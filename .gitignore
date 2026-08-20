@@ -12,6 +12,10 @@ classes/
 # idea
 
 .idea/
+!.idea/
+.idea/*
+!.idea/runConfigurations/
+!.idea/runConfigurations/Minecraft_Client.xml
 *.iml
 *.ipr
 *.iws
