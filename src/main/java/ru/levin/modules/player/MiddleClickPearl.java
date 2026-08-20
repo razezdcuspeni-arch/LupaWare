@@ -2,6 +2,7 @@ package ru.levin.modules.player;
 
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
+import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.util.Hand;
 import ru.levin.events.Event;
 import ru.levin.events.impl.input.EventKey;
@@ -57,15 +58,19 @@ public class MiddleClickPearl extends Function {
         int currentSlot = mc.player.getInventory().selectedSlot;
         int pearlSlot = InventoryUtil.getHotBarSlot(Items.ENDER_PEARL);
         if (pearlSlot != -1) {
-            if (pearlSlot != currentSlot) {
-                mc.player.getInventory().selectedSlot = pearlSlot;
-                mc.player.networkHandler.sendPacket(new net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket(pearlSlot));
-            }
-            mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
-            mc.player.swingHand(Hand.MAIN_HAND);
-            if (pearlSlot != currentSlot) {
-                mc.player.getInventory().selectedSlot = currentSlot;
-                mc.player.networkHandler.sendPacket(new net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket(currentSlot));
+            boolean switched = pearlSlot != currentSlot;
+            try {
+                if (switched) {
+                    mc.player.getInventory().selectedSlot = pearlSlot;
+                    mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(pearlSlot));
+                }
+                mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
+                mc.player.swingHand(Hand.MAIN_HAND);
+            } finally {
+                if (switched) {
+                    mc.player.getInventory().selectedSlot = currentSlot;
+                    mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(currentSlot));
+                }
             }
             return;
         }

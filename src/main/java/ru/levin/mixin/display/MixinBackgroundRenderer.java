@@ -7,6 +7,8 @@ import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.Fog;
 import net.minecraft.client.render.FogShape;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.LivingEntity;
 import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -23,8 +25,14 @@ public class MixinBackgroundRenderer {
 
     @Inject(method = "getFogModifier(Lnet/minecraft/entity/Entity;F)Lnet/minecraft/client/render/BackgroundRenderer$StatusEffectFogModifier;", at = @At("HEAD"), cancellable = true)
     private static void onGetFogModifier(Entity entity, float tickDelta, CallbackInfoReturnable<Object> info) {
-        if (Manager.FUNCTION_MANAGER.noRender.state && Manager.FUNCTION_MANAGER.noRender.mods.get("Плохие эффекты"))
-            info.setReturnValue(null);
+        if (Manager.FUNCTION_MANAGER.noRender.state) {
+            boolean removeBadEffects = Manager.FUNCTION_MANAGER.noRender.mods.get("Плохие эффекты");
+            boolean removeDarkness = Manager.FUNCTION_MANAGER.noRender.mods.get("Тьма")
+                    && entity instanceof LivingEntity living && living.hasStatusEffect(StatusEffects.DARKNESS);
+            if (removeBadEffects || removeDarkness) {
+                info.setReturnValue(null);
+            }
+        }
     }
 
     @ModifyReturnValue(method = "applyFog", at = @At("RETURN"))
