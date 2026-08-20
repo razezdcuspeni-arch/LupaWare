@@ -26,16 +26,16 @@ public class UpdatesScreen extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        int accent = ColorUtil.rgba(63, 169, 255, 255);
-        int purple = ColorUtil.rgba(170, 120, 255, 255);
+        int accent = ColorUtil.rgba(235, 235, 235, 255);
+        int purple = ColorUtil.rgba(175, 175, 175, 255);
         int text = Color.WHITE.getRGB();
-        int muted = ColorUtil.rgba(155, 164, 180, 255);
-        int panel = ColorUtil.rgba(25, 28, 35, 248);
-        int card = ColorUtil.rgba(31, 35, 44, 248);
+        int muted = ColorUtil.rgba(155, 155, 155, 255);
+        int panel = ColorUtil.rgba(24, 24, 24, 248);
+        int card = ColorUtil.rgba(32, 32, 32, 248);
 
-        RenderUtil.drawRoundedRect(context.getMatrices(), 0, 0, width, height, 0, ColorUtil.rgba(13, 15, 20, 255));
+        RenderUtil.drawRoundedRect(context.getMatrices(), 0, 0, width, height, 0, ColorUtil.rgba(10, 10, 10, 255));
         RenderUtil.drawRoundedRect(context.getMatrices(), 26, 24, width - 52, height - 48, 16, panel);
-        RenderUtil.drawRoundedBorder(context.getMatrices(), 26, 24, width - 52, height - 48, 16, 1f, ColorUtil.rgba(55, 63, 78, 190));
+        RenderUtil.drawRoundedBorder(context.getMatrices(), 26, 24, width - 52, height - 48, 16, 1f, ColorUtil.rgba(90, 90, 90, 190));
 
         FontUtils.sf_medium[15].drawLeftAligned(context.getMatrices(), "LUPAWARE / CHANGELOG", 58, 56, accent);
         FontUtils.sf_bold[36].drawLeftAligned(context.getMatrices(), "Updates", 58, 82, text);
@@ -46,7 +46,7 @@ public class UpdatesScreen extends Screen {
         int cardWidth = width - 116;
         int cardHeight = 238;
         RenderUtil.drawRoundedRect(context.getMatrices(), cardX, cardY, cardWidth, cardHeight, 14, card);
-        RenderUtil.drawRoundedBorder(context.getMatrices(), cardX, cardY, cardWidth, cardHeight, 14, 1f, ColorUtil.rgba(70, 82, 105, 190));
+        RenderUtil.drawRoundedBorder(context.getMatrices(), cardX, cardY, cardWidth, cardHeight, 14, 1f, ColorUtil.rgba(105, 105, 105, 190));
         RenderUtil.drawRoundedRect(context.getMatrices(), cardX, cardY, 5, cardHeight, 3, accent);
 
         FontUtils.sf_medium[14].drawLeftAligned(context.getMatrices(), "LATEST UPDATE  /  1.21.4", cardX + 28, cardY + 26, accent);
@@ -63,7 +63,7 @@ public class UpdatesScreen extends Screen {
 
     private void drawBullet(DrawContext context, int x, int y, String value, int color) {
         RenderUtil.drawRoundedRect(context.getMatrices(), x, y + 3, 8, 8, 4, color);
-        FontUtils.sf_medium[16].drawLeftAligned(context.getMatrices(), value, x + 19, y, ColorUtil.rgba(218, 224, 235, 255));
+        FontUtils.sf_medium[16].drawLeftAligned(context.getMatrices(), value, x + 19, y, ColorUtil.rgba(218, 218, 218, 255));
     }
 
     @Override
@@ -100,10 +100,10 @@ public class UpdatesScreen extends Screen {
         void render(DrawContext context, int mouseX, int mouseY, float delta) {
             boolean hovered = isHovered(mouseX, mouseY);
             hover += ((hovered ? 1f : 0f) - hover) * 0.16f;
-            int base = ColorUtil.rgba(30, 34, 42, 255);
-            int active = ColorUtil.rgba(48, 91, 135, 255);
+            int base = ColorUtil.rgba(30, 30, 30, 255);
+            int active = ColorUtil.rgba(72, 72, 72, 255);
             RenderUtil.drawRoundedRect(context.getMatrices(), x, y, width, height, 9, ColorUtil.blendColorsInt(base, active, hover));
-            RenderUtil.drawRoundedBorder(context.getMatrices(), x, y, width, height, 9, 1f, ColorUtil.rgba(65, 78, 99, 220));
+            RenderUtil.drawRoundedBorder(context.getMatrices(), x, y, width, height, 9, 1f, ColorUtil.rgba(105, 105, 105, 220));
             FontUtils.sf_medium[17].centeredDraw(context.getMatrices(), label, x + width / 2f, y + height / 2f - 6, Color.WHITE.getRGB());
         }
 

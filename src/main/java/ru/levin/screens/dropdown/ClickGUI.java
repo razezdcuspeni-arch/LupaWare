@@ -144,7 +144,6 @@ public class ClickGUI extends Screen implements IMinecraft {
         if (animation <= 0.01) return;
 
         super.render(ctx, mouseX, mouseY, delta);
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), 0, 0, width, height, 0, new Color(7, 7, 7, 255).getRGB());
         FontUtils.sf_bold[20].drawLeftAligned(ctx.getMatrices(), "LUPAWARE", 24, 22, Color.WHITE.getRGB());
         FontUtils.sf_medium[13].drawLeftAligned(ctx.getMatrices(), "CLIENT CONTROL CENTER  /  RIGHT SHIFT", 25, 44, new Color(135, 135, 135).getRGB());
         ctx.getMatrices().push();
@@ -182,7 +181,7 @@ public class ClickGUI extends Screen implements IMinecraft {
     }
     private void renderHudLayoutOverlay(DrawContext ctx, int mouseX, int mouseY) {
         if (!hudLayoutMode) return;
-        int accent = Manager.STYLE_MANAGER.getFirstColor();
+        int accent = new Color(210, 210, 210).getRGB();
         int text = ColorUtil.applyAlpha(Color.WHITE.getRGB(), 220);
         FontUtils.sf_medium[14].drawLeftAligned(ctx.getMatrices(), "HUD LAYOUT  •  drag modules with mouse", 16, 16, text);
         Manager.DRAG_MANAGER.draggables.values().forEach(dragging -> {
@@ -346,8 +345,8 @@ public class ClickGUI extends Screen implements IMinecraft {
             int col1 = f.state ? Color.WHITE.getRGB() : new Color(184, 184, 184).getRGB();
             int col2 = col1;
 
-            int colorModule = f.state ? new Color(255, 255, 255, clickGUI.alphaModules.get().intValue()).getRGB() : new Color(28, 28, 28, 230).getRGB();
-            int colorModule2 = f.state ? new Color(58, 58, 58, clickGUI.alphaModules.get().intValue()).getRGB() : colorModule;
+            int colorModule = f.state ? new Color(58, 58, 58, clickGUI.alphaModules.get().intValue()).getRGB() : new Color(28, 28, 28, 230).getRGB();
+            int colorModule2 = colorModule;
 
             if (clickGUI.filling.get() || f.state) {
                 RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 9, currentY + 2, PANEL_WIDTH - 18, Math.max(21, totalHeight - 5), clickGUI.rounding.get().intValue(), colorModule2);
@@ -365,7 +364,7 @@ public class ClickGUI extends Screen implements IMinecraft {
                 textToRender = f.name;
             }
 
-            FontUtils.sf_medium[13].drawClipped(ctx.getMatrices(), textToRender, PANEL_WIDTH - 42, x + 15, currentY + 7, f.state ? Color.BLACK.getRGB() : col1);
+            FontUtils.sf_medium[13].drawClipped(ctx.getMatrices(), textToRender, PANEL_WIDTH - 42, x + 15, currentY + 7, f.state ? Color.WHITE.getRGB() : col1);
 
             if (animatedSettingsHeight > 0) {
                 float settingY = currentY + functionHeight;

@@ -87,7 +87,7 @@ public class ModeSettingRenderer implements SettingRenderer<ModeSetting>, IMinec
             hoverProgress.put(mode, hoverProg);
 
             Color baseColor = new Color(30, 30, 30, 180);
-            int selectedColor = Manager.STYLE_MANAGER.getFirstColor();
+            int selectedColor = new Color(220, 220, 220, 220).getRGB();
 
             int bgColor;
             if (selected) {

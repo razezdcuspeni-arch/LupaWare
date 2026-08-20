@@ -35,7 +35,7 @@ public class BooleanSettingRenderer implements SettingRenderer<BooleanSetting>, 
         int switchY = y + (HEIGHT - SWITCH_HEIGHT) / 2 - 2;
 
         Color offColor = new Color(50, 50, 50, 200);
-        int onColor = Manager.STYLE_MANAGER.getFirstColor();
+        int onColor = new Color(230, 230, 230, 220).getRGB();
         int bgColor = ColorUtil.interpolateColor(offColor.getRGB(), onColor, progress);
 
         RenderUtil.drawRoundedRect(ctx.getMatrices(), switchX, switchY, WIDTH, SWITCH_HEIGHT, 5, bgColor);

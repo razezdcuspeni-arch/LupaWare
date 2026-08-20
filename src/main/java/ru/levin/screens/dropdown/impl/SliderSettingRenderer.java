@@ -39,7 +39,7 @@ public class SliderSettingRenderer implements SettingRenderer<SliderSetting> {
         if (setting.circlePos == -1) setting.circlePos = targetProgressWidth;
         setting.circlePos += (targetProgressWidth - setting.circlePos) * 0.2;
 
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), barX, barY, (int) setting.circlePos, BAR_HEIGHT, 1, Manager.STYLE_MANAGER.getFirstColor());
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), barX, barY, (int) setting.circlePos, BAR_HEIGHT, 1, new Color(220, 220, 220, 220).getRGB());
 
         FontUtils.durman[13].drawLeftAligned(ctx.getMatrices(), setting.getName(), x + PADDING, y + 2, Color.WHITE.getRGB());
         String valueText = formatValue(roundedValue, increment);

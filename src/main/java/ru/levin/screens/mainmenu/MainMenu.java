@@ -171,9 +171,9 @@ public class MainMenu extends Screen {
             boolean hovered = isHovered(mouseX, mouseY);
             hoverAnim += ((hovered ? 1f : 0f) - hoverAnim) * 0.16f;
             int base = prominent ? ColorUtil.rgba(30, 30, 30, 255) : ColorUtil.rgba(24, 24, 24, 255);
-            int hover = prominent ? (Manager.STYLE_MANAGER != null ? Manager.STYLE_MANAGER.getSecondColor() : ColorUtil.rgba(92, 92, 92, 255)) : ColorUtil.rgba(70, 70, 70, 255);
+            int hover = prominent ? ColorUtil.rgba(92, 92, 92, 255) : ColorUtil.rgba(70, 70, 70, 255);
             int background = ColorUtil.blendColorsInt(base, hover, hoverAnim);
-            int border = prominent ? ColorUtil.rgba(105, 105, 105, 220) : ColorUtil.rgba(55, 63, 78, 180);
+            int border = prominent ? ColorUtil.rgba(105, 105, 105, 220) : ColorUtil.rgba(85, 85, 85, 180);
             RenderUtil.drawRoundedRect(context.getMatrices(), x, y, width, height, 9, background);
             RenderUtil.drawRoundedBorder(context.getMatrices(), x, y, width, height, 9, 1f, border);
             int textColor = hovered ? Color.WHITE.getRGB() : ColorUtil.rgba(210, 210, 210, 255);

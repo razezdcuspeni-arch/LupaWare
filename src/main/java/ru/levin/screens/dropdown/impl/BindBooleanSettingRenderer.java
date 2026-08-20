@@ -81,7 +81,7 @@ public class BindBooleanSettingRenderer implements SettingRenderer<BindBooleanSe
             int paddingRightClose = 8;
             int closeX = x + width - closeSize - paddingRightClose + 10;
             int closeY = bindBoxY + (bindBoxHeight - closeSize) / 2 - 1;
-            RenderUtil.drawTexture(ctx.getMatrices(), "images/gui/fl.png", closeX, closeY, closeSize, closeSize, 0, Color.RED.getRGB());
+            RenderUtil.drawTexture(ctx.getMatrices(), "images/gui/fl.png", closeX, closeY, closeSize, closeSize, 0, new Color(180, 180, 180).getRGB());
 
             return;
         } else {
@@ -94,7 +94,7 @@ public class BindBooleanSettingRenderer implements SettingRenderer<BindBooleanSe
         int switchX = x + width - SWITCH_WIDTH + 4;
         int switchY = y + (HEIGHT - SWITCH_HEIGHT) / 2 - 2;
         Color offColor = new Color(50, 50, 50, 200);
-        int onColor = Manager.STYLE_MANAGER.getFirstColor();
+        int onColor = new Color(230, 230, 230, 220).getRGB();
         int bgColor = ColorUtil.interpolateColor(offColor.getRGB(), onColor, progress);
 
         RenderUtil.drawRoundedRect(ctx.getMatrices(), switchX, switchY, SWITCH_WIDTH, SWITCH_HEIGHT, 5, bgColor);
