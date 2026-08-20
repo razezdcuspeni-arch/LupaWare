@@ -43,22 +43,22 @@ public class MainMenu extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        int accent = Manager.STYLE_MANAGER != null ? Manager.STYLE_MANAGER.getFirstColor() : ColorUtil.rgba(63, 169, 255, 255);
-        int secondary = Manager.STYLE_MANAGER != null ? Manager.STYLE_MANAGER.getSecondColor() : ColorUtil.rgba(33, 212, 253, 255);
-        int muted = ColorUtil.rgba(155, 164, 180, 255);
-        int panel = ColorUtil.rgba(25, 28, 35, 245);
-        int panelLight = ColorUtil.rgba(31, 35, 44, 245);
+        int accent = Color.WHITE.getRGB();
+        int secondary = ColorUtil.rgba(210, 210, 210, 255);
+        int muted = ColorUtil.rgba(155, 155, 155, 255);
+        int panel = ColorUtil.rgba(18, 18, 18, 248);
+        int panelLight = ColorUtil.rgba(28, 28, 28, 248);
 
         RenderUtil.drawRoundedRect(context.getMatrices(), 0, 0, width, height, 0, ColorUtil.rgba(13, 15, 20, 255));
         RenderUtil.drawRoundedRect(context.getMatrices(), 18, 18, 250, height - 36, 12, panel);
-        RenderUtil.drawRoundedBorder(context.getMatrices(), 18, 18, 250, height - 36, 12, 1f, ColorUtil.rgba(55, 63, 78, 170));
+        RenderUtil.drawRoundedBorder(context.getMatrices(), 18, 18, 250, height - 36, 12, 1f, ColorUtil.rgba(95, 95, 95, 190));
 
         // Brand block.
         RenderUtil.drawRoundedRect(context.getMatrices(), 38, 40, 42, 42, 10, accent);
         FontUtils.sf_bold[24].centeredDraw(context.getMatrices(), "LW", 59, 49, Color.WHITE.getRGB());
         FontUtils.sf_bold[24].drawLeftAligned(context.getMatrices(), "LupaWare", 94, 42, Color.WHITE.getRGB());
         FontUtils.sf_medium[16].drawLeftAligned(context.getMatrices(), "by: wasdd", 95, 68, muted);
-        RenderUtil.drawRoundedRect(context.getMatrices(), 38, 101, 210, 1, 0, ColorUtil.rgba(61, 70, 88, 180));
+        RenderUtil.drawRoundedRect(context.getMatrices(), 38, 101, 210, 1, 0, ColorUtil.rgba(90, 90, 90, 180));
 
         int navStart = 132;
         singleplayerButton.x = 38;
@@ -99,8 +99,8 @@ public class MainMenu extends Screen {
 
         int statusX = contentX + 29;
         int statusY = heroY + 130;
-        RenderUtil.drawRoundedRect(context.getMatrices(), statusX, statusY, 10, 10, 5, ColorUtil.rgba(74, 220, 142, 255));
-        FontUtils.sf_medium[16].drawLeftAligned(context.getMatrices(), "Client online", statusX + 18, statusY - 3, ColorUtil.rgba(190, 205, 215, 255));
+        RenderUtil.drawRoundedRect(context.getMatrices(), statusX, statusY, 10, 10, 5, Color.WHITE.getRGB());
+        FontUtils.sf_medium[16].drawLeftAligned(context.getMatrices(), "Client online", statusX + 18, statusY - 3, ColorUtil.rgba(225, 225, 225, 255));
         FontUtils.sf_medium[16].drawLeftAligned(context.getMatrices(), "Fabric 1.21.4", statusX + 142, statusY - 3, muted);
 
         int cardY = heroY + heroHeight + 20;
@@ -116,11 +116,11 @@ public class MainMenu extends Screen {
 
     private void drawInfoCard(DrawContext context, int x, int y, int cardWidth, String eyebrow, String title, String subtitle, int accent) {
         RenderUtil.drawRoundedRect(context.getMatrices(), x, y, cardWidth, 94, 12, ColorUtil.rgba(25, 28, 35, 245));
-        RenderUtil.drawRoundedBorder(context.getMatrices(), x, y, cardWidth, 94, 12, 1f, ColorUtil.rgba(55, 63, 78, 170));
+        RenderUtil.drawRoundedBorder(context.getMatrices(), x, y, cardWidth, 94, 12, 1f, ColorUtil.rgba(95, 95, 95, 190));
         RenderUtil.drawRoundedRect(context.getMatrices(), x + 18, y + 19, 4, 52, 2, accent);
         FontUtils.sf_medium[13].drawLeftAligned(context.getMatrices(), eyebrow, x + 34, y + 16, accent);
         FontUtils.sf_bold[20].drawLeftAligned(context.getMatrices(), title, x + 34, y + 36, Color.WHITE.getRGB());
-        FontUtils.sf_medium[14].drawLeftAligned(context.getMatrices(), subtitle, x + 34, y + 64, ColorUtil.rgba(155, 164, 180, 255));
+        FontUtils.sf_medium[14].drawLeftAligned(context.getMatrices(), subtitle, x + 34, y + 64, ColorUtil.rgba(155, 155, 155, 255));
     }
 
     @Override
@@ -170,13 +170,13 @@ public class MainMenu extends Screen {
         void render(DrawContext context, int mouseX, int mouseY, float delta) {
             boolean hovered = isHovered(mouseX, mouseY);
             hoverAnim += ((hovered ? 1f : 0f) - hoverAnim) * 0.16f;
-            int base = prominent ? ColorUtil.rgba(34, 39, 50, 255) : ColorUtil.rgba(30, 34, 42, 255);
-            int hover = prominent ? (Manager.STYLE_MANAGER != null ? Manager.STYLE_MANAGER.getSecondColor() : ColorUtil.rgba(48, 91, 135, 255)) : ColorUtil.rgba(48, 54, 66, 255);
+            int base = prominent ? ColorUtil.rgba(30, 30, 30, 255) : ColorUtil.rgba(24, 24, 24, 255);
+            int hover = prominent ? (Manager.STYLE_MANAGER != null ? Manager.STYLE_MANAGER.getSecondColor() : ColorUtil.rgba(92, 92, 92, 255)) : ColorUtil.rgba(70, 70, 70, 255);
             int background = ColorUtil.blendColorsInt(base, hover, hoverAnim);
-            int border = prominent ? ColorUtil.rgba(65, 78, 99, 220) : ColorUtil.rgba(55, 63, 78, 180);
+            int border = prominent ? ColorUtil.rgba(105, 105, 105, 220) : ColorUtil.rgba(55, 63, 78, 180);
             RenderUtil.drawRoundedRect(context.getMatrices(), x, y, width, height, 9, background);
             RenderUtil.drawRoundedBorder(context.getMatrices(), x, y, width, height, 9, 1f, border);
-            int textColor = hovered ? Color.WHITE.getRGB() : ColorUtil.rgba(218, 224, 235, 255);
+            int textColor = hovered ? Color.WHITE.getRGB() : ColorUtil.rgba(210, 210, 210, 255);
             FontUtils.sf_medium[17].centeredDraw(context.getMatrices(), name, x + width / 2f, y + height / 2f - 6, textColor);
         }
 

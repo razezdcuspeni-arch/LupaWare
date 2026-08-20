@@ -18,8 +18,8 @@ import static ru.levin.util.math.MathUtil.interpolateInt;
 
 @SuppressWarnings("All")
 public class ColorUtil implements IMinecraft {
-    public static final int hud_color = new Color(25, 22, 33, 220).getRGB();
-    public static final int hud_color2 = new Color(16, 15, 19, 255).getRGB();
+    public static final int hud_color = new Color(42, 42, 42, 235).getRGB();
+    public static final int hud_color2 = new Color(16, 16, 16, 255).getRGB();
 
     private static final Map<Identifier, BufferedImage> CACHED_IMAGES = new HashMap<>();
     public static void loadImage(Identifier identifier) {
@@ -104,20 +104,12 @@ public class ColorUtil implements IMinecraft {
     }
 
     public static int getColorHud(int index) {
-        StyleManager theme = Manager.STYLE_MANAGER;
-        Color upColor = new Color(theme.getFirstColor());
-        Color downColor = new Color(theme.getSecondColor());
-        return ColorUtil.gradient(5, index, upColor.getRGB(),downColor.getRGB());
+        int shade = 190 + Math.floorMod(index, 66);
+        return new Color(shade, shade, shade, 255).getRGB();
     }
     public static int getColorHud(int index, int alpha) {
-        StyleManager theme = Manager.STYLE_MANAGER;
-        Color upColor = new Color(theme.getFirstColor());
-        Color downColor = new Color(theme.getSecondColor());
-        int gradientColor = ColorUtil.gradient(5, index, upColor.getRGB(), downColor.getRGB());
-        int red = (gradientColor >> 16) & 0xFF;
-        int green = (gradientColor >> 8) & 0xFF;
-        int blue = gradientColor & 0xFF;
-        return new Color(red, green, blue, alpha).getRGB();
+        int shade = 190 + Math.floorMod(index, 66);
+        return new Color(shade, shade, shade, MathHelper.clamp(alpha, 0, 255)).getRGB();
     }
 
     public static float[] rgba(final int color) {

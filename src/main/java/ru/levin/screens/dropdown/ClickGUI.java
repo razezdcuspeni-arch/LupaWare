@@ -39,15 +39,15 @@ public class ClickGUI extends Screen implements IMinecraft {
     private boolean hudLayoutMode = true;
 
     private final int PANEL_WIDTH = 145;
-    private final int PANEL_HEIGHT = 310;
-    private final int PANEL_MARGIN = 10;
+    private final int PANEL_HEIGHT = 370;
+    private final int PANEL_MARGIN = 14;
 
-    private final Color GUI_COLOR = Manager.FUNCTION_MANAGER.clickGUI.getGuiColor();
+    private final Color GUI_COLOR = new Color(16, 16, 16, 248);
 
-    private final int TITLE_MARGIN_TOP = 10;
-    private final int TITLE_HEIGHT = 30;
+    private final int TITLE_MARGIN_TOP = 12;
+    private final int TITLE_HEIGHT = 42;
 
-    private final int FUNCTION_HEIGHT = 24;
+    private final int FUNCTION_HEIGHT = 27;
 
     private final int SCROLL_AREA_Y_OFFSET = TITLE_MARGIN_TOP + TITLE_HEIGHT;
     private final int SCROLL_AREA_HEIGHT = PANEL_HEIGHT - SCROLL_AREA_Y_OFFSET - 5;
@@ -144,6 +144,9 @@ public class ClickGUI extends Screen implements IMinecraft {
         if (animation <= 0.01) return;
 
         super.render(ctx, mouseX, mouseY, delta);
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), 0, 0, width, height, 0, new Color(7, 7, 7, 255).getRGB());
+        FontUtils.sf_bold[20].drawLeftAligned(ctx.getMatrices(), "LUPAWARE", 24, 22, Color.WHITE.getRGB());
+        FontUtils.sf_medium[13].drawLeftAligned(ctx.getMatrices(), "CLIENT CONTROL CENTER  /  RIGHT SHIFT", 25, 44, new Color(135, 135, 135).getRGB());
         ctx.getMatrices().push();
 
         for (Type category : renderCategories) {
@@ -281,24 +284,25 @@ public class ClickGUI extends Screen implements IMinecraft {
 
     private void renderPanel(DrawContext ctx, int x, int y, Type category, int mouseX, int mouseY) {
         ru.levin.modules.render.ClickGUI clickGUI = Manager.FUNCTION_MANAGER.clickGUI;
-        int panelColor = ColorUtil.rgba(18, 21, 29, 245);
-        int headerColor = ColorUtil.rgba(25, 29, 40, 255);
-        int borderColor = ColorUtil.rgba(66, 77, 98, 210);
-        int accentColor = ColorUtil.getColorStyle(45);
+        int panelColor = new Color(17, 17, 17, 250).getRGB();
+        int headerColor = new Color(30, 30, 30, 255).getRGB();
+        int borderColor = new Color(88, 88, 88, 230).getRGB();
+        int accentColor = Color.WHITE.getRGB();
 
         if (clickGUI.blur.get() && clickGUI.blurSetting.get("Панели")) {
             drawBlur(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 16, 10, -1);
         }
         RenderUtil.drawRoundedRect(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 16, panelColor);
         RenderUtil.drawRoundedBorder(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 16, 1f, borderColor);
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), x, y, PANEL_WIDTH, TITLE_HEIGHT + 6, 14, headerColor);
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 12, y + TITLE_HEIGHT + 3, PANEL_WIDTH - 24, 1, 0, ColorUtil.rgba(61, 72, 94, 180));
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 12, y + 11, 3, 22, 2, accentColor);
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), x, y, PANEL_WIDTH, TITLE_HEIGHT + 8, 10, headerColor);
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 12, y + TITLE_HEIGHT + 8, PANEL_WIDTH - 24, 1, 0, new Color(85, 85, 85, 220).getRGB());
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 12, y + 13, 5, 26, 2, accentColor);
 
-        String title = category.name();
+        String title = category.name().toUpperCase();
         String icon = category.icon;
-        FontUtils.icomoon[18].drawLeftAligned(ctx.getMatrices(), icon, x + 22, y + TITLE_MARGIN_TOP + 3, ColorUtil.rgba(214, 222, 237, 255));
-        FontUtils.sf_bold[18].drawLeftAligned(ctx.getMatrices(), title, x + 44, y + TITLE_MARGIN_TOP + 3, Color.WHITE.getRGB());
+        FontUtils.icomoon[18].drawLeftAligned(ctx.getMatrices(), icon, x + 24, y + TITLE_MARGIN_TOP + 6, Color.WHITE.getRGB());
+        FontUtils.sf_bold[16].drawLeftAligned(ctx.getMatrices(), title, x + 48, y + TITLE_MARGIN_TOP + 6, Color.WHITE.getRGB());
+        FontUtils.sf_medium[11].drawRightAligned(ctx.getMatrices(), "MODULES", x + PANEL_WIDTH - 12, y + TITLE_MARGIN_TOP + 9, new Color(150, 150, 150).getRGB());
 
         {
             int maxBefore = calculateMaxScroll(category);
@@ -339,11 +343,11 @@ public class ClickGUI extends Screen implements IMinecraft {
                 continue;
             }
 
-            int col1 = f.state ? ColorUtil.getColorStyle(30) : ColorUtil.rgba(191, 201, 218, 255);
-            int col2 = f.state ? ColorUtil.getColorStyle(120) : col1;
+            int col1 = f.state ? Color.WHITE.getRGB() : new Color(184, 184, 184).getRGB();
+            int col2 = col1;
 
-            int colorModule = f.state ? ColorUtil.applyAlpha(ColorUtil.getColorStyle(45), clickGUI.alphaModules.get().intValue()) : ColorUtil.rgba(27, 31, 42, 230);
-            int colorModule2 = f.state ? ColorUtil.applyAlpha(ColorUtil.getColorStyle(120), clickGUI.alphaModules.get().intValue()) : colorModule;
+            int colorModule = f.state ? new Color(255, 255, 255, clickGUI.alphaModules.get().intValue()).getRGB() : new Color(28, 28, 28, 230).getRGB();
+            int colorModule2 = f.state ? new Color(58, 58, 58, clickGUI.alphaModules.get().intValue()).getRGB() : colorModule;
 
             if (clickGUI.filling.get() || f.state) {
                 RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 9, currentY + 2, PANEL_WIDTH - 18, Math.max(21, totalHeight - 5), clickGUI.rounding.get().intValue(), colorModule2);
@@ -361,7 +365,7 @@ public class ClickGUI extends Screen implements IMinecraft {
                 textToRender = f.name;
             }
 
-            FontUtils.sf_medium[15].renderGradientText(ctx.getMatrices(), textToRender, x + 15, currentY + 6, col1, col2);
+            FontUtils.sf_medium[13].drawClipped(ctx.getMatrices(), textToRender, PANEL_WIDTH - 42, x + 15, currentY + 7, f.state ? Color.BLACK.getRGB() : col1);
 
             if (animatedSettingsHeight > 0) {
                 float settingY = currentY + functionHeight;
@@ -410,7 +414,7 @@ public class ClickGUI extends Screen implements IMinecraft {
                 if (Math.abs((f.expanded ? 1f : 0f) - currentProgress) < 0.001f) currentProgress = f.expanded ? 1f : 0f;
                 arrowRotationProgress.put(f, currentProgress);
 
-                int arrowX = x + PANEL_WIDTH - 17;
+                int arrowX = x + PANEL_WIDTH - 16;
                 int arrowY = (int) (currentY + FUNCTION_HEIGHT / 2);
 
                 ctx.getMatrices().push();

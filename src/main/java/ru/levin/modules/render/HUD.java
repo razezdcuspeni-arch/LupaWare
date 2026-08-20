@@ -311,7 +311,7 @@ public class HUD extends Function {
 
         FontUtils.durman[15].drawLeftAligned(eventRender2D.getDrawContext().getMatrices(), "Effects", posX + 10, posY + 5f, -1);
 
-        drawRoundedRect(eventRender2D.getDrawContext().getMatrices(), posX, posY + headerHeight - 1, maxWidth, potionListHeightDynamic + 6, new Vector4f(0, 3, 3, 0), new Color(18, 24, 42, alpha).getRGB());
+        drawRoundedRect(eventRender2D.getDrawContext().getMatrices(), posX, posY + headerHeight - 1, maxWidth, potionListHeightDynamic + 6, new Vector4f(0, 3, 3, 0), new Color(18, 18, 18, alpha).getRGB());
 
         Scissor.push();
         Scissor.setFromComponentCoordinates(posX, posY, maxWidth, (headerHeight + potionListHeightDynamic + padding / 2.0F + 5));
@@ -341,7 +341,7 @@ public class HUD extends Function {
             float finalYOffset = yOffset;
             list.add(() -> {eventRender2D.getDrawContext().drawSpriteStretched(RenderLayer::getGuiTextured, texture, (int) (posX + padding - 1.5f), (int) finalYOffset - 1, 9, 9, -1);});
 
-            RenderUtil.drawRoundedRect(eventRender2D.getDrawContext().getMatrices(), posX + padding + 9, finalYOffset - 1f, 1.2f, 9, 0, new Color(112, 236, 255, 190).getRGB());
+            RenderUtil.drawRoundedRect(eventRender2D.getDrawContext().getMatrices(), posX + padding + 9, finalYOffset - 1f, 1.2f, 9, 0, new Color(220, 220, 220, 190).getRGB());
 
             FontUtils.durman[13].drawLeftAligned(eventRender2D.getDrawContext().getMatrices(), displayName, posX + padding + 14f, yOffset - 1f, color);
 
@@ -447,7 +447,7 @@ public class HUD extends Function {
 
         FontUtils.durman[15].drawLeftAligned(eventRender2D.getDrawContext().getMatrices(), "Cooldowns", posX + 10, posY + 5f, -1);
 
-        drawRoundedRect(eventRender2D.getDrawContext().getMatrices(), posX, posY + headerHeight - 1, maxWidth, cooldownListHeightDynamic + 6, new Vector4f(0, 3, 3, 0), new Color(18, 24, 42, alpha).getRGB());
+        drawRoundedRect(eventRender2D.getDrawContext().getMatrices(), posX, posY + headerHeight - 1, maxWidth, cooldownListHeightDynamic + 6, new Vector4f(0, 3, 3, 0), new Color(18, 18, 18, alpha).getRGB());
 
         Scissor.push();
         Scissor.setFromComponentCoordinates(posX, posY, maxWidth, (headerHeight + cooldownListHeightDynamic + padding / 2.0F + 5));
@@ -472,7 +472,7 @@ public class HUD extends Function {
 
             RenderAddon.renderItem(eventRender2D.getDrawContext(), stack, posX + padding - 1.5f, yOffset - 1f, 0.6f,false);
 
-            RenderUtil.drawRoundedRect(eventRender2D.getDrawContext().getMatrices(), posX + padding + 10, yOffset - 0.5f, 1.2f, 9, 0, new Color(112, 236, 255, 190).getRGB());
+            RenderUtil.drawRoundedRect(eventRender2D.getDrawContext().getMatrices(), posX + padding + 10, yOffset - 0.5f, 1.2f, 9, 0, new Color(220, 220, 220, 190).getRGB());
 
             FontUtils.durman[13].drawLeftAligned(eventRender2D.getDrawContext().getMatrices(), itemName, posX + padding + 14f, yOffset - 0.3f, -1);
 
@@ -546,7 +546,7 @@ public class HUD extends Function {
 
         fontBig.drawLeftAligned(render2D.getDrawContext().getMatrices(), "StaffList",posX + 10, posY + 5f,-1);
 
-        drawRoundedRect(render2D.getDrawContext().getMatrices(), posX, posY + headerHeight - 1, widthDynamic, hDynam + 6, new Vector4f(0, 3, 3, 0), new Color(18, 24, 42, alpha).getRGB());
+        drawRoundedRect(render2D.getDrawContext().getMatrices(), posX, posY + headerHeight - 1, widthDynamic, hDynam + 6, new Vector4f(0, 3, 3, 0), new Color(18, 18, 18, alpha).getRGB());
 
         if (!staffPlayers.isEmpty()) {
             Scissor.push();
@@ -575,7 +575,7 @@ public class HUD extends Function {
                     RenderUtil.drawTexture(render2D.getDrawContext().getMatrices(), "images/hud/staffvanish.png", posX + padding, baseY - 1f, 9, 9, 3, Color.white.getRGB());
                 }
 
-                RenderUtil.drawRoundedRect(render2D.getDrawContext().getMatrices(), posX + padding + 11, baseY - 0.8f, 1.2f, 9, 0, new Color(112, 236, 255, 190).getRGB());
+                RenderUtil.drawRoundedRect(render2D.getDrawContext().getMatrices(), posX + padding + 11, baseY - 0.8f, 1.2f, 9, 0, new Color(220, 220, 220, 190).getRGB());
 
                 fontSmall.drawLeftAligned(render2D.getDrawContext().getMatrices(), staffname, posX + padding + 16f, baseY - 0.5f, Color.WHITE.getRGB());
 
@@ -622,7 +622,7 @@ public class HUD extends Function {
 
         RenderAddon.drawHead(render2D.getDrawContext().getMatrices(), target, x + 4, y + 3.5f, 28, roundingSilaSanya.get().floatValue());
 
-        drawRoundedRect(render2D.getDrawContext().getMatrices(), x + 34.2F, y + 26F, 82, 5.0F, 0, new Color(11, 16, 30, 255).getRGB());
+        drawRoundedRect(render2D.getDrawContext().getMatrices(), x + 34.2F, y + 26F, 82, 5.0F, 0, new Color(11, 11, 11, 255).getRGB());
 
         StyleManager theme = Manager.STYLE_MANAGER;
         java.awt.Color upColor = new java.awt.Color(theme.getFirstColor());
@@ -665,30 +665,29 @@ public class HUD extends Function {
         String title = "LUPAWARE";
         String version = "1.21.4";
         String status = "ONLINE";
-        String detail = Manager.USER_PROFILE.getName() + "  /  " + ClientManager.getFps() + " FPS  /  " + ClientManager.getPing() + " MS";
+        String detail = Manager.USER_PROFILE.getName() + "  •  " + ClientManager.getFps() + " FPS  •  " + ClientManager.getPing() + " MS";
         float titleWidth = FontUtils.durman[17].getWidth(title);
-        float detailWidth = FontUtils.durman[13].getWidth(detail);
-        float width = Math.max(178, 42 + Math.max(titleWidth, detailWidth));
+        float detailWidth = FontUtils.durman[12].getWidth(detail);
+        float width = 236;
         int alpha = Math.max(150, customAlpha.get().intValue());
-        int panel = new Color(10, 15, 28, alpha).getRGB();
-        int accent = ColorUtil.getColorStyle(180);
-        int accentSoft = applyHudAlpha(accent, 190);
+        int panel = new Color(12, 12, 12, alpha).getRGB();
+        int accent = Color.WHITE.getRGB();
+        int accentSoft = new Color(180, 180, 180, 220).getRGB();
 
         if (blur.get()) {
-            drawBlur(matrices, x, y, width, 43, new Vector4f(8, 8, 8, 8), 14, Color.WHITE.getRGB());
+            drawBlur(matrices, x, y, width, 48, new Vector4f(8, 8, 8, 8), 14, Color.WHITE.getRGB());
         }
-        drawRoundedRect(matrices, x, y, width, 43, new Vector4f(8, 8, 8, 8), panel);
-        drawRoundedRect(matrices, x, y, 34, 43, new Vector4f(8, 0, 0, 8), accent);
-        FontUtils.durman[18].centeredDraw(matrices, "LW", x + 17, y + 10, Color.WHITE.getRGB());
-        drawRoundedRect(matrices, x + 43, y + 8, 54, 12, 6, new Color(35, 205, 170, 55).getRGB());
-        FontUtils.durman[11].centeredDraw(matrices, status, x + 70, y + 11, new Color(126, 255, 215).getRGB());
-        FontUtils.durman[17].drawLeftAligned(matrices, title, x + 43, y + 22, Color.WHITE.getRGB());
-        FontUtils.durman[12].drawLeftAligned(matrices, version, x + 43 + titleWidth + 7, y + 24, new Color(145, 157, 184).getRGB());
-        drawRoundedRect(matrices, x + 43, y + 35, Math.min(detailWidth + 8, width - 51), 1.5f, 1, accentSoft);
-        FontUtils.durman[13].drawLeftAligned(matrices, detail, x + 43, y + 37, new Color(190, 201, 224).getRGB());
+        drawRoundedRect(matrices, x, y, width, 48, new Vector4f(7, 7, 7, 7), panel);
+        drawRoundedRect(matrices, x, y, 40, 48, new Vector4f(7, 0, 0, 7), Color.WHITE.getRGB());
+        FontUtils.durman[20].centeredDraw(matrices, "LW", x + 20, y + 12, Color.BLACK.getRGB());
+        FontUtils.durman[11].drawLeftAligned(matrices, status, x + 52, y + 7, Color.WHITE.getRGB());
+        FontUtils.durman[17].drawLeftAligned(matrices, title, x + 52, y + 19, Color.WHITE.getRGB());
+        FontUtils.durman[12].drawLeftAligned(matrices, version, x + 52 + titleWidth + 7, y + 22, new Color(170, 170, 170).getRGB());
+        drawRoundedRect(matrices, x + 52, y + 34, width - 64, 1.5f, 1, accentSoft);
+        FontUtils.durman[12].drawClipped(matrices, detail, width - 64, x + 52, y + 37, new Color(190, 190, 190).getRGB());
 
         watermarkDrag.setWidth(width);
-        watermarkDrag.setHeight(43);
+        watermarkDrag.setHeight(48);
     }
 
     private int applyHudAlpha(int color, int alpha) {
@@ -706,12 +705,12 @@ public class HUD extends Function {
         String heading = "POSITION";
         var font = FontUtils.durman[13];
         float width = Math.max(128, font.getWidth(coords) + 62);
-        int panel = new Color(10, 15, 28, Math.max(150, customAlpha.get().intValue())).getRGB();
-        int accent = ColorUtil.getColorStyle(180);
+        int panel = new Color(12, 12, 12, Math.max(150, customAlpha.get().intValue())).getRGB();
+        int accent = Color.WHITE.getRGB();
 
         drawRoundedRect(matrices, x, y, width, 28, new Vector4f(7, 7, 7, 7), panel);
         drawRoundedRect(matrices, x, y, 3, 28, new Vector4f(2, 0, 0, 2), accent);
-        FontUtils.durman[11].drawLeftAligned(matrices, heading, x + 11, y + 5, new Color(141, 157, 188).getRGB());
+        FontUtils.durman[11].drawLeftAligned(matrices, heading, x + 11, y + 5, new Color(155, 155, 155).getRGB());
         font.drawLeftAligned(matrices, coords, x + 11, y + 15, Color.WHITE.getRGB());
         drawRoundedRect(matrices, x + width - 42, y + 6, 32, 16, 5, applyHudAlpha(accent, 180));
         FontUtils.durman[11].centeredDraw(matrices, tps, x + width - 26, y + 11, Color.WHITE.getRGB());
@@ -744,15 +743,15 @@ public class HUD extends Function {
         float targetHeight = 25 + activeModules * lineHeight;
         keybindsHeightDynamic = MathUtil.fast(keybindsHeightDynamic, targetHeight - 25, 15);
         float height = 25 + keybindsHeightDynamic;
-        int panel = new Color(10, 15, 28, Math.max(150, customAlpha.get().intValue())).getRGB();
-        int accent = ColorUtil.getColorStyle(180);
+        int panel = new Color(12, 12, 12, Math.max(150, customAlpha.get().intValue())).getRGB();
+        int accent = Color.WHITE.getRGB();
 
         if (blur.get()) drawBlur(matrices, posX, posY, maxWidth, height, new Vector4f(9, 9, 9, 9), 14, Color.WHITE.getRGB());
         drawRoundedRect(matrices, posX, posY, maxWidth, height, new Vector4f(9, 9, 9, 9), panel);
-        drawRoundedRect(matrices, posX, posY, maxWidth, 25, new Vector4f(9, 9, 0, 0), new Color(20, 28, 48, Math.max(150, customAlpha.get().intValue())).getRGB());
+        drawRoundedRect(matrices, posX, posY, maxWidth, 25, new Vector4f(9, 9, 0, 0), new Color(28, 28, 28, Math.max(150, customAlpha.get().intValue())).getRGB());
         drawRoundedRect(matrices, posX + 9, posY + 8, 4, 9, 2, accent);
         FontUtils.durman[15].drawLeftAligned(matrices, "ACTIVE BINDS", posX + 20, posY + 8, Color.WHITE.getRGB());
-        FontUtils.durman[11].drawRightAligned(matrices, String.valueOf(activeModules), posX + maxWidth - 9, posY + 9, new Color(145, 157, 184).getRGB());
+        FontUtils.durman[11].drawRightAligned(matrices, String.valueOf(activeModules), posX + maxWidth - 9, posY + 9, new Color(165, 165, 165).getRGB());
 
         float yOffset = posY + 31;
         for (Function f : Manager.FUNCTION_MANAGER.getFunctions()) {
@@ -774,10 +773,10 @@ public class HUD extends Function {
 
     private float drawBindRow(MatrixStack matrices, ru.levin.manager.fontManager.RenderFonts font, String name, String key, float x, float y, float width, int accent, int padding) {
         float keyWidth = font.getWidth(key);
-        drawRoundedRect(matrices, x + 8, y - 2, width - 16, 13, 4, new Color(25, 34, 56, 170).getRGB());
+        drawRoundedRect(matrices, x + 8, y - 2, width - 16, 13, 4, new Color(30, 30, 30, 210).getRGB());
         drawRoundedRect(matrices, x + 12, y + 2, 2, 5, 1, accent);
-        font.drawLeftAligned(matrices, name, x + 20, y + 1, new Color(229, 235, 248).getRGB());
-        font.drawRightAligned(matrices, key, x + width - padding - 3, y + 1, new Color(163, 177, 207).getRGB());
+        font.drawLeftAligned(matrices, name, x + 20, y + 1, new Color(232, 232, 232).getRGB());
+        font.drawRightAligned(matrices, key, x + width - padding - 3, y + 1, new Color(170, 170, 170).getRGB());
         return y + 14;
     }
 
@@ -926,10 +925,10 @@ public class HUD extends Function {
 
     private int getStatusColor(StaffPlayer.Status status) {
         switch(status) {
-            case NEAR: return Color.ORANGE.getRGB();
-            case SPEC: return Color.YELLOW.getRGB();
-            case VANISHED: return Color.RED.getRGB();
-            default: return Color.GREEN.getRGB();
+            case NEAR: return new Color(220, 220, 220).getRGB();
+            case SPEC: return new Color(180, 180, 180).getRGB();
+            case VANISHED: return new Color(110, 110, 110).getRGB();
+            default: return Color.WHITE.getRGB();
         }
     }
     private String formatCooldownTime(float seconds) {
