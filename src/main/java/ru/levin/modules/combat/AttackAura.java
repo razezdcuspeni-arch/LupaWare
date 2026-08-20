@@ -100,6 +100,18 @@ public class AttackAura extends Function {
     private long lastHitMs = 0L;
     private int preSprintTicks = 0;
 
+    /**
+     * Active rotation implementation. Imported Shade modules override this
+     * instead of relying on the legacy AttackAura mode selector.
+     */
+    protected String getRotationMode() {
+        return mode.get();
+    }
+
+    protected boolean isRotationMode(String value) {
+        return value.equals(getRotationMode());
+    }
+
     public AttackAura() {
         addSettings(
                 mode,
@@ -170,7 +182,7 @@ public class AttackAura extends Function {
     @Override
     protected void onDisable() {
         if (target != null && isValidTarget(target)) {
-            String modeName = mode.get();
+            String modeName = getRotationMode();
             if (modeName.equals("FunTime") || modeName.equals("HollyWorld") || modeName.equals("ReallyWorld")) {
                 Manager.ROTATION.smoothReturn(350);
             } else {
@@ -256,13 +268,13 @@ public class AttackAura extends Function {
             return;
         }
 
-        if (mode.is("KoopinAc") || mode.is("1.8.8")) {
+        if (isRotationMode("KoopinAc") || isRotationMode("1.8.8")) {
             koopinVector(t, true);
             if (canAttackNow && passRay && noPotion) attackTarget(mc.player);
             return;
         }
 
-        if (mode.is("SpookyTime")) {
+        if (isRotationMode("SpookyTime")) {
             if (mc.player == null) return;
 
             if (target == null) {
@@ -376,7 +388,7 @@ public class AttackAura extends Function {
             return;
         }
 
-        if (mode.is("LonyGrief")) {
+        if (isRotationMode("LonyGrief")) {
             Vec3d tp = predictPos(t);
             double yawToTarget = Math.toDegrees(Math.atan2(tp.z - mc.player.getZ(), tp.x - mc.player.getX())) - 90.0;
             double yawDiff = Math.abs(MathHelper.wrapDegrees((float) yawToTarget - currYaw));
@@ -385,7 +397,7 @@ public class AttackAura extends Function {
             return;
         }
 
-        if (mode.is("FunTime")) {
+        if (isRotationMode("FunTime")) {
             if (canAttackNow && canAttack() && noPotion) {
                 if (passRay) {
                     attackTarget(mc.player);
@@ -418,7 +430,7 @@ public class AttackAura extends Function {
             return;
         }
 
-        if (mode.is("HollyWorld")) {
+        if (isRotationMode("HollyWorld")) {
             if (canAttackNow && canAttack() && passRay && noPotion) {
                 hollyworld(t, true);
                 attackTarget(mc.player);
@@ -428,7 +440,7 @@ public class AttackAura extends Function {
             return;
         }
 
-        if (mode.is("Snap")) {
+        if (isRotationMode("Snap")) {
             if (canAttackNow && canAttack() && passRay && noPotion) {
                 attackTarget(mc.player);
                 lastHitMs = System.currentTimeMillis();

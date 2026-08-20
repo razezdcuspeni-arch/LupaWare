@@ -10,5 +10,10 @@ public final class TestFT extends AttackAura {
         mode.set("FunTime");
         mode.setVisible(() -> false);
     }
+
+    @Override
+    protected String getRotationMode() {
+        return "FunTime";
+    }
 }
 

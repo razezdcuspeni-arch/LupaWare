@@ -10,5 +10,10 @@ public final class TestXB extends AttackAura {
         mode.set("HollyWorld");
         mode.setVisible(() -> false);
     }
+
+    @Override
+    protected String getRotationMode() {
+        return "HollyWorld";
+    }
 }
 

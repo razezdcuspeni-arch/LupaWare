@@ -10,5 +10,10 @@ public final class TestSpooky extends AttackAura {
         mode.set("SpookyTime");
         mode.setVisible(() -> false);
     }
+
+    @Override
+    protected String getRotationMode() {
+        return "SpookyTime";
+    }
 }
 
