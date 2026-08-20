@@ -34,7 +34,7 @@ import static ru.levin.util.render.RenderUtil.*;
 @SuppressWarnings("All")
 @FunctionAnnotation(name = "TargetESP", desc = "Красивый указатель на вашем противнике", type = Type.Render)
 public class TargetESP extends Function {
-    private final ModeSetting mode = new ModeSetting("Мод","Призраки","Маркер","Маркер2","Призраки","Кружок");
+    private final ModeSetting mode = new ModeSetting("Мод","Призраки","Маркер","Маркер2","Skeleton","Призраки","Кружок");
 
     private final float[] SCALE_CACHE = new float[101];
     private final EaseInOutQuad animation = new EaseInOutQuad(800, 1);
@@ -59,7 +59,7 @@ public class TargetESP extends Function {
         lastTarget = currentTarget;
 
         if (currentTarget != null) {
-            if (mode.is("Маркер") || mode.is("Маркер2")) {
+            if (mode.is("Маркер") || mode.is("Маркер2") || mode.is("Skeleton")) {
                 render(currentTarget);
             } else if (mode.is("Призраки")) {
                 renderGhosts(14, 8, 1.8f, 3f, currentTarget);
@@ -211,6 +211,9 @@ public class TargetESP extends Function {
         }
         if (mode.is("Маркер2")) {
             RenderSystem.setShaderTexture(0, ResourceProvider.marker2);
+        }
+        if (mode.is("Skeleton")) {
+            RenderSystem.setShaderTexture(0, ResourceProvider.skeletonSkull);
         }
 
         RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR);

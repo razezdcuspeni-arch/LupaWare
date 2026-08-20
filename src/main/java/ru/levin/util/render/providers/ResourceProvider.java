@@ -27,6 +27,7 @@ public final class ResourceProvider {
 
 	public static final Identifier marker = Identifier.of("lupaware", "images/targetesp/target.png");
 	public static final Identifier marker2 = Identifier.of("lupaware", "images/targetesp/target2.png");
+		public static final Identifier skeletonSkull = Identifier.of("lupaware", "textures/targetesp/skull_skeleton.png");
 
 
 	public static final Identifier CUSTOM_CAPE = Identifier.of("lupaware", "cape/cape.png");

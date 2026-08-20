@@ -81,12 +81,12 @@ public class ClickGUI extends Screen implements IMinecraft {
     private final int SEARCH_MARGIN_BOTTOM = 12;
     private final int SEARCH_MAX_WIDTH = 260;
 
-    private final int THEME_HEIGHT = 28;
+    private final int THEME_HEIGHT = 36;
     private final int THEME_MARGIN_BOTTOM = 12;
-    private final int THEME_MAX_WIDTH = 280;
+    private final int THEME_MAX_WIDTH = 360;
     private static float themeScrollOffset = 0;
     private static float themeScrollTarget = 0;
-    private final int VISIBLE_THEMES = 9;
+    private final int VISIBLE_THEMES = 8;
 
     private float themeMenuAnim = 0f;
     private float themeMenuTarget = 0f;
@@ -870,14 +870,14 @@ public class ClickGUI extends Screen implements IMinecraft {
     }
 
     private void renderColorPickers(DrawContext ctx, int x, int y, int mouseX, int mouseY) {
-        int panelWidth = 150;
-        int panelHeight = 100;
+        int panelWidth = 260;
+        int panelHeight = 190;
         float animOffsetX = (1f - colorPickerAnim) * 30f;
         float animScale = 0.95f + 0.05f * colorPickerAnim;
         float alphaMult = colorPickerAnim;
 
-        int panelX = (int) (x - panelWidth - 20 + animOffsetX);
-        int panelY = y - panelHeight / 2 - 12;
+        int panelX = Math.min(width - panelWidth - 12, (int) (x + 40 + animOffsetX));
+        int panelY = Math.max(12, y - panelHeight - 24);
 
         ctx.getMatrices().push();
         ctx.getMatrices().translate(panelX + panelWidth / 2f, panelY + panelHeight / 2f, 0);
@@ -890,9 +890,9 @@ public class ClickGUI extends Screen implements IMinecraft {
         }
         RenderUtil.drawRoundedRect(ctx.getMatrices(), 0, 0, panelWidth, panelHeight, 4, ColorUtil.applyAlpha(baseColor, alphaMult));
 
-        int picker1Size = 60;
-        int picker1X = 8;
-        int picker1Y = 8;
+        int picker1Size = 104;
+        int picker1X = 14;
+        int picker1Y = 28;
         RenderUtil.drawTexture(ctx.getMatrices(), "images/gui/pick.png", picker1X, picker1Y, picker1Size, picker1Size, 14, ColorUtil.applyAlpha(Color.WHITE.getRGB(), alphaMult));
         RenderUtil.drawRoundedBorder(ctx.getMatrices(), picker1X, picker1Y, picker1Size, picker1Size, 14, 0.1f, ColorUtil.applyAlpha(Color.WHITE.getRGB(), alphaMult));
 
@@ -900,9 +900,9 @@ public class ClickGUI extends Screen implements IMinecraft {
         int dotY1 = (int) (picker1Y + picker1CursorY * picker1Size);
         RenderUtil.drawCircle(ctx.getMatrices(), dotX1, dotY1, 4f, ColorUtil.applyAlpha(Color.BLACK.getRGB(), alphaMult));
 
-        int picker2Size = 60;
-        int picker2X = 78;
-            int picker2Y = 8;
+        int picker2Size = 104;
+        int picker2X = 142;
+        int picker2Y = 28;
         RenderUtil.drawTexture(ctx.getMatrices(), "images/gui/pick.png", picker2X, picker2Y, picker2Size, picker2Size, 14, ColorUtil.applyAlpha(Color.WHITE.getRGB(), alphaMult));
         RenderUtil.drawRoundedBorder(ctx.getMatrices(), picker2X, picker2Y, picker2Size, picker2Size, 14, 0.1f, ColorUtil.applyAlpha(Color.WHITE.getRGB(), alphaMult));
 
@@ -910,14 +910,14 @@ public class ClickGUI extends Screen implements IMinecraft {
         int dotY2 = (int) (picker2Y + picker2CursorY * picker2Size);
         RenderUtil.drawCircle(ctx.getMatrices(), dotX2, dotY2, 4f, ColorUtil.applyAlpha(Color.BLACK.getRGB(), alphaMult));
 
-        int closeButtonSize = 14;
+        int closeButtonSize = 18;
         int closeButtonX = panelWidth - closeButtonSize;
         int closeButtonY = 0;
         RenderUtil.drawRoundedRect(ctx.getMatrices(), closeButtonX, closeButtonY, closeButtonSize, closeButtonSize, new Vector4f(0, 4, 0, 4), ColorUtil.applyAlpha(Color.WHITE.getRGB(), alphaMult));
         FontUtils.sf_medium[20].drawLeftAligned(ctx.getMatrices(), "×", closeButtonX + 2, closeButtonY - 1.5f, ColorUtil.applyAlpha(Color.RED.getRGB(), alphaMult));
 
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), 48, 82, 70, 12, new Vector4f(3, 3, 3, 3), ColorUtil.applyAlpha(Color.WHITE.getRGB(), alphaMult));
-        FontUtils.durman[12].drawLeftAligned(ctx.getMatrices(), "Добавить тему", 53, 84, ColorUtil.applyAlpha(Color.BLACK.getRGB(), alphaMult));
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), 75, 164, 110, 18, new Vector4f(5, 5, 5, 5), ColorUtil.applyAlpha(Color.WHITE.getRGB(), alphaMult));
+        FontUtils.durman[13].centeredDraw(ctx.getMatrices(), "Добавить тему", 130, 170, ColorUtil.applyAlpha(Color.BLACK.getRGB(), alphaMult));
 
         ctx.getMatrices().pop();
     }
@@ -926,18 +926,18 @@ public class ClickGUI extends Screen implements IMinecraft {
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
         if (button == 0 && colorPickerOpen) {
-            int panelWidth = 150;
-            int panelHeight = 100;
-            int panelX = getThemeX(getThemeWidth()) - panelWidth - 32;
-            int panelY = getThemeY() - panelHeight / 2 - 12;
+            int panelWidth = 260;
+            int panelHeight = 190;
+            int panelX = Math.min(width - panelWidth - 12, getThemeX(getThemeWidth()) + 5 + 40);
+            int panelY = Math.max(12, getThemeY() - panelHeight - 24);
 
-            int picker1Size = 60;
-            int picker1X = panelX + 8;
-            int picker1Y = panelY + 8;
+            int picker1Size = 104;
+            int picker1X = panelX + 14;
+            int picker1Y = panelY + 28;
 
-            int picker2Size = 60;
-            int picker2X = panelX + 78;
-            int picker2Y = panelY + 8;
+            int picker2Size = 104;
+            int picker2X = panelX + 142;
+            int picker2Y = panelY + 28;
             if (draggingPicker1) {
                 float nx = (float) (mouseX - picker1X) / picker1Size;
                 float ny = (float) (mouseY - picker1Y) / picker1Size;
@@ -1017,20 +1017,20 @@ public class ClickGUI extends Screen implements IMinecraft {
             int fixedX = themeX + padding;
             int fixedY = centerY;
 
-            int panelWidth = 150;
-            int panelHeight = 100;
-            int panelX = fixedX - panelWidth - 32;
-            int panelY = fixedY - panelHeight / 2 - 12;
+            int panelWidth = 260;
+            int panelHeight = 190;
+            int panelX = Math.min(width - panelWidth - 12, fixedX + 40);
+            int panelY = Math.max(12, fixedY - panelHeight - 24);
 
-            int picker1Size = 60;
-            int picker1X = panelX + 8;
-            int picker1Y = panelY + 8;
+            int picker1Size = 104;
+            int picker1X = panelX + 14;
+            int picker1Y = panelY + 28;
 
-            int picker2Size = 60;
-            int picker2X = panelX + 78;
-            int picker2Y = panelY + 8;
+            int picker2Size = 104;
+            int picker2X = panelX + 142;
+            int picker2Y = panelY + 28;
 
-            int closeButtonSize = 14;
+            int closeButtonSize = 18;
             int closeButtonX = panelX + panelWidth - closeButtonSize;
             int closeButtonY = panelY;
             if (mouseX >= closeButtonX && mouseX <= closeButtonX + closeButtonSize && mouseY >= closeButtonY && mouseY <= closeButtonY + closeButtonSize) {
@@ -1057,10 +1057,10 @@ public class ClickGUI extends Screen implements IMinecraft {
                 return true;
             }
 
-            int addButtonX = panelX + 48;
-            int addButtonY = panelY + 82;
-            int addButtonWidth = 70;
-            int addButtonHeight = 12;
+            int addButtonX = panelX + 75;
+            int addButtonY = panelY + 164;
+            int addButtonWidth = 110;
+            int addButtonHeight = 18;
 
             if (mouseX >= addButtonX && mouseX <= addButtonX + addButtonWidth && mouseY >= addButtonY && mouseY <= addButtonY + addButtonHeight) {
                 String baseName = "Custom";
