@@ -36,18 +36,18 @@ import static ru.levin.util.render.RenderUtil.drawBlur;
 
 public class ClickGUI extends Screen implements IMinecraft {
     private boolean isClose;
-    private boolean hudLayoutMode = true;
+    private boolean hudLayoutMode = false;
 
-    private final int PANEL_WIDTH = 168;
-    private final int PANEL_HEIGHT = 400;
-    private final int PANEL_MARGIN = 14;
+    private final int PANEL_WIDTH = 148;
+    private final int PANEL_HEIGHT = 340;
+    private final int PANEL_MARGIN = 9;
 
     private final Color GUI_COLOR = new Color(16, 16, 16, 248);
 
-    private final int TITLE_MARGIN_TOP = 12;
-    private final int TITLE_HEIGHT = 42;
+    private final int TITLE_MARGIN_TOP = 9;
+    private final int TITLE_HEIGHT = 36;
 
-    private final int FUNCTION_HEIGHT = 34;
+    private final int FUNCTION_HEIGHT = 29;
 
     private final int SCROLL_AREA_Y_OFFSET = TITLE_MARGIN_TOP + TITLE_HEIGHT;
     private final int SCROLL_AREA_HEIGHT = PANEL_HEIGHT - SCROLL_AREA_Y_OFFSET - 5;
@@ -530,6 +530,10 @@ public class ClickGUI extends Screen implements IMinecraft {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == GLFW.GLFW_KEY_H && !functionBinding && functions == null) {
+            hudLayoutMode = !hudLayoutMode;
+            return true;
+        }
         if (isClose) {
             return true;
         }

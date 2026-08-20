@@ -177,6 +177,7 @@ public class Dragging {
 
     public boolean onClick(double mouseX, double mouseY, int button) {
         if (!(mc.currentScreen instanceof ChatScreen) && !(mc.currentScreen instanceof ClickGUI)) return false;
+        if ("WaterMark".equalsIgnoreCase(name)) return false;
 
         float scaledMouseX = (float) mouseX;
         float scaledMouseY = (float) mouseY;
