@@ -31,7 +31,7 @@ public class DiscordRCP extends Function {
         DiscordEventHandlers handlers = new DiscordEventHandlers();
         rpc.Discord_Initialize("1384873696375603281", handlers, true, "");
         presence.startTimestamp = System.currentTimeMillis() / 1000L;
-        presence.largeImageText = "https://t.me/lupaware";
+        presence.largeImageText = "LupaWare 1.21.4";
 
         updatePresenceFields();
 
@@ -56,8 +56,8 @@ public class DiscordRCP extends Function {
     }
 
     private void updatePresenceFields() {
-        presence.details = "User: " + Manager.USER_PROFILE.getName();
-        presence.state = "Role: " + Manager.USER_PROFILE.getRole();
+        presence.details = "User: free";
+        presence.state = "Role: owner";
 
         presence.button_label_1 = "Купить";
         presence.button_url_1 = "https://lupaware.ru";

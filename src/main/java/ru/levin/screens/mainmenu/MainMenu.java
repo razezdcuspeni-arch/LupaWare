@@ -11,166 +11,162 @@ import ru.levin.util.color.ColorUtil;
 import ru.levin.manager.fontManager.FontUtils;
 import ru.levin.util.render.RenderUtil;
 
-import java.awt.*;
+import java.awt.Color;
 
 @SuppressWarnings("All")
 public class MainMenu extends Screen {
-
     private Button singleplayerButton;
     private Button multiplayerButton;
     private Button altmanagerButton;
-    private CombinedButton optionsQuitButton;
+    private Button optionsButton;
+    private Button quitButton;
 
-    private final String title = "LupaWare 1.21.4";
-
-    private int shakeTime = 0;
-    private float shakeOffsetY = 0f;
+    private static final String TITLE = "LupaWare 1.21.4";
+    private static final String WINDOW_LABEL = "LupaWare | by: wasdd";
+    private int activePulse;
 
     public MainMenu() {
-        super(Text.literal("Custom Main Menu"));
+        super(Text.literal(WINDOW_LABEL));
     }
 
     @Override
     protected void init() {
-        int buttonWidth = 200;
-        int buttonHeight = 30;
-
-        singleplayerButton = new Button("Singleplayer", 0, 0, buttonWidth, buttonHeight);
-        multiplayerButton = new Button("Multiplayer", 0, 0, buttonWidth, buttonHeight);
-        altmanagerButton = new Button("AltManager", 0, 0, buttonWidth, buttonHeight);
-        optionsQuitButton = new CombinedButton(0, 0, buttonWidth, buttonHeight, "Options", "Quit");
+        singleplayerButton = new Button("Singleplayer", 0, 0, 206, 34, true);
+        multiplayerButton = new Button("Multiplayer", 0, 0, 206, 34, true);
+        altmanagerButton = new Button("AltManager", 0, 0, 206, 34, true);
+        optionsButton = new Button("Options", 0, 0, 98, 32, false);
+        quitButton = new Button("Quit", 0, 0, 98, 32, false);
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-         RenderUtil.drawRoundedRect(context.getMatrices(), -1, -1, this.width + 2, this.height + 2, 4, new Color(27, 27, 27, 255).getRGB());
-        if (shakeTime > 0) {
-            shakeTime--;
-            shakeOffsetY = (float)(Math.sin(shakeTime * 0.5) * 3);
-        } else {
-            shakeOffsetY = 0f;
-        }
+        int accent = ColorUtil.rgba(63, 169, 255, 255);
+        int muted = ColorUtil.rgba(155, 164, 180, 255);
+        int panel = ColorUtil.rgba(25, 28, 35, 245);
+        int panelLight = ColorUtil.rgba(31, 35, 44, 245);
 
-        int titleWidth = (int) FontUtils.sf_bold[54].getWidth(title);
-        float titleX = (this.width - titleWidth) / 2f;
-        float titleBaseY = this.height / 5f;
-        float titleY = titleBaseY + shakeOffsetY;
+        RenderUtil.drawRoundedRect(context.getMatrices(), 0, 0, width, height, 0, ColorUtil.rgba(13, 15, 20, 255));
+        RenderUtil.drawRoundedRect(context.getMatrices(), 18, 18, 250, height - 36, 12, panel);
+        RenderUtil.drawRoundedBorder(context.getMatrices(), 18, 18, 250, height - 36, 12, 1f, ColorUtil.rgba(55, 63, 78, 170));
 
-        float time = (System.currentTimeMillis() % 4000L) / 1500f;
-        FontUtils.sf_bold[54].renderAnimatedGradientText(context.getMatrices(), title, titleX, titleY, ColorUtil.getColorStyle(30), ColorUtil.getColorStyle(260), time);
+        // Brand block.
+        RenderUtil.drawRoundedRect(context.getMatrices(), 38, 40, 42, 42, 10, accent);
+        FontUtils.sf_bold[24].centeredDraw(context.getMatrices(), "LW", 59, 49, Color.WHITE.getRGB());
+        FontUtils.sf_bold[24].drawLeftAligned(context.getMatrices(), "LupaWare", 94, 42, Color.WHITE.getRGB());
+        FontUtils.sf_medium[16].drawLeftAligned(context.getMatrices(), "by: wasdd", 95, 68, muted);
+        RenderUtil.drawRoundedRect(context.getMatrices(), 38, 101, 210, 1, 0, ColorUtil.rgba(61, 70, 88, 180));
 
-        float titleHeight = 54;
-
-        int spacing = 12;
-        int buttonWidth = 200;
-        int buttonHeight = 30;
-
-        float buttonsStartY = titleBaseY + titleHeight + spacing * 2;
-
-        int centerX = this.width / 2 - buttonWidth / 2;
-
-        singleplayerButton.x = centerX;
-        singleplayerButton.y = (int)buttonsStartY;
-
-        multiplayerButton.x = centerX;
-        multiplayerButton.y = (int)(buttonsStartY + buttonHeight + spacing);
-
-        altmanagerButton.x = centerX;
-        altmanagerButton.y = (int)(buttonsStartY + 2 * (buttonHeight + spacing));
-
-        optionsQuitButton.x = centerX;
-        optionsQuitButton.y = (int)(buttonsStartY + 3 * (buttonHeight + spacing));
-        optionsQuitButton.width = buttonWidth;
+        int navStart = 132;
+        singleplayerButton.x = 38;
+        singleplayerButton.y = navStart;
+        multiplayerButton.x = 38;
+        multiplayerButton.y = navStart + 46;
+        altmanagerButton.x = 38;
+        altmanagerButton.y = navStart + 92;
+        optionsButton.x = 38;
+        optionsButton.y = height - 72;
+        quitButton.x = 148;
+        quitButton.y = height - 72;
 
         singleplayerButton.render(context, mouseX, mouseY, delta);
         multiplayerButton.render(context, mouseX, mouseY, delta);
         altmanagerButton.render(context, mouseX, mouseY, delta);
-        optionsQuitButton.render(context, mouseX, mouseY, delta);
+        optionsButton.render(context, mouseX, mouseY, delta);
+        quitButton.render(context, mouseX, mouseY, delta);
+
+        // Main content area.
+        int contentX = 302;
+        int contentWidth = width - contentX - 36;
+        FontUtils.sf_medium[16].drawLeftAligned(context.getMatrices(), "DASHBOARD / HOME", contentX, 46, accent);
+        FontUtils.sf_bold[42].drawLeftAligned(context.getMatrices(), "Welcome back", contentX, 73, Color.WHITE.getRGB());
+        FontUtils.sf_medium[18].drawLeftAligned(context.getMatrices(), "Your client is ready for the next session.", contentX, 121, muted);
+
+        int heroY = 166;
+        int heroHeight = 178;
+        RenderUtil.drawRoundedRect(context.getMatrices(), contentX, heroY, contentWidth, heroHeight, 14, panelLight);
+        RenderUtil.drawRoundedBorder(context.getMatrices(), contentX, heroY, contentWidth, heroHeight, 14, 1f, ColorUtil.rgba(70, 82, 105, 180));
+        RenderUtil.drawRoundedRect(context.getMatrices(), contentX, heroY, 5, heroHeight, 3, accent);
+        FontUtils.sf_bold[28].drawLeftAligned(context.getMatrices(), TITLE, contentX + 28, heroY + 28, Color.WHITE.getRGB());
+        FontUtils.sf_medium[17].drawLeftAligned(context.getMatrices(), "A clean space for your Minecraft experience.", contentX + 29, heroY + 68, muted);
+        FontUtils.sf_medium[17].drawLeftAligned(context.getMatrices(), "Choose a section from the navigation to continue.", contentX + 29, heroY + 94, muted);
+
+        int statusX = contentX + 29;
+        int statusY = heroY + 130;
+        RenderUtil.drawRoundedRect(context.getMatrices(), statusX, statusY, 10, 10, 5, ColorUtil.rgba(74, 220, 142, 255));
+        FontUtils.sf_medium[16].drawLeftAligned(context.getMatrices(), "Client online", statusX + 18, statusY - 3, ColorUtil.rgba(190, 205, 215, 255));
+        FontUtils.sf_medium[16].drawLeftAligned(context.getMatrices(), "Fabric 1.21.4", statusX + 142, statusY - 3, muted);
+
+        int cardY = heroY + heroHeight + 20;
+        int cardWidth = (contentWidth - 20) / 2;
+        drawInfoCard(context, contentX, cardY, cardWidth, "QUICK ACCESS", "AltManager", "Manage your accounts", accent);
+        drawInfoCard(context, contentX + cardWidth + 20, cardY, cardWidth, "BUILD", "Stable release", "LupaWare 1.21.4", ColorUtil.rgba(170, 120, 255, 255));
+
+        FontUtils.sf_medium[15].drawLeftAligned(context.getMatrices(), "LupaWare | by: wasdd", contentX, height - 32, muted);
+        String versionText = "v1.21.4";
+        float versionX = width - 36 - FontUtils.sf_medium[15].getWidth(versionText);
+        FontUtils.sf_medium[15].drawLeftAligned(context.getMatrices(), versionText, versionX, height - 32, muted);
+    }
+
+    private void drawInfoCard(DrawContext context, int x, int y, int cardWidth, String eyebrow, String title, String subtitle, int accent) {
+        RenderUtil.drawRoundedRect(context.getMatrices(), x, y, cardWidth, 94, 12, ColorUtil.rgba(25, 28, 35, 245));
+        RenderUtil.drawRoundedBorder(context.getMatrices(), x, y, cardWidth, 94, 12, 1f, ColorUtil.rgba(55, 63, 78, 170));
+        RenderUtil.drawRoundedRect(context.getMatrices(), x + 18, y + 19, 4, 52, 2, accent);
+        FontUtils.sf_medium[13].drawLeftAligned(context.getMatrices(), eyebrow, x + 34, y + 16, accent);
+        FontUtils.sf_bold[20].drawLeftAligned(context.getMatrices(), title, x + 34, y + 36, Color.WHITE.getRGB());
+        FontUtils.sf_medium[14].drawLeftAligned(context.getMatrices(), subtitle, x + 34, y + 64, ColorUtil.rgba(155, 164, 180, 255));
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        int titleWidth = (int) FontUtils.sf_bold[54].getWidth(title);
-        float titleX = (this.width - titleWidth) / 2f;
-        float titleY = this.height / 5f;
-
-        if (mouseX >= titleX && mouseX <= titleX + titleWidth && mouseY >= titleY && mouseY <= titleY + 54) {
-            shakeTime = 20;
-            return true;
-        }
-
         if (singleplayerButton.isHovered(mouseX, mouseY)) {
-            this.client.setScreen(new SelectWorldScreen(this));
+            client.setScreen(new SelectWorldScreen(this));
             return true;
         }
         if (multiplayerButton.isHovered(mouseX, mouseY)) {
-            this.client.setScreen(new MultiplayerScreen(this));
+            client.setScreen(new MultiplayerScreen(this));
             return true;
         }
         if (altmanagerButton.isHovered(mouseX, mouseY)) {
-
-            this.client.setScreen(new AltManager(this));
+            client.setScreen(new AltManager(this));
             return true;
         }
-        if (optionsQuitButton.isOptionHovered(mouseX, mouseY)) {
-            this.client.setScreen(new OptionsScreen(this, client.options));
+        if (optionsButton.isHovered(mouseX, mouseY)) {
+            client.setScreen(new OptionsScreen(this, client.options));
             return true;
         }
-        if (optionsQuitButton.isQuitHovered(mouseX, mouseY)) {
-            this.client.scheduleStop();
+        if (quitButton.isHovered(mouseX, mouseY)) {
+            client.scheduleStop();
             return true;
         }
-
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
-    private class Button {
+    private static class Button {
         final String name;
         int x, y, width, height;
+        final boolean prominent;
+        private float hoverAnim;
 
-        private float hoverAnim = 0f;
-        private float scale = 1f;
-
-        Button(String name, int x, int y, int width, int height) {
+        Button(String name, int x, int y, int width, int height, boolean prominent) {
             this.name = name;
             this.x = x;
             this.y = y;
             this.width = width;
             this.height = height;
+            this.prominent = prominent;
         }
 
         void render(DrawContext context, int mouseX, int mouseY, float delta) {
             boolean hovered = isHovered(mouseX, mouseY);
-
-            float animSpeed = 0.04f;
-
-            if (hovered) {
-                hoverAnim = Math.min(1f, hoverAnim + animSpeed);
-                scale = Math.min(1.02f, scale + animSpeed * 0.5f);
-            } else {
-                hoverAnim = Math.max(0f, hoverAnim - animSpeed);
-                scale = Math.max(1f, scale - animSpeed * 0.5f);
-            }
-
-            int baseColor = new Color(35, 35, 35).getRGB();
-            int hoverColor = new Color(55, 55, 55).getRGB();
-            int bgColor = ColorUtil.blendColorsInt(baseColor, hoverColor, hoverAnim);
-
-            int outlineColor = new Color(60, 60, 60, 180).getRGB();
-
-            float textHeight = 20;
-            float textY = y + (height - textHeight) / 2f + 3;
-
-            context.getMatrices().push();
-            context.getMatrices().translate(x + width / 2f, y + height / 2f, 0);
-            context.getMatrices().scale(scale, scale, 1);
-            context.getMatrices().translate(-(x + width / 2f), -(y + height / 2f), 0);
-
-            RenderUtil.drawRoundedRect(context.getMatrices(), x, y, width, height, 4, bgColor);
-            RenderUtil.drawRoundedBorder(context.getMatrices(), x, y, width, height, 4, 1f, outlineColor);
-            FontUtils.sf_medium[20].centeredDraw(context.getMatrices(), name, x + width / 2f, textY, Color.WHITE.getRGB());
-
-            context.getMatrices().pop();
+            hoverAnim += ((hovered ? 1f : 0f) - hoverAnim) * 0.16f;
+            int base = prominent ? ColorUtil.rgba(34, 39, 50, 255) : ColorUtil.rgba(30, 34, 42, 255);
+            int hover = prominent ? ColorUtil.rgba(48, 91, 135, 255) : ColorUtil.rgba(48, 54, 66, 255);
+            int background = ColorUtil.blendColorsInt(base, hover, hoverAnim);
+            int border = prominent ? ColorUtil.rgba(65, 78, 99, 220) : ColorUtil.rgba(55, 63, 78, 180);
+            RenderUtil.drawRoundedRect(context.getMatrices(), x, y, width, height, 9, background);
+            RenderUtil.drawRoundedBorder(context.getMatrices(), x, y, width, height, 9, 1f, border);
+            int textColor = hovered ? Color.WHITE.getRGB() : ColorUtil.rgba(218, 224, 235, 255);
+            FontUtils.sf_medium[17].centeredDraw(context.getMatrices(), name, x + width / 2f, y + height / 2f - 6, textColor);
         }
 
         boolean isHovered(double mouseX, double mouseY) {
@@ -178,87 +174,6 @@ public class MainMenu extends Screen {
         }
     }
 
-    private class CombinedButton {
-        int x, y, width, height;
-        final String leftName, rightName;
-
-        private float leftHoverAnim = 0f;
-        private float rightHoverAnim = 0f;
-        private float leftScale = 1f;
-        private float rightScale = 1f;
-
-        CombinedButton(int x, int y, int width, int height, String leftName, String rightName) {
-            this.x = x;
-            this.y = y;
-            this.width = width;
-            this.height = height;
-            this.leftName = leftName;
-            this.rightName = rightName;
-        }
-
-        void render(DrawContext context, int mouseX, int mouseY, float delta) {
-            int buttonGap = 2;
-            int halfWidth = width / 2;
-            int shrink = 4;
-
-            boolean leftHovered = isOptionHovered(mouseX, mouseY);
-            boolean rightHovered = isQuitHovered(mouseX, mouseY);
-
-            float animSpeed = 0.04f;
-
-            if (leftHovered) {
-                leftHoverAnim = Math.min(1f, leftHoverAnim + animSpeed);
-                leftScale = Math.min(1.02f, leftScale + animSpeed * 0.5f);
-            } else {
-                leftHoverAnim = Math.max(0f, leftHoverAnim - animSpeed);
-                leftScale = Math.max(1f, leftScale - animSpeed * 0.5f);
-            }
-
-            if (rightHovered) {
-                rightHoverAnim = Math.min(1f, rightHoverAnim + animSpeed);
-                rightScale = Math.min(1.02f, rightScale + animSpeed * 0.5f);
-            } else {
-                rightHoverAnim = Math.max(0f, rightHoverAnim - animSpeed);
-                rightScale = Math.max(1f, rightScale - animSpeed * 0.5f);
-            }
-
-            int baseColor = new Color(35, 35, 35).getRGB();
-            int hoverColor = new Color(55, 55, 55).getRGB();
-            int outlineColor = new Color(60, 60, 60, 180).getRGB();
-
-            int buttonWidth = halfWidth - shrink;
-
-            int leftX = x + buttonGap;
-            int leftBg = ColorUtil.blendColorsInt(baseColor, hoverColor, leftHoverAnim);
-            context.getMatrices().push();
-            context.getMatrices().translate(leftX + buttonWidth / 2f, y + height / 2f, 0);
-            context.getMatrices().scale(leftScale, leftScale, 1);
-            context.getMatrices().translate(-(leftX + buttonWidth / 2f), -(y + height / 2f), 0);
-            RenderUtil.drawRoundedRect(context.getMatrices(), leftX, y, buttonWidth, height, 4, leftBg);
-            RenderUtil.drawRoundedBorder(context.getMatrices(), leftX, y, buttonWidth, height, 4, 1f, outlineColor);
-            FontUtils.sf_medium[20].centeredDraw(context.getMatrices(), leftName, leftX + buttonWidth / 2f, y + (height - 10) / 2.2f, Color.WHITE.getRGB());
-            context.getMatrices().pop();
-
-            int rightX = x + halfWidth + buttonGap;
-            int rightBg = ColorUtil.blendColorsInt(baseColor, hoverColor, rightHoverAnim);
-            context.getMatrices().push();
-            context.getMatrices().translate(rightX + buttonWidth / 2f, y + height / 2f, 0);
-            context.getMatrices().scale(rightScale, rightScale, 1);
-            context.getMatrices().translate(-(rightX + buttonWidth / 2f), -(y + height / 2f), 0);
-            RenderUtil.drawRoundedRect(context.getMatrices(), rightX, y, buttonWidth, height, 4, rightBg);
-            RenderUtil.drawRoundedBorder(context.getMatrices(), rightX, y, buttonWidth, height, 4, 1f, outlineColor);
-            FontUtils.sf_medium[20].centeredDraw(context.getMatrices(), rightName, rightX + buttonWidth / 2f, y + (height - 10) / 2.2f, Color.WHITE.getRGB());
-            context.getMatrices().pop();
-        }
-
-        boolean isOptionHovered(double mouseX, double mouseY) {
-            return mouseX >= x && mouseX < x + width / 2 - 1 && mouseY >= y && mouseY <= y + height;
-        }
-
-        boolean isQuitHovered(double mouseX, double mouseY) {
-            return mouseX > x + width / 2 + 1 && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
-        }
-    }
     @Override
     public boolean shouldCloseOnEsc() {
         return false;

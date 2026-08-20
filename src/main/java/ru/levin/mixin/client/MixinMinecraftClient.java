@@ -22,7 +22,7 @@ public abstract class MixinMinecraftClient implements IMinecraft {
     @Inject(method = "getWindowTitle", at = @At("HEAD"), cancellable = true)
     private void getWindowTitle(CallbackInfoReturnable<String> cir) {
         if (!ClientManager.legitMode) {
-            cir.setReturnValue("LupaWare 1.21.4 Fabric | " + Manager.USER_PROFILE.getName());
+            cir.setReturnValue("LupaWare | by: wasdd");
         }
     }
     @Inject(at = @At("HEAD"), method = "stop")
