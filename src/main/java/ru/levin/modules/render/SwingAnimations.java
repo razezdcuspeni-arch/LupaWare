@@ -29,16 +29,24 @@ public class SwingAnimations extends Function {
     private final ModeSetting mode = new ModeSetting("Тип", "Smooth", "Smooth", "Block", "ToBack","SelfBack","360","Down","Glide","DropDown","DeadCode");
 
     public final BooleanSetting slowAnimation = new BooleanSetting("Плавность", false);
+    public final BooleanSetting onlyWithAuraTarget = new BooleanSetting("Только при цели KillAura", true);
     public final SliderSetting slowAnimationSpeed = new SliderSetting("Сила плавности", 12f, 1, 50, 1, () -> slowAnimation.get());
 
     private final SliderSetting corner = new SliderSetting("Угол", 12.0f, 1.0f, 360.0f, 1.0f);
     private final SliderSetting slant = new SliderSetting("Наклон", 12.0f, 1.0f, 360.0f, 1.0f);
 
     public SwingAnimations() {
-        addSettings(mode,slowAnimation,slowAnimationSpeed,corner,slant);
+        addSettings(mode, onlyWithAuraTarget, slowAnimation, slowAnimationSpeed, corner, slant);
     }
 
     private void renderSwordAnimation(MatrixStack matrices, float swingProgress, float equipProgress, Arm arm) {
+        if (onlyWithAuraTarget.get()
+                && (!Manager.FUNCTION_MANAGER.attackAura.isState()
+                || Manager.FUNCTION_MANAGER.attackAura.target == null)) {
+            applyEquipOffset(matrices, arm, equipProgress);
+            applySwingOffset(matrices, arm, swingProgress);
+            return;
+        }
         int i = arm == Arm.RIGHT ? 1 : -1;
         switch (mode.get()) {
             case "Smooth" -> {

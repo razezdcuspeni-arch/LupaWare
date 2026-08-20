@@ -38,8 +38,8 @@ public class ClickGUI extends Screen implements IMinecraft {
     private boolean isClose;
     private boolean hudLayoutMode = true;
 
-    private final int PANEL_WIDTH = 145;
-    private final int PANEL_HEIGHT = 370;
+    private final int PANEL_WIDTH = 168;
+    private final int PANEL_HEIGHT = 400;
     private final int PANEL_MARGIN = 14;
 
     private final Color GUI_COLOR = new Color(16, 16, 16, 248);
@@ -47,7 +47,7 @@ public class ClickGUI extends Screen implements IMinecraft {
     private final int TITLE_MARGIN_TOP = 12;
     private final int TITLE_HEIGHT = 42;
 
-    private final int FUNCTION_HEIGHT = 27;
+    private final int FUNCTION_HEIGHT = 34;
 
     private final int SCROLL_AREA_Y_OFFSET = TITLE_MARGIN_TOP + TITLE_HEIGHT;
     private final int SCROLL_AREA_HEIGHT = PANEL_HEIGHT - SCROLL_AREA_Y_OFFSET - 5;
@@ -350,9 +350,6 @@ public class ClickGUI extends Screen implements IMinecraft {
 
             if (clickGUI.filling.get() || f.state) {
                 RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 9, currentY + 2, PANEL_WIDTH - 18, Math.max(21, totalHeight - 5), clickGUI.rounding.get().intValue(), colorModule2);
-            }
-            if (clickGUI.strike.get() || f.state) {
-                RenderUtil.drawRoundedBorder(ctx.getMatrices(), x + 9, currentY + 2, PANEL_WIDTH - 18, Math.max(21, totalHeight - 5), clickGUI.rounding.get().intValue(), 0.7f, ColorUtil.applyAlpha(col2, 190));
             }
 
             String textToRender;

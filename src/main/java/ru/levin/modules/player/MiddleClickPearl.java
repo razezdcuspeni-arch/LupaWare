@@ -44,11 +44,34 @@ public class MiddleClickPearl extends Function {
     }
 
     private void handleMouseTickEvent() {
-        if (!mc.player.getItemCooldownManager().isCoolingDown(Items.ENDER_PEARL.getDefaultStack())) {
-            if (Manager.FUNCTION_MANAGER.attackAura.target != null) {
-                mc.player.networkHandler.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(mc.player.getYaw(), mc.player.getPitch(), mc.player.isOnGround(), false));
+        if (mc.player == null || mc.interactionManager == null
+                || mc.player.getItemCooldownManager().isCoolingDown(Items.ENDER_PEARL.getDefaultStack())) {
+            return;
+        }
+
+        if (Manager.FUNCTION_MANAGER.attackAura.target != null) {
+            mc.player.networkHandler.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(
+                    mc.player.getYaw(), mc.player.getPitch(), mc.player.isOnGround(), false));
+        }
+
+        int currentSlot = mc.player.getInventory().selectedSlot;
+        int pearlSlot = InventoryUtil.getHotBarSlot(Items.ENDER_PEARL);
+        if (pearlSlot != -1) {
+            if (pearlSlot != currentSlot) {
+                mc.player.getInventory().selectedSlot = pearlSlot;
+                mc.player.networkHandler.sendPacket(new net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket(pearlSlot));
             }
-            InventoryUtil.inventorySwapClick2(Items.ENDER_PEARL, inventoryUse.get(), true);
+            mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
+            mc.player.swingHand(Hand.MAIN_HAND);
+            if (pearlSlot != currentSlot) {
+                mc.player.getInventory().selectedSlot = currentSlot;
+                mc.player.networkHandler.sendPacket(new net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket(currentSlot));
+            }
+            return;
+        }
+
+        if (inventoryUse.get()) {
+            InventoryUtil.inventorySwapClick2(Items.ENDER_PEARL, true, true);
         }
     }
 }
