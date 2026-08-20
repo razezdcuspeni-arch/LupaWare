@@ -29,7 +29,7 @@ public class DiscordRCP extends Function {
         if (started) return;
         started = true;
         DiscordEventHandlers handlers = new DiscordEventHandlers();
-        rpc.Discord_Initialize("1384873696375603281", handlers, true, "");
+        rpc.Discord_Initialize("1540046262332694588", handlers, true, "");
         presence.startTimestamp = System.currentTimeMillis() / 1000L;
         presence.largeImageText = "LupaWare | by: wasdd";
 

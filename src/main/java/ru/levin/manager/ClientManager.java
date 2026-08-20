@@ -117,11 +117,7 @@ public class ClientManager implements IMinecraft {
     public static void message(String string) {
         if (mc == null || mc.player == null || mc.world == null || mc.inGameHud == null) return;
 
-        StyleManager theme = Manager.STYLE_MANAGER;
-        int start = theme.getFirstColor();
-        int end = theme.getSecondColor();
-
-        mc.inGameHud.getChatHud().addMessage(applyGradient(string, start, end));
+        mc.inGameHud.getChatHud().addMessage(applyMonochrome(string));
     }
 
     public static String gradient(String message, int first, int end) {
@@ -145,20 +141,11 @@ public class ClientManager implements IMinecraft {
         return result.toString();
     }
 
-    private static Text applyGradient(String string, int startColor, int endColor) {
+    private static Text applyMonochrome(String string) {
         MutableText component = Text.empty();
-        final String name = LupaWare.getInstance().name;
-        final int length = name.length();
-        final float inv = (length <= 1) ? 0f : 1f / (length - 1);
-
-        for (int i = 0; i < length; i++) {
-            int rgb = ColorUtil.blendColors(startColor, endColor, (length == 1) ? 0.5f : (i * inv)) & 0xFFFFFF;
-            component.append(Text.literal(String.valueOf(name.charAt(i))).setStyle(Style.EMPTY.withColor(TextColor.fromRgb(rgb)).withBold(true)));
-        }
-
-        int gray = (java.awt.Color.GRAY.getRGB()) & 0xFFFFFF;
-        component.append(Text.literal(" ➭ ").setStyle(Style.EMPTY.withColor(TextColor.fromRgb(gray)).withBold(true)));
-        component.append(Text.literal(string).setStyle(Style.EMPTY.withFormatting(Formatting.RESET)));
+        component.append(Text.literal(LupaWare.getInstance().name).setStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xFFFFFF)).withBold(true)));
+        component.append(Text.literal(" ➭ ").setStyle(Style.EMPTY.withColor(TextColor.fromRgb(0x808080)).withBold(true)));
+        component.append(Text.literal(string).setStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xD0D0D0)).withFormatting(Formatting.RESET)));
 
         return component;
     }
