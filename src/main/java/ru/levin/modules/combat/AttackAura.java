@@ -40,6 +40,7 @@ import ru.levin.util.math.RayTraceUtil;
 import ru.levin.util.move.MoveUtil;
 import ru.levin.util.player.AuraUtil;
 import ru.levin.util.player.InventoryUtil;
+import ru.levin.util.player.GCDUtil;
 import ru.levin.util.vector.VectorUtil;
 
 import java.util.*;
@@ -60,6 +61,7 @@ public class AttackAura extends Function {
             "testFT",
             "testspooky",
             "SlothAC",
+            "SpookyPooky",
             "Snap",
             "KoopinAc",
             "LonyGrief",
@@ -291,6 +293,11 @@ public class AttackAura extends Function {
             return;
         }
 
+        if (isRotationMode("SpookyPooky")) {
+            spookyPookyRotation(t, canAttackNow, noPotion);
+            return;
+        }
+
         if (isRotationMode("KoopinAc") || isRotationMode("1.8.8")) {
             koopinVector(t, true);
             if (canAttackNow && passRay && noPotion) attackTarget(mc.player);
@@ -484,6 +491,88 @@ public class AttackAura extends Function {
         }
         setRotation(t, true);
     }
+    private void spookyPookyRotation(LivingEntity entity, boolean canAttackNow, boolean noPotion) {
+        Vec3d eyes = mc.player.getEyePos();
+        Vec3d point = entity.getBoundingBox().getCenter();
+        float neuroRand1 = random.nextFloat();
+        float neuroRand2 = random.nextFloat();
+        float neuroRand3 = random.nextFloat();
+        float neuroRand4 = random.nextFloat();
+
+        float distToTarget = (float) eyes.distanceTo(point);
+        float distanceFactor;
+        if (distToTarget < 2.0f) {
+            distanceFactor = 0.8f + neuroRand1 * 0.4f;
+        } else if (distToTarget < 4.0f) {
+            distanceFactor = 1.2f + neuroRand2 * 0.6f;
+        } else {
+            distanceFactor = 0.9f + neuroRand3 * 0.5f;
+        }
+
+        // LupaWare does not expose the source client's TPS helper; 1.0 is the neutral factor.
+        float tpsMultiplier = 1.0f;
+        float baseSpeed = MathHelper.clamp(distToTarget * 0.25f, 0.8f, 3.0f)
+                * distanceFactor * tpsMultiplier;
+
+        double dx = point.x - eyes.x;
+        double dy = point.y - eyes.y;
+        double dz = point.z - eyes.z;
+        float targetYaw = (float) Math.toDegrees(Math.atan2(dz, dx)) - 90.0f;
+        float targetPitch = MathHelper.clamp(
+                (float) -Math.toDegrees(Math.atan2(dy, Math.hypot(dx, dz))), -90.0f, 90.0f);
+
+        float lastYaw = Manager.ROTATION.getYaw();
+        float lastPitch = Manager.ROTATION.getPitch();
+        float yawDiff = MathHelper.wrapDegrees(targetYaw - lastYaw);
+        float pitchDiff = targetPitch - lastPitch;
+        if (Math.abs(yawDiff) > 280.0f) {
+            yawDiff = MathHelper.clamp(yawDiff, -280.0f, 280.0f);
+        }
+
+        float smoothFactorBase;
+        if (distToTarget < 3.0f && Math.abs(yawDiff) < 10.0f) {
+            smoothFactorBase = 0.08f + neuroRand2 * 0.06f;
+        } else if (distToTarget > 5.0f || Math.abs(yawDiff) > 30.0f) {
+            smoothFactorBase = 0.18f + neuroRand3 * 0.12f;
+        } else {
+            smoothFactorBase = 0.12f + neuroRand1 * 0.08f;
+        }
+
+        float tpsAdapt = tpsMultiplier > 1.2f ? 0.9f : (tpsMultiplier < 0.8f ? 1.2f : 1.0f);
+        smoothFactorBase *= tpsAdapt;
+        float smoothYaw = yawDiff * smoothFactorBase * (baseSpeed * 0.7f);
+        float smoothPitch = pitchDiff * smoothFactorBase * (baseSpeed * 0.5f);
+
+        if (neuroRand4 < 0.02f) {
+            smoothYaw += (random.nextFloat() - 0.5f) * 1.2f;
+            smoothPitch += (random.nextFloat() - 0.5f) * 0.8f;
+        }
+        smoothYaw += (float) Math.sin(System.currentTimeMillis() / 300.0) * 0.03f;
+        smoothPitch += (float) Math.cos(System.currentTimeMillis() / 500.0) * 0.02f;
+        if (random.nextFloat() < 0.05f && Math.abs(yawDiff) > 5.0f) {
+            smoothYaw *= 1.1f + random.nextFloat() * 0.3f;
+        }
+
+        float newYaw = lastYaw + smoothYaw;
+        float newPitch = MathHelper.clamp(lastPitch + smoothPitch, -90.0f, 90.0f);
+        float gcd = GCDUtil.getGCDValue();
+        if (gcd > 0.0f) {
+            newYaw -= (newYaw - lastYaw) % gcd;
+            newPitch -= (newPitch - lastPitch) % gcd;
+        }
+        if (Math.abs(newYaw - lastYaw) < 0.01f && Math.abs(newPitch - lastPitch) < 0.01f) {
+            newYaw = lastYaw;
+            newPitch = lastPitch;
+        }
+
+        Manager.ROTATION.set(newYaw, newPitch);
+        boolean aligned = !raycast.get()
+                || RayTraceUtil.getMouseOver(entity, newYaw, newPitch, distance.get().floatValue()) == entity;
+        if (canAttackNow && canAttack() && aligned && noPotion) {
+            attackTarget(mc.player);
+        }
+    }
+
     private void slothAcRotation(LivingEntity entity, boolean canAttackNow, boolean noPotion) {
         Vec3d targetPos = predictPos(entity);
         Vec3d eyePos = mc.player.getEyePos();
