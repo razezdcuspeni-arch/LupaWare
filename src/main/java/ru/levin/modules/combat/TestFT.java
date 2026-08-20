@@ -8,6 +8,7 @@ public final class TestFT extends AttackAura {
     public TestFT() {
         super();
         mode.set("FunTime");
+        mode.setVisible(() -> false);
     }
 }
 

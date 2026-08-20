@@ -8,6 +8,7 @@ public final class TestSpooky extends AttackAura {
     public TestSpooky() {
         super();
         mode.set("SpookyTime");
+        mode.setVisible(() -> false);
     }
 }
 

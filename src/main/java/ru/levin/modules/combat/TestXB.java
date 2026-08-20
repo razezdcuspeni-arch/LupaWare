@@ -8,6 +8,7 @@ public final class TestXB extends AttackAura {
     public TestXB() {
         super();
         mode.set("HollyWorld");
+        mode.setVisible(() -> false);
     }
 }
 
