@@ -59,6 +59,7 @@ public class AttackAura extends Function {
             "testXB",
             "testFT",
             "testspooky",
+            "SlothAC",
             "Snap",
             "KoopinAc",
             "LonyGrief",
@@ -285,6 +286,11 @@ public class AttackAura extends Function {
             return;
         }
 
+        if (isRotationMode("SlothAC")) {
+            slothAcRotation(t, canAttackNow, noPotion);
+            return;
+        }
+
         if (isRotationMode("KoopinAc") || isRotationMode("1.8.8")) {
             koopinVector(t, true);
             if (canAttackNow && passRay && noPotion) attackTarget(mc.player);
@@ -478,6 +484,52 @@ public class AttackAura extends Function {
         }
         setRotation(t, true);
     }
+    private void slothAcRotation(LivingEntity entity, boolean canAttackNow, boolean noPotion) {
+        Vec3d targetPos = predictPos(entity);
+        Vec3d eyePos = mc.player.getEyePos();
+        double dx = targetPos.x - eyePos.x;
+        double dy = targetPos.y + entity.getEyeHeight(entity.getPose()) / 2.0 - eyePos.y;
+        double dz = targetPos.z - eyePos.z;
+
+        float targetYaw = (float) Math.toDegrees(Math.atan2(dz, dx)) - 90.0F;
+        float targetPitch = (float) -Math.toDegrees(Math.atan2(dy, Math.hypot(dx, dz)));
+        float yawDelta = MathHelper.wrapDegrees(targetYaw - Manager.ROTATION.getYaw());
+        float pitchDelta = targetPitch - Manager.ROTATION.getPitch();
+        float rotationDifference = (float) Math.hypot(yawDelta, pitchDelta);
+
+        boolean attackWindow = canAttackNow && canAttack();
+        boolean rayPassed = !raycast.get()
+                || RayTraceUtil.getMouseOver(entity, Manager.ROTATION.getYaw(), Manager.ROTATION.getPitch(), distance.get().floatValue()) == entity;
+
+        float yawOffset = attackWindow ? 0.0f
+                : (float) (randomLerp(1.0f, 40.0f) * Math.sin(System.currentTimeMillis() / 60.0D));
+        float pitchOffset = attackWindow ? 0.0f
+                : (float) (randomLerp(30.0f, 180.0f) * Math.cos(System.currentTimeMillis() / 40.0D));
+        float speed = attackWindow ? 1.0f : (canAttack() ? 0.5f : 0.3f);
+        if (attackWindow && !rayPassed) speed = 1.0f;
+
+        float lineYaw = rotationDifference < 0.001f ? 0.0f
+                : Math.abs(yawDelta / rotationDifference) * 180.0f;
+        float linePitch = Math.abs(pitchDelta) * 180.0f;
+        float moveYaw = MathHelper.clamp(yawDelta, -lineYaw, lineYaw);
+        float movePitch = MathHelper.clamp(pitchDelta, -linePitch, linePitch);
+        float factor = MathHelper.clamp(randomLerp(speed, speed + 0.2f), 0.0f, 1.0f);
+
+        float nextYaw = Manager.ROTATION.getYaw() + moveYaw * factor + yawOffset;
+        float nextPitch = MathHelper.clamp(Manager.ROTATION.getPitch() + movePitch * factor + pitchOffset, -89.9f, 89.9f);
+        Manager.ROTATION.set(nextYaw, nextPitch);
+
+        boolean aligned = !raycast.get()
+                || RayTraceUtil.getMouseOver(entity, nextYaw, nextPitch, distance.get().floatValue()) == entity;
+        if (canAttackNow && canAttack() && aligned && noPotion) {
+            attackTarget(mc.player);
+        }
+    }
+
+    private float randomLerp(float min, float max) {
+        return MathHelper.lerp(random.nextFloat(), min, max);
+    }
+
     private void setRotation(LivingEntity entity, boolean applyGcd) {
         Vec3d tp = predictPos(entity);
         double dx = tp.x - mc.player.getX();
