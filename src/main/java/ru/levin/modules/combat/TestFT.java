@@ -15,5 +15,10 @@ public final class TestFT extends AttackAura {
     protected String getRotationMode() {
         return "FunTime";
     }
+
+    @Override
+    protected boolean useBoundedImportedRotation() {
+        return true;
+    }
 }
 

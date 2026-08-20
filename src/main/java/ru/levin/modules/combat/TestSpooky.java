@@ -15,5 +15,10 @@ public final class TestSpooky extends AttackAura {
     protected String getRotationMode() {
         return "SpookyTime";
     }
+
+    @Override
+    protected boolean useBoundedImportedRotation() {
+        return true;
+    }
 }
 

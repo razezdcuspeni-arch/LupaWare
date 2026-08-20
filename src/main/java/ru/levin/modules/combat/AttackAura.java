@@ -112,6 +112,14 @@ public class AttackAura extends Function {
         return value.equals(getRotationMode());
     }
 
+    /**
+     * Imported Shade modes can opt into a bounded rotation path. The original
+     * mode branches remain available for the legacy AttackAura selector.
+     */
+    protected boolean useBoundedImportedRotation() {
+        return false;
+    }
+
     public AttackAura() {
         addSettings(
                 mode,
@@ -270,6 +278,16 @@ public class AttackAura extends Function {
         boolean canAttackNow = shouldAttack(t);
         boolean passRay = !raycast.get() || RayTraceUtil.getMouseOver(t, currYaw, currPitch, distance.get().floatValue()) == t;
         boolean noPotion = !Manager.FUNCTION_MANAGER.autoPotion.isActivePotion;
+
+        if (useBoundedImportedRotation()) {
+            setBoundedRotation(t);
+            boolean aligned = !raycast.get()
+                    || RayTraceUtil.getMouseOver(t, Manager.ROTATION.getYaw(), Manager.ROTATION.getPitch(), distance.get().floatValue()) == t;
+            if (canAttackNow && aligned && noPotion) {
+                attackTarget(mc.player);
+            }
+            return;
+        }
 
         if (handleElytraRotation(t)) {
             if (canAttackNow && passRay && noPotion) attackTarget(mc.player);
@@ -469,6 +487,17 @@ public class AttackAura extends Function {
         }
         setRotation(t, true);
     }
+    private void setBoundedRotation(LivingEntity entity) {
+        Vec3d tp = predictPos(entity);
+        double dx = tp.x - mc.player.getX();
+        double dy = (tp.y + entity.getEyeHeight(entity.getPose()) / 2.0) - (mc.player.getY() + mc.player.getEyeHeight(mc.player.getPose()));
+        double dz = tp.z - mc.player.getZ();
+        float yaw = (float) Math.toDegrees(Math.atan2(dz, dx)) - 90.0F;
+        float pitch = (float) -Math.toDegrees(Math.atan2(dy, Math.hypot(dx, dz)));
+        // Imported modes must never make a large per-tick turn or an overshoot.
+        Manager.ROTATION.setSmooth(yaw, pitch, 0.65f, 32f, 12f, true);
+    }
+
     private void setRotation(LivingEntity entity, boolean applyGcd) {
         Vec3d tp = predictPos(entity);
         double dx = tp.x - mc.player.getX();

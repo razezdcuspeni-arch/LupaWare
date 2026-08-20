@@ -15,5 +15,10 @@ public final class TestXB extends AttackAura {
     protected String getRotationMode() {
         return "HollyWorld";
     }
+
+    @Override
+    protected boolean useBoundedImportedRotation() {
+        return true;
+    }
 }
 
