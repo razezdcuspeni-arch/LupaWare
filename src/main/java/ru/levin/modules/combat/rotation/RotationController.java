@@ -32,11 +32,16 @@ public final class RotationController implements IMinecraft {
         float dYaw = MathHelper.wrapDegrees(targetYaw - rotate.x);
         float dPitch = targetPitch - rotate.y;
 
-        float stepYaw = Math.min(Math.max(Math.abs(dYaw), 1.0F), maxYawStep);
-        float stepPitch = Math.min(Math.max(Math.abs(dPitch), 1.0F), maxPitchStep);
+        float stepYaw = Math.min(Math.abs(dYaw), maxYawStep);
+        float stepPitch = Math.min(Math.abs(dPitch), maxPitchStep);
+        float factor = MathHelper.clamp(smooth, 0.0f, 1.0f);
 
-        float ny = rotate.x + (dYaw > 0f ? stepYaw : -stepYaw) * smooth;
-        float np = MathHelper.clamp(rotate.y + (dPitch > 0f ? stepPitch : -stepPitch) * smooth, -89.9f, 89.9f);
+        float ny = Math.abs(dYaw) < 0.001f
+                ? rotate.x
+                : rotate.x + (dYaw > 0f ? stepYaw : -stepYaw) * factor;
+        float np = Math.abs(dPitch) < 0.001f
+                ? rotate.y
+                : MathHelper.clamp(rotate.y + (dPitch > 0f ? stepPitch : -stepPitch) * factor, -89.9f, 89.9f);
 
         if (applyGcd) {
             float gcd = GCDUtil.getGCDValue();

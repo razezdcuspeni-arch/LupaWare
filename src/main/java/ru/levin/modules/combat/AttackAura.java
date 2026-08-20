@@ -161,6 +161,8 @@ public class AttackAura extends Function {
 
             if (target == null) {
                 Manager.ROTATION.set(player.getYaw(), player.getPitch());
+                lastHitMs = 0L;
+                shakeStartTime = 0L;
                 cpsLimit = System.currentTimeMillis();
                 return;
             }
@@ -177,6 +179,12 @@ public class AttackAura extends Function {
     @Override
     protected void onEnable() {
         super.onEnable();
+        if (mc.player != null) {
+            // Never start a combat rotation from the controller's default 0/0 state.
+            Manager.ROTATION.set(mc.player.getYaw(), mc.player.getPitch());
+        }
+        lastHitMs = 0L;
+        shakeStartTime = 0L;
     }
 
     @Override
@@ -381,7 +389,9 @@ public class AttackAura extends Function {
                 );
             }
             Manager.ROTATION.setSmooth(headRotation.y, headRotation.x, 0.8f, 60, 90, true);
-            if (canAttackNow && passRay && noPotion) {
+            boolean aligned = !raycast.get()
+                    || RayTraceUtil.getMouseOver(t, Manager.ROTATION.getYaw(), Manager.ROTATION.getPitch(), distance.get().floatValue()) == t;
+            if (canAttackNow && aligned && noPotion) {
                 attackTarget(mc.player);
             }
 
@@ -398,12 +408,6 @@ public class AttackAura extends Function {
         }
 
         if (isRotationMode("FunTime")) {
-            if (canAttackNow && canAttack() && noPotion) {
-                if (passRay) {
-                    attackTarget(mc.player);
-                }
-                lastHitMs = System.currentTimeMillis();
-            }
            if (System.currentTimeMillis() - lastHitMs < 450) {
                funtime(t);
 
@@ -427,15 +431,22 @@ public class AttackAura extends Function {
                Manager.ROTATION.setSmooth(finalYaw, finalPitch, 1.0f, 20f, 10f, true);
            }
 
+            boolean aligned = !raycast.get()
+                    || RayTraceUtil.getMouseOver(t, Manager.ROTATION.getYaw(), Manager.ROTATION.getPitch(), distance.get().floatValue()) == t;
+            if (canAttackNow && canAttack() && aligned && noPotion) {
+                attackTarget(mc.player);
+                lastHitMs = System.currentTimeMillis();
+            }
             return;
         }
 
         if (isRotationMode("HollyWorld")) {
-            if (canAttackNow && canAttack() && passRay && noPotion) {
-                hollyworld(t, true);
+            boolean attackReady = canAttackNow && canAttack() && noPotion;
+            hollyworld(t, attackReady);
+            boolean aligned = !raycast.get()
+                    || RayTraceUtil.getMouseOver(t, Manager.ROTATION.getYaw(), Manager.ROTATION.getPitch(), distance.get().floatValue()) == t;
+            if (attackReady && aligned) {
                 attackTarget(mc.player);
-            } else {
-                hollyworld(t, false);
             }
             return;
         }
