@@ -9,6 +9,7 @@ import net.minecraft.text.Text;
 import ru.levin.screens.altmanager.AltManager;
 import ru.levin.util.color.ColorUtil;
 import ru.levin.manager.fontManager.FontUtils;
+import ru.levin.manager.Manager;
 import ru.levin.util.render.RenderUtil;
 
 import java.awt.Color;
@@ -42,7 +43,8 @@ public class MainMenu extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        int accent = ColorUtil.rgba(63, 169, 255, 255);
+        int accent = Manager.STYLE_MANAGER != null ? Manager.STYLE_MANAGER.getFirstColor() : ColorUtil.rgba(63, 169, 255, 255);
+        int secondary = Manager.STYLE_MANAGER != null ? Manager.STYLE_MANAGER.getSecondColor() : ColorUtil.rgba(33, 212, 253, 255);
         int muted = ColorUtil.rgba(155, 164, 180, 255);
         int panel = ColorUtil.rgba(25, 28, 35, 245);
         int panelLight = ColorUtil.rgba(31, 35, 44, 245);
@@ -104,7 +106,7 @@ public class MainMenu extends Screen {
         int cardY = heroY + heroHeight + 20;
         int cardWidth = (contentWidth - 20) / 2;
         drawInfoCard(context, contentX, cardY, cardWidth, "QUICK ACCESS", "AltManager", "Manage your accounts", accent);
-        drawInfoCard(context, contentX + cardWidth + 20, cardY, cardWidth, "BUILD", "Stable release", "LupaWare 1.21.4", ColorUtil.rgba(170, 120, 255, 255));
+        drawInfoCard(context, contentX + cardWidth + 20, cardY, cardWidth, "BUILD", "Stable release", "LupaWare 1.21.4", secondary);
 
         FontUtils.sf_medium[15].drawLeftAligned(context.getMatrices(), "LupaWare | by: wasdd", contentX, height - 32, muted);
         String versionText = "v1.21.4";
@@ -169,7 +171,7 @@ public class MainMenu extends Screen {
             boolean hovered = isHovered(mouseX, mouseY);
             hoverAnim += ((hovered ? 1f : 0f) - hoverAnim) * 0.16f;
             int base = prominent ? ColorUtil.rgba(34, 39, 50, 255) : ColorUtil.rgba(30, 34, 42, 255);
-            int hover = prominent ? ColorUtil.rgba(48, 91, 135, 255) : ColorUtil.rgba(48, 54, 66, 255);
+            int hover = prominent ? (Manager.STYLE_MANAGER != null ? Manager.STYLE_MANAGER.getSecondColor() : ColorUtil.rgba(48, 91, 135, 255)) : ColorUtil.rgba(48, 54, 66, 255);
             int background = ColorUtil.blendColorsInt(base, hover, hoverAnim);
             int border = prominent ? ColorUtil.rgba(65, 78, 99, 220) : ColorUtil.rgba(55, 63, 78, 180);
             RenderUtil.drawRoundedRect(context.getMatrices(), x, y, width, height, 9, background);

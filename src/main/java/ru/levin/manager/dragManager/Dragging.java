@@ -11,6 +11,7 @@ import org.lwjgl.glfw.GLFW;
 import ru.levin.events.impl.player.EventAttack;
 import ru.levin.manager.fontManager.FontUtils;
 import ru.levin.modules.Function;
+import ru.levin.screens.dropdown.ClickGUI;
 import ru.levin.util.render.RenderUtil;
 
 import static ru.levin.manager.IMinecraft.mc;
@@ -138,7 +139,7 @@ public class Dragging {
         if (tipAlpha > 0f) {
             int color = ((int) (tipAlpha * 255) << 24) | 0xFFFFFF;
             MatrixStack matrix = new MatrixStack();
-            String tip = "Shift - чтобы прилепить к сетке";
+            String tip = "Shift — привязка к сетке";
             FontUtils.durman[12].centeredDraw(matrix, tip, xPos + width / 2f, yPos + height + 4f, color);
         }
     }
@@ -175,7 +176,7 @@ public class Dragging {
     }
 
     public boolean onClick(double mouseX, double mouseY, int button) {
-        if (!(mc.currentScreen instanceof ChatScreen)) return false;
+        if (!(mc.currentScreen instanceof ChatScreen) && !(mc.currentScreen instanceof ClickGUI)) return false;
 
         float scaledMouseX = (float) mouseX;
         float scaledMouseY = (float) mouseY;

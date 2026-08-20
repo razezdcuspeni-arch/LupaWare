@@ -11,6 +11,7 @@ import org.joml.Vector4f;
 import org.joml.Vector4i;
 import org.lwjgl.glfw.GLFW;
 import ru.levin.manager.ClientManager;
+import ru.levin.manager.dragManager.Dragging;
 import ru.levin.manager.IMinecraft;
 import ru.levin.manager.Manager;
 import ru.levin.manager.themeManager.Style;
@@ -35,6 +36,7 @@ import static ru.levin.util.render.RenderUtil.drawBlur;
 
 public class ClickGUI extends Screen implements IMinecraft {
     private boolean isClose;
+    private boolean hudLayoutMode = true;
 
     private final int PANEL_WIDTH = 145;
     private final int PANEL_HEIGHT = 310;
@@ -79,12 +81,12 @@ public class ClickGUI extends Screen implements IMinecraft {
     private final int SEARCH_MARGIN_BOTTOM = 12;
     private final int SEARCH_MAX_WIDTH = 260;
 
-    private final int THEME_HEIGHT = 16;
-    private final int THEME_MARGIN_BOTTOM = 40;
-    private final int THEME_MAX_WIDTH = 180;
+    private final int THEME_HEIGHT = 28;
+    private final int THEME_MARGIN_BOTTOM = 12;
+    private final int THEME_MAX_WIDTH = 280;
     private static float themeScrollOffset = 0;
     private static float themeScrollTarget = 0;
-    private final int VISIBLE_THEMES = 11;
+    private final int VISIBLE_THEMES = 9;
 
     private float themeMenuAnim = 0f;
     private float themeMenuTarget = 0f;
@@ -172,8 +174,22 @@ public class ClickGUI extends Screen implements IMinecraft {
         renderButtomTheme(ctx, mouseX, mouseY);
         renderTheme(ctx,mouseX,mouseY);
         renderExpiryText(ctx);
+        renderHudLayoutOverlay(ctx, mouseX, mouseY);
         ctx.getMatrices().pop();
     }
+    private void renderHudLayoutOverlay(DrawContext ctx, int mouseX, int mouseY) {
+        if (!hudLayoutMode) return;
+        int accent = Manager.STYLE_MANAGER.getFirstColor();
+        int text = ColorUtil.applyAlpha(Color.WHITE.getRGB(), 220);
+        FontUtils.sf_medium[14].drawLeftAligned(ctx.getMatrices(), "HUD LAYOUT  •  drag modules with mouse", 16, 16, text);
+        Manager.DRAG_MANAGER.draggables.values().forEach(dragging -> {
+            if (dragging.getModule() != null && dragging.getModule().state) {
+                dragging.onDraw(mouseX, mouseY, mc.getWindow());
+            }
+        });
+        RenderUtil.drawRoundedBorder(ctx.getMatrices(), 10, 10, 235, 22, 6, 1f, ColorUtil.applyAlpha(accent, 180));
+    }
+
     private Function getHoveredFunction(int mouseX, int mouseY, int startX, int startY) {
         int idx = 0;
         for (Type category : renderCategories) {
@@ -691,7 +707,8 @@ public class ClickGUI extends Screen implements IMinecraft {
     }
 
     private int getThemeY() {
-        return (height + PANEL_HEIGHT) / 2 + THEME_MARGIN_BOTTOM;
+        // Theme strip is deliberately above the search field; it must never overlap it.
+        return getSearchY() - THEME_HEIGHT - THEME_MARGIN_BOTTOM;
     }
     private void renderButtomTheme(DrawContext ctx, double mouseX, double mouseY) {
         int searchWidth = getSearchWidth();
@@ -853,8 +870,8 @@ public class ClickGUI extends Screen implements IMinecraft {
     }
 
     private void renderColorPickers(DrawContext ctx, int x, int y, int mouseX, int mouseY) {
-        int panelWidth = 85;
-        int panelHeight = 51;
+        int panelWidth = 150;
+        int panelHeight = 100;
         float animOffsetX = (1f - colorPickerAnim) * 30f;
         float animScale = 0.95f + 0.05f * colorPickerAnim;
         float alphaMult = colorPickerAnim;
@@ -873,9 +890,9 @@ public class ClickGUI extends Screen implements IMinecraft {
         }
         RenderUtil.drawRoundedRect(ctx.getMatrices(), 0, 0, panelWidth, panelHeight, 4, ColorUtil.applyAlpha(baseColor, alphaMult));
 
-        int picker1Size = 30;
-        int picker1X = 5;
-        int picker1Y = 5;
+        int picker1Size = 60;
+        int picker1X = 8;
+        int picker1Y = 8;
         RenderUtil.drawTexture(ctx.getMatrices(), "images/gui/pick.png", picker1X, picker1Y, picker1Size, picker1Size, 14, ColorUtil.applyAlpha(Color.WHITE.getRGB(), alphaMult));
         RenderUtil.drawRoundedBorder(ctx.getMatrices(), picker1X, picker1Y, picker1Size, picker1Size, 14, 0.1f, ColorUtil.applyAlpha(Color.WHITE.getRGB(), alphaMult));
 
@@ -883,9 +900,9 @@ public class ClickGUI extends Screen implements IMinecraft {
         int dotY1 = (int) (picker1Y + picker1CursorY * picker1Size);
         RenderUtil.drawCircle(ctx.getMatrices(), dotX1, dotY1, 4f, ColorUtil.applyAlpha(Color.BLACK.getRGB(), alphaMult));
 
-        int picker2Size = 30;
-        int picker2X = 50;
-        int picker2Y = 5;
+        int picker2Size = 60;
+        int picker2X = 78;
+            int picker2Y = 8;
         RenderUtil.drawTexture(ctx.getMatrices(), "images/gui/pick.png", picker2X, picker2Y, picker2Size, picker2Size, 14, ColorUtil.applyAlpha(Color.WHITE.getRGB(), alphaMult));
         RenderUtil.drawRoundedBorder(ctx.getMatrices(), picker2X, picker2Y, picker2Size, picker2Size, 14, 0.1f, ColorUtil.applyAlpha(Color.WHITE.getRGB(), alphaMult));
 
@@ -893,14 +910,14 @@ public class ClickGUI extends Screen implements IMinecraft {
         int dotY2 = (int) (picker2Y + picker2CursorY * picker2Size);
         RenderUtil.drawCircle(ctx.getMatrices(), dotX2, dotY2, 4f, ColorUtil.applyAlpha(Color.BLACK.getRGB(), alphaMult));
 
-        int closeButtonSize = 10;
+        int closeButtonSize = 14;
         int closeButtonX = panelWidth - closeButtonSize;
         int closeButtonY = 0;
         RenderUtil.drawRoundedRect(ctx.getMatrices(), closeButtonX, closeButtonY, closeButtonSize, closeButtonSize, new Vector4f(0, 4, 0, 4), ColorUtil.applyAlpha(Color.WHITE.getRGB(), alphaMult));
         FontUtils.sf_medium[20].drawLeftAligned(ctx.getMatrices(), "×", closeButtonX + 2, closeButtonY - 1.5f, ColorUtil.applyAlpha(Color.RED.getRGB(), alphaMult));
 
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), 14, 39, 56, 8, new Vector4f(1, 1, 1, 1), ColorUtil.applyAlpha(Color.WHITE.getRGB(), alphaMult));
-        FontUtils.durman[12].drawLeftAligned(ctx.getMatrices(), "Добавить тему", 18, 39, ColorUtil.applyAlpha(Color.BLACK.getRGB(), alphaMult));
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), 48, 82, 70, 12, new Vector4f(3, 3, 3, 3), ColorUtil.applyAlpha(Color.WHITE.getRGB(), alphaMult));
+        FontUtils.durman[12].drawLeftAligned(ctx.getMatrices(), "Добавить тему", 53, 84, ColorUtil.applyAlpha(Color.BLACK.getRGB(), alphaMult));
 
         ctx.getMatrices().pop();
     }
@@ -909,18 +926,18 @@ public class ClickGUI extends Screen implements IMinecraft {
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
         if (button == 0 && colorPickerOpen) {
-            int panelWidth = 85;
-            int panelHeight = 51;
-            int panelX = getThemeX(getThemeWidth()) - panelWidth - 20;
+            int panelWidth = 150;
+            int panelHeight = 100;
+            int panelX = getThemeX(getThemeWidth()) - panelWidth - 32;
             int panelY = getThemeY() - panelHeight / 2 - 12;
 
-            int picker1Size = 30;
-            int picker1X = panelX + 5;
-            int picker1Y = panelY + 5;
+            int picker1Size = 60;
+            int picker1X = panelX + 8;
+            int picker1Y = panelY + 8;
 
-            int picker2Size = 30;
-            int picker2X = panelX + 50;
-            int picker2Y = panelY + 5;
+            int picker2Size = 60;
+            int picker2X = panelX + 78;
+            int picker2Y = panelY + 8;
             if (draggingPicker1) {
                 float nx = (float) (mouseX - picker1X) / picker1Size;
                 float ny = (float) (mouseY - picker1Y) / picker1Size;
@@ -950,6 +967,10 @@ public class ClickGUI extends Screen implements IMinecraft {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (hudLayoutMode) {
+            Manager.DRAG_MANAGER.draggables.values().forEach(dragging -> dragging.onRelease(button));
+            Manager.DRAG_MANAGER.save();
+        }
         draggingPicker1 = false;
         draggingPicker2 = false;
         if (draggingSlider != null) {
@@ -965,6 +986,13 @@ public class ClickGUI extends Screen implements IMinecraft {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (hudLayoutMode && button == 0) {
+            for (Dragging dragging : Manager.DRAG_MANAGER.draggables.values()) {
+                if (dragging.getModule() != null && dragging.getModule().state && dragging.onClick(mouseX, mouseY, button)) {
+                    return true;
+                }
+            }
+        }
         int totalWidth = renderCategories.size() * (PANEL_WIDTH + PANEL_MARGIN) - PANEL_MARGIN;
         int startX = (width - totalWidth) / 2;
         int startY = (height - PANEL_HEIGHT) / 2;
@@ -989,20 +1017,20 @@ public class ClickGUI extends Screen implements IMinecraft {
             int fixedX = themeX + padding;
             int fixedY = centerY;
 
-            int panelWidth = 85;
-            int panelHeight = 51;
-            int panelX = fixedX - panelWidth - 20;
+            int panelWidth = 150;
+            int panelHeight = 100;
+            int panelX = fixedX - panelWidth - 32;
             int panelY = fixedY - panelHeight / 2 - 12;
 
-            int picker1Size = 30;
-            int picker1X = panelX + 5;
-            int picker1Y = panelY + 5;
+            int picker1Size = 60;
+            int picker1X = panelX + 8;
+            int picker1Y = panelY + 8;
 
-            int picker2Size = 30;
-            int picker2X = panelX + 50;
-            int picker2Y = panelY + 5;
+            int picker2Size = 60;
+            int picker2X = panelX + 78;
+            int picker2Y = panelY + 8;
 
-            int closeButtonSize = 10;
+            int closeButtonSize = 14;
             int closeButtonX = panelX + panelWidth - closeButtonSize;
             int closeButtonY = panelY;
             if (mouseX >= closeButtonX && mouseX <= closeButtonX + closeButtonSize && mouseY >= closeButtonY && mouseY <= closeButtonY + closeButtonSize) {
@@ -1029,10 +1057,10 @@ public class ClickGUI extends Screen implements IMinecraft {
                 return true;
             }
 
-            int addButtonX = panelX + 14;
-            int addButtonY = panelY + 39;
-            int addButtonWidth = 56;
-            int addButtonHeight = 8;
+            int addButtonX = panelX + 48;
+            int addButtonY = panelY + 82;
+            int addButtonWidth = 70;
+            int addButtonHeight = 12;
 
             if (mouseX >= addButtonX && mouseX <= addButtonX + addButtonWidth && mouseY >= addButtonY && mouseY <= addButtonY + addButtonHeight) {
                 String baseName = "Custom";

@@ -18,11 +18,16 @@ public class StyleManager implements IMinecraft {
     private final Path file = Paths.get(Objects.requireNonNull(mc.runDirectory).getAbsolutePath(), "files", "themes.ew");
 
     public void init() {
-        addStyle("Клиентский", "#5433FF", "#00FFFF");
-        addStyle("Осень", "#FF7D00", "#FFD700");
-        addStyle("Кислотный", "#CCFF00", "#00FF00");
-        addStyle("Океан", "#0077BE", "#00B4D8");
-        addStyle("Вишневый", "#8B0000", "#FF1493");
+        addStyle("Клиентский", "#6C63FF", "#21D4FD");
+        addStyle("Aurora", "#00C6A7", "#5B5FEF");
+        addStyle("Sunset", "#FF7A59", "#FFB86B");
+        addStyle("Ocean", "#1677FF", "#00D4FF");
+        addStyle("Rose", "#D946EF", "#FB7185");
+        addStyle("Mint", "#34D399", "#A3E635");
+        addStyle("Nebula", "#7C3AED", "#22D3EE");
+        addStyle("Lavender", "#A78BFA", "#F0ABFC");
+        addStyle("Forest", "#0F766E", "#84CC16");
+        addStyle("Ember", "#F97316", "#EC4899");
         loadCustomThemes();
         if (!styles.isEmpty()) {
             currentStyle = styles.get(0);
