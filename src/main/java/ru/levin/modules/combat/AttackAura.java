@@ -50,7 +50,7 @@ import static net.minecraft.util.Hand.MAIN_HAND;
 @FunctionAnnotation(name = "AttackAura", keywords = {"Пиздить","Хуячить","KillAura"}, desc = "Ебашит бошки всем вокруг", type = Type.Combat)
 public class AttackAura extends Function {
 
-    private final ModeSetting mode = new ModeSetting("Мод",
+    protected final ModeSetting mode = new ModeSetting("Мод",
             "ReallyWorld",
             "ReallyWorld",
             "HollyWorld",
