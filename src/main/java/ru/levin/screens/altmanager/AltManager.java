@@ -5,6 +5,7 @@ import java.awt.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
@@ -30,6 +31,15 @@ public class AltManager extends Screen implements IMinecraft {
     private float[] hoverAnimations2;
     private int selectedAccountIndex = -1;
     private static final float SCALE = 1.5f;
+
+    private static final String[] RANDOM_NICK_ADJECTIVES = {
+            "Silent", "Lucky", "Swift", "Brave", "Clever", "Calm", "Frosty", "Misty",
+            "Cosmic", "Golden", "Shadow", "Sunny", "Wild", "Silver", "Gentle", "Rapid"
+    };
+    private static final String[] RANDOM_NICK_NOUNS = {
+            "Fox", "Wolf", "Hawk", "River", "Cloud", "Panda", "Tiger", "Raven",
+            "Breeze", "Comet", "Forest", "Knight", "Spark", "Voyager", "Stone", "Moon"
+    };
 
     private float createHoverAnim = 0f, clearHoverAnim = 0f, randomHoverAnim = 0f;
     private float createScale = 1f, clearScale = 1f, randomScale = 1f;
@@ -303,18 +313,10 @@ public class AltManager extends Screen implements IMinecraft {
             return true;
         }
         if (RenderUtil.isInRegion(mouseX, mouseY, randomX, buttonsY, buttonWidth, inputHeight) && button == 0) {
-            int maxNumber = 9999999;
-            String prefix = "lupaware_";
-            String randomNumberStr = String.valueOf((int)(Math.random() * (maxNumber + 1)));
-            String randomName = prefix + randomNumberStr;
-            if (randomName.length() > 16) {
-                randomName = randomName.substring(0, 16);
-            }
+            String randomName = generateRandomNick();
 
-            if (!accounts.contains(randomName)) {
-                accounts.add(randomName);
-                Manager.ACCOUNT_MANAGER.addAccount(randomName);
-            }
+            accounts.add(randomName);
+            Manager.ACCOUNT_MANAGER.addAccount(randomName);
 
             ClientManager.loginAccount(randomName);
 
@@ -391,6 +393,25 @@ public class AltManager extends Screen implements IMinecraft {
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY,scrollX, scrollY);
+    }
+
+    private String generateRandomNick() {
+        String randomName;
+        boolean alreadyExists;
+        do {
+            String adjective = RANDOM_NICK_ADJECTIVES[ThreadLocalRandom.current().nextInt(RANDOM_NICK_ADJECTIVES.length)];
+            String noun = RANDOM_NICK_NOUNS[ThreadLocalRandom.current().nextInt(RANDOM_NICK_NOUNS.length)];
+            randomName = adjective + noun;
+
+            alreadyExists = false;
+            for (String account : accounts) {
+                if (account.equalsIgnoreCase(randomName)) {
+                    alreadyExists = true;
+                    break;
+                }
+            }
+        } while (alreadyExists);
+        return randomName;
     }
 
     @Override
