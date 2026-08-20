@@ -1,6 +1,6 @@
 {
 	"schemaVersion": 1,
-	"id": "exosware",
+	"id": "lupaware",
 	"version": "${version}",
 	"name": "Minecraft",
 	"description": "Основная игра!",
@@ -10,19 +10,19 @@
 		"Nikita / DarkSide"
 	],
 	"contact": {
-		"homepage": "https://exosware.ru/",
-		"sources": "https://t.me/exosware"
+		"homepage": "https://lupaware.ru/",
+		"sources": "https://t.me/lupaware"
 	},
 	"license": "Minecraft EULA",
-	"icon": "assets/exosware/icon.png",
+	"icon": "assets/lupaware/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"ru.levin.ExosWare"
+			"ru.levin.LupaWare"
 		]
 	},
 	"mixins": [
-		"exosware.mixins.json"
+		"lupaware.mixins.json"
 	],
 	"depends": {
 		"fabricloader": ">=0.16.14",

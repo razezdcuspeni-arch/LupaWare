@@ -41,9 +41,9 @@ public class JumpCircles extends Function {
             new String[]{"Игроков", "Друзей", "Меня"}
     );
 
-    private final Identifier CIRCLE_TEXTURE = Identifier.of("exosware", "images/circles/circle.png");
-    private final Identifier CIRCLE2_TEXTURE = Identifier.of("exosware", "images/circles/circle2.png");
-    private final Identifier CIRCLE3_TEXTURE = Identifier.of("exosware", "images/circles/circle3.png");
+    private final Identifier CIRCLE_TEXTURE = Identifier.of("lupaware", "images/circles/circle.png");
+    private final Identifier CIRCLE2_TEXTURE = Identifier.of("lupaware", "images/circles/circle2.png");
+    private final Identifier CIRCLE3_TEXTURE = Identifier.of("lupaware", "images/circles/circle3.png");
     public JumpCircles() {
         addSettings(circleType, targets, rotateSpeed, circleScale);
     }

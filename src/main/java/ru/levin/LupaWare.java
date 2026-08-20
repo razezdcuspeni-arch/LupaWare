@@ -39,19 +39,19 @@ import java.nio.file.attribute.DosFileAttributeView;
 import java.util.Objects;
 
 @SuppressWarnings("All")
-public final class ExosWare implements ModInitializer {
-	private static ExosWare instance;
+public final class LupaWare implements ModInitializer {
+	private static LupaWare instance;
 	private final File directory;
 	private final File directoryAddon;
-	public final String name = "ExosWare client";
+	public final String name = "LupaWare client";
 	@Getter
 	boolean initialized;
 
-	public static ExosWare getInstance() {
+	public static LupaWare getInstance() {
 		return instance;
 	}
 
-	public ExosWare() {
+	public LupaWare() {
 		instance = this;
 		this.directory = new File(Objects.requireNonNull(MinecraftClient.getInstance().runDirectory), "files");
 		this.directoryAddon = new File(Objects.requireNonNull(MinecraftClient.getInstance().runDirectory), "files/modules");
@@ -119,7 +119,7 @@ public final class ExosWare implements ModInitializer {
 
 		if (key == Manager.FUNCTION_MANAGER.unHook.unHookKey.getKey() && ClientManager.legitMode) {
 			UnHook.functionsToBack.forEach(function -> function.setState(true));
-			File folder = new File("C:\\ExosWare");
+			File folder = new File("C:\\LupaWare");
 			if (folder.exists()) {
 				try {
 					Path folderPathObj = folder.toPath();

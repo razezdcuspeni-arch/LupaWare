@@ -14,7 +14,7 @@ public class AudioUtil implements IMinecraft {
 
     public static void playSound(String name) {
 
-        Identifier id = Identifier.of("exosware", "sounds/" + name);
+        Identifier id = Identifier.of("lupaware", "sounds/" + name);
         mc.execute(() -> {
             try {
                 Optional<Resource> resourceOpt = mc.getResourceManager().getResource(id);

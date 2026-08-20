@@ -33,7 +33,7 @@ import java.util.*;
 @FunctionAnnotation(name = "Breadcrumbs", type = Type.Render, desc = "Красивые круги при движении")
 public class Breadcrumbs extends Function {
 
-    private final Identifier IMAGE = Identifier.of("exosware", "images/circles/circles5.png");
+    private final Identifier IMAGE = Identifier.of("lupaware", "images/circles/circles5.png");
 
     private final List<Circle> circles = new ArrayList<>();
     private final Map<PlayerEntity, TimerUtil> spawnTimers = new HashMap<>();

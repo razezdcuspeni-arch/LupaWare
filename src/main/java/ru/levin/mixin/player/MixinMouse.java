@@ -6,7 +6,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import ru.levin.ExosWare;
+import ru.levin.LupaWare;
 import ru.levin.events.Event;
 import ru.levin.events.impl.input.EventMouse;
 import ru.levin.manager.IMinecraft;
@@ -18,7 +18,7 @@ public class MixinMouse implements IMinecraft {
     private void beforeSpectatorCheck(long window, int button, int action, int mods, CallbackInfo ci) {
         boolean bl = action == 1;
         if (!bl) return;
-        ExosWare main = new ExosWare();
+        LupaWare main = new LupaWare();
         main.keyPress(-100 + button);
 
         Event.call(new EventMouse(button));

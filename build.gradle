@@ -35,7 +35,7 @@ dependencies {
 
 loom {
 	mixin {
-		defaultRefmapName = "exosware-refmap.json"
+		defaultRefmapName = "lupaware-refmap.json"
 		useLegacyMixinAp = true
 	}
 

@@ -1,9 +1,8 @@
 #version 150
 
-#moj_import <exosware:common.glsl>
+#moj_import <lupaware:common.glsl>
 
 in vec3 Position;
-in vec2 UV0;
 in vec4 Color;
 
 uniform mat4 ModelViewMat;
@@ -15,7 +14,8 @@ out vec4 FragColor;
 
 void main() {
     gl_Position = ProjMat * ModelViewMat * vec4(Position, 1.0);
+
     FragCoord = rvertexcoord(gl_VertexID);
-    TexCoord = UV0;
+    TexCoord = gl_Position.xy * 0.5 + 0.5;
     FragColor = Color;
-} 
+}

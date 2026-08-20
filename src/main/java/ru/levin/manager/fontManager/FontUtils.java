@@ -6,7 +6,7 @@ import java.util.Objects;
 @SuppressWarnings("All")
 public class FontUtils {
 
-    public final String fontsDir = "/assets/exosware/font/";
+    public final String fontsDir = "/assets/lupaware/font/";
 
     public volatile RenderFonts[] comfortaa = new RenderFonts[256];
     public static volatile RenderFonts[] durman = new RenderFonts[256];

@@ -45,7 +45,7 @@ public class UnHook extends Function {
                 function.setState(false);
             }
         }
-        File folder = new File("C:\\ExosWare");
+        File folder = new File("C:\\LupaWare");
 
         if (folder.exists()) {
             try {

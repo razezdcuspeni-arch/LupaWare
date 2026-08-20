@@ -21,7 +21,7 @@ public class MainMenu extends Screen {
     private Button altmanagerButton;
     private CombinedButton optionsQuitButton;
 
-    private final String title = "ExosWare 1.21.4";
+    private final String title = "LupaWare 1.21.4";
 
     private int shakeTime = 0;
     private float shakeOffsetY = 0f;

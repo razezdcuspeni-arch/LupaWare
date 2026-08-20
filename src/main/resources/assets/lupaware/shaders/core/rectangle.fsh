@@ -1,6 +1,6 @@
 #version 150
 
-#moj_import <exosware:common.glsl>
+#moj_import <lupaware:common.glsl>
 
 in vec2 FragCoord;
 in vec4 FragColor;

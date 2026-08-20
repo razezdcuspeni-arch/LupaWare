@@ -31,7 +31,7 @@ import net.minecraft.world.GameMode;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector4f;
 import org.joml.Vector4i;
-import ru.levin.ExosWare;
+import ru.levin.LupaWare;
 import ru.levin.manager.themeManager.StyleManager;
 import ru.levin.mixin.iface.ItemCooldownEntryAccessor;
 import ru.levin.mixin.iface.ItemCooldownManagerAccessor;
@@ -115,14 +115,14 @@ public class HUD extends Function {
         addSettings(setting,hudColor,gradientType, customAlpha, visibleCrosshair, blur,roundingSilaSanya);
     }
 
-    public final Dragging watermarkDrag = ExosWare.getInstance().createDrag(this, "WaterMark", 10, 10);
-    public final Dragging targethudDrag = ExosWare.getInstance().createDrag(this, "TargetHUD", 10, 45);
-    public final Dragging keybindsDrag = ExosWare.getInstance().createDrag(this, "KeyBindsHUD", 10, 95);
-    public final Dragging stafflistDrag = ExosWare.getInstance().createDrag(this, "StaffListHUD", 10, 128);
-    public final Dragging itemcooldownDrag = ExosWare.getInstance().createDrag(this, "CoolDownHUD", 10, 165);
-    public final Dragging potionhudDrag = ExosWare.getInstance().createDrag(this, "PotionHUD", 10, 198);
-    public final Dragging coordinateshudDrag = ExosWare.getInstance().createDrag(this, "CoordinatesHUD", 10, 198);
-    public final Dragging armorDrag = ExosWare.getInstance().createDrag(this, "ArmorHUD", 478, 468);
+    public final Dragging watermarkDrag = LupaWare.getInstance().createDrag(this, "WaterMark", 10, 10);
+    public final Dragging targethudDrag = LupaWare.getInstance().createDrag(this, "TargetHUD", 10, 45);
+    public final Dragging keybindsDrag = LupaWare.getInstance().createDrag(this, "KeyBindsHUD", 10, 95);
+    public final Dragging stafflistDrag = LupaWare.getInstance().createDrag(this, "StaffListHUD", 10, 128);
+    public final Dragging itemcooldownDrag = LupaWare.getInstance().createDrag(this, "CoolDownHUD", 10, 165);
+    public final Dragging potionhudDrag = LupaWare.getInstance().createDrag(this, "PotionHUD", 10, 198);
+    public final Dragging coordinateshudDrag = LupaWare.getInstance().createDrag(this, "CoordinatesHUD", 10, 198);
+    public final Dragging armorDrag = LupaWare.getInstance().createDrag(this, "ArmorHUD", 478, 468);
 
     Animation tHudAnimation = new EaseBackIn(300, 1, 1.5f);
     private final Vector4f corner = new Vector4f(3, 0, 0, 3);
@@ -661,7 +661,7 @@ public class HUD extends Function {
         float x = watermarkDrag.getX();
         float y = watermarkDrag.getY();
 
-        String textLogo = "ExosWare 1.21.4";
+        String textLogo = "LupaWare 1.21.4";
         String textInfo = Manager.USER_PROFILE.getName() + " | " + ClientManager.getFps() + " FPS | " + ClientManager.getPing() + " MS | " + ClientManager.getBps(mc.player) + " BPS";
 
         var matrices = render2D.getDrawContext().getMatrices();

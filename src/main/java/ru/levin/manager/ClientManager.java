@@ -16,7 +16,7 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.MathHelper;
-import ru.levin.ExosWare;
+import ru.levin.LupaWare;
 import ru.levin.manager.themeManager.StyleManager;
 import ru.levin.mixin.iface.BossBarHudAccessor;
 import ru.levin.mixin.iface.MinecraftClientAccessor;
@@ -147,7 +147,7 @@ public class ClientManager implements IMinecraft {
 
     private static Text applyGradient(String string, int startColor, int endColor) {
         MutableText component = Text.empty();
-        final String name = ExosWare.getInstance().name;
+        final String name = LupaWare.getInstance().name;
         final int length = name.length();
         final float inv = (length <= 1) ? 0f : 1f / (length - 1);
 

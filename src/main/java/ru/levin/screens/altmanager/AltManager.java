@@ -304,7 +304,7 @@ public class AltManager extends Screen implements IMinecraft {
         }
         if (RenderUtil.isInRegion(mouseX, mouseY, randomX, buttonsY, buttonWidth, inputHeight) && button == 0) {
             int maxNumber = 9999999;
-            String prefix = "exosware_";
+            String prefix = "lupaware_";
             String randomNumberStr = String.valueOf((int)(Math.random() * (maxNumber + 1)));
             String randomName = prefix + randomNumberStr;
             if (randomName.length() > 16) {

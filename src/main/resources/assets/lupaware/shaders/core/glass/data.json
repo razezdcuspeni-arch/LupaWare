@@ -1,6 +1,6 @@
 {
-  "vertex": "exosware:core/glass/vertex",
-  "fragment": "exosware:core/glass/fragment",
+  "vertex": "lupaware:core/glass/vertex",
+  "fragment": "lupaware:core/glass/fragment",
   "samplers": [
     {
       "name": "Sampler0"

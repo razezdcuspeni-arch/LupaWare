@@ -31,7 +31,7 @@ public class DiscordRCP extends Function {
         DiscordEventHandlers handlers = new DiscordEventHandlers();
         rpc.Discord_Initialize("1384873696375603281", handlers, true, "");
         presence.startTimestamp = System.currentTimeMillis() / 1000L;
-        presence.largeImageText = "https://t.me/exosware";
+        presence.largeImageText = "https://t.me/lupaware";
 
         updatePresenceFields();
 
@@ -60,11 +60,11 @@ public class DiscordRCP extends Function {
         presence.state = "Role: " + Manager.USER_PROFILE.getRole();
 
         presence.button_label_1 = "Купить";
-        presence.button_url_1 = "https://exosware.ru";
+        presence.button_url_1 = "https://lupaware.ru";
         presence.button_label_2 = "Телеграмм";
-        presence.button_url_2 = "https://t.me/exosware";
+        presence.button_url_2 = "https://t.me/lupaware";
 
-        presence.largeImageKey = "https://api.exosware.ru/api/loader/discord.gif";
+        presence.largeImageKey = "https://api.lupaware.ru/api/loader/discord.gif";
     }
 
     @Override

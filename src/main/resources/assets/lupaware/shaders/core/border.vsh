@@ -1,6 +1,6 @@
 #version 150
 
-#moj_import <exosware:common.glsl>
+#moj_import <lupaware:common.glsl>
 
 in vec3 Position;
 in vec4 Color;

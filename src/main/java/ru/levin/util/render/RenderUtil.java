@@ -189,7 +189,7 @@ public class RenderUtil implements IMinecraft {
         enableRender();
         Identifier textureId;
         if (texture instanceof String path) {
-            textureId = Identifier.of("exosware", path);
+            textureId = Identifier.of("lupaware", path);
         } else if (texture instanceof Identifier id) {
             textureId = id;
         } else {

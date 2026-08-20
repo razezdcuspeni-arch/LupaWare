@@ -17,7 +17,7 @@ import static ru.levin.manager.IMinecraft.mc;
 
 public class IrcManager {
 
-    private final String cheatName = "ExosWare";
+    private final String cheatName = "LupaWare";
     private final String secretKey = "levinAntiKotopishka";
 
     private volatile Socket socket;
