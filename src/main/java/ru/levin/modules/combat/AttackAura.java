@@ -607,16 +607,20 @@ public class AttackAura extends Function {
                 (float) -Math.toDegrees(Math.atan2(dy, Math.hypot(dx, dz))), -90.0F, 90.0F);
         float yawDelta = MathHelper.wrapDegrees(targetYaw - currentYaw);
         float pitchDelta = targetPitch - currentPitch;
-        float distanceToPoint = (float) eye.distanceTo(bestPoint);
-        float yawStep = MathHelper.clamp(8.0F + distanceToPoint * 3.0F, 8.0F, 22.0F);
-        float pitchStep = MathHelper.clamp(6.0F + distanceToPoint * 2.0F, 6.0F, 14.0F);
+        // Constant steps remove the distance-based acceleration seen in the duel.
+        // The point selection remains multipoint, but the movement itself is uniform.
+        float yawStep = 10.0F;
+        float pitchStep = 7.0F;
         float nextYaw = currentYaw + MathHelper.clamp(yawDelta, -yawStep, yawStep);
         float nextPitch = MathHelper.clamp(currentPitch + MathHelper.clamp(pitchDelta, -pitchStep, pitchStep), -90.0F, 90.0F);
 
         Manager.ROTATION.set(nextYaw, nextPitch);
-        boolean aligned = !raycast.get()
+        float remainingYaw = Math.abs(MathHelper.wrapDegrees(targetYaw - nextYaw));
+        float remainingPitch = Math.abs(targetPitch - nextPitch);
+        boolean aimReady = remainingYaw <= 14.0F && remainingPitch <= 10.0F;
+        boolean rayReady = !raycast.get()
                 || RayTraceUtil.getMouseOver(entity, nextYaw, nextPitch, distance.get().floatValue()) == entity;
-        if (canAttackNow && canAttack() && aligned && noPotion) {
+        if (canAttackNow && canAttack() && aimReady && rayReady && noPotion) {
             attackTarget(mc.player);
         }
     }
@@ -859,7 +863,9 @@ public class AttackAura extends Function {
             }
         }
 
-        cpsLimit = System.currentTimeMillis() + 500L;
+        // Let the normal Minecraft attack cooldown decide the next valid hit.
+        // ManusRotation uses a short gate so a ready attack is not lost to an extra timer.
+        cpsLimit = System.currentTimeMillis() + (isRotationMode("ManusRotation") ? 50L : 500L);
 
         mc.interactionManager.attackEntity(player, target);
         mc.player.swingHand(MAIN_HAND);
