@@ -36,16 +36,16 @@ import static ru.levin.util.render.RenderUtil.drawBlur;
 public class ClickGUI extends Screen implements IMinecraft {
     private boolean isClose;
 
-    private final int PANEL_WIDTH = 170;
-    private final int PANEL_HEIGHT = 350;
-    private final int PANEL_MARGIN = 14;
+    private final int PANEL_WIDTH = 145;
+    private final int PANEL_HEIGHT = 310;
+    private final int PANEL_MARGIN = 10;
 
     private final Color GUI_COLOR = Manager.FUNCTION_MANAGER.clickGUI.getGuiColor();
 
-    private final int TITLE_MARGIN_TOP = 12;
-    private final int TITLE_HEIGHT = 34;
+    private final int TITLE_MARGIN_TOP = 10;
+    private final int TITLE_HEIGHT = 30;
 
-    private final int FUNCTION_HEIGHT = 27;
+    private final int FUNCTION_HEIGHT = 24;
 
     private final int SCROLL_AREA_Y_OFFSET = TITLE_MARGIN_TOP + TITLE_HEIGHT;
     private final int SCROLL_AREA_HEIGHT = PANEL_HEIGHT - SCROLL_AREA_Y_OFFSET - 5;
@@ -75,9 +75,9 @@ public class ClickGUI extends Screen implements IMinecraft {
     private final SliderSettingRenderer sliderSettingRenderer = new SliderSettingRenderer();
     private final TextSettingRenderer textSettingRenderer = new TextSettingRenderer();
 
-    private final int SEARCH_HEIGHT = 28;
-    private final int SEARCH_MARGIN_BOTTOM = 16;
-    private final int SEARCH_MAX_WIDTH = 320;
+    private final int SEARCH_HEIGHT = 24;
+    private final int SEARCH_MARGIN_BOTTOM = 12;
+    private final int SEARCH_MAX_WIDTH = 260;
 
     private final int THEME_HEIGHT = 16;
     private final int THEME_MARGIN_BOTTOM = 40;
@@ -275,14 +275,14 @@ public class ClickGUI extends Screen implements IMinecraft {
         }
         RenderUtil.drawRoundedRect(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 16, panelColor);
         RenderUtil.drawRoundedBorder(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 16, 1f, borderColor);
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), x, y, PANEL_WIDTH, TITLE_HEIGHT + 6, 16, headerColor);
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 14, y + TITLE_HEIGHT + 3, PANEL_WIDTH - 28, 1, 0, ColorUtil.rgba(61, 72, 94, 180));
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 14, y + 13, 4, 24, 2, accentColor);
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), x, y, PANEL_WIDTH, TITLE_HEIGHT + 6, 14, headerColor);
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 12, y + TITLE_HEIGHT + 3, PANEL_WIDTH - 24, 1, 0, ColorUtil.rgba(61, 72, 94, 180));
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 12, y + 11, 3, 22, 2, accentColor);
 
         String title = category.name();
         String icon = category.icon;
-        FontUtils.icomoon[20].drawLeftAligned(ctx.getMatrices(), icon, x + 27, y + TITLE_MARGIN_TOP + 3, ColorUtil.rgba(214, 222, 237, 255));
-        FontUtils.sf_bold[20].drawLeftAligned(ctx.getMatrices(), title, x + 52, y + TITLE_MARGIN_TOP + 3, Color.WHITE.getRGB());
+        FontUtils.icomoon[18].drawLeftAligned(ctx.getMatrices(), icon, x + 22, y + TITLE_MARGIN_TOP + 3, ColorUtil.rgba(214, 222, 237, 255));
+        FontUtils.sf_bold[18].drawLeftAligned(ctx.getMatrices(), title, x + 44, y + TITLE_MARGIN_TOP + 3, Color.WHITE.getRGB());
 
         {
             int maxBefore = calculateMaxScroll(category);
@@ -345,7 +345,7 @@ public class ClickGUI extends Screen implements IMinecraft {
                 textToRender = f.name;
             }
 
-            FontUtils.sf_medium[16].renderGradientText(ctx.getMatrices(), textToRender, x + 18, currentY + 8, col1, col2);
+            FontUtils.sf_medium[15].renderGradientText(ctx.getMatrices(), textToRender, x + 15, currentY + 6, col1, col2);
 
             if (animatedSettingsHeight > 0) {
                 float settingY = currentY + functionHeight;
@@ -394,8 +394,8 @@ public class ClickGUI extends Screen implements IMinecraft {
                 if (Math.abs((f.expanded ? 1f : 0f) - currentProgress) < 0.001f) currentProgress = f.expanded ? 1f : 0f;
                 arrowRotationProgress.put(f, currentProgress);
 
-                int arrowX = x + PANEL_WIDTH - 19;
-                int arrowY = (int) (currentY + FUNCTION_HEIGHT / 2 + 2);
+                int arrowX = x + PANEL_WIDTH - 17;
+                int arrowY = (int) (currentY + FUNCTION_HEIGHT / 2);
 
                 ctx.getMatrices().push();
                 ctx.getMatrices().translate(arrowX, arrowY, 0);
@@ -698,7 +698,7 @@ public class ClickGUI extends Screen implements IMinecraft {
         int searchX = getSearchX(searchWidth);
         int searchY = getSearchY();
 
-        int buttonX = searchX + 185;
+        int buttonX = searchX + searchWidth - 22;
         int buttonY = searchY + 2;
         int buttonWidth = 16;
         int buttonHeight = 16;
@@ -971,6 +971,10 @@ public class ClickGUI extends Screen implements IMinecraft {
         int searchWidth = getSearchWidth();
         int searchX = getSearchX(searchWidth);
         int searchY = getSearchY();
+        int buttonX = searchX + searchWidth - 22;
+        int buttonY = searchY + 2;
+        int buttonWidth = 16;
+        int buttonHeight = 16;
 
         if (colorPickerOpen) {
             int themeWidth = getThemeWidth();
@@ -1056,17 +1060,14 @@ public class ClickGUI extends Screen implements IMinecraft {
             }
         }
 
-        if (mouseX >= searchX && mouseX <= searchX + searchWidth && mouseY >= searchY && mouseY <= searchY + SEARCH_HEIGHT) {
+        if (mouseX >= searchX && mouseX <= searchX + searchWidth && mouseY >= searchY && mouseY <= searchY + SEARCH_HEIGHT
+                && !(mouseX >= buttonX && mouseX <= buttonX + buttonWidth && mouseY >= buttonY && mouseY <= buttonY + buttonHeight)) {
             searchState.focused = true;
             searchState.cursorPosition = searchState.text.length();
             return true;
         } else {
             searchState.focused = false;
         }
-        int buttonX = searchX + 185;
-        int buttonY = searchY + 2;
-        int buttonWidth = 16;
-        int buttonHeight = 16;
         if (mouseX >= buttonX && mouseX <= buttonX + buttonWidth && mouseY >= buttonY && mouseY <= buttonY + buttonHeight) {
             themeMenu = !themeMenu;
             themeMenuTarget = themeMenu ? 1f : 0f;

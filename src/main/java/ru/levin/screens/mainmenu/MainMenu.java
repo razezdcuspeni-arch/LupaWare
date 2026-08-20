@@ -18,6 +18,7 @@ public class MainMenu extends Screen {
     private Button singleplayerButton;
     private Button multiplayerButton;
     private Button altmanagerButton;
+    private Button updatesButton;
     private Button optionsButton;
     private Button quitButton;
 
@@ -34,6 +35,7 @@ public class MainMenu extends Screen {
         singleplayerButton = new Button("Singleplayer", 0, 0, 206, 34, true);
         multiplayerButton = new Button("Multiplayer", 0, 0, 206, 34, true);
         altmanagerButton = new Button("AltManager", 0, 0, 206, 34, true);
+        updatesButton = new Button("Updates", 0, 0, 206, 34, true);
         optionsButton = new Button("Options", 0, 0, 98, 32, false);
         quitButton = new Button("Quit", 0, 0, 98, 32, false);
     }
@@ -63,6 +65,8 @@ public class MainMenu extends Screen {
         multiplayerButton.y = navStart + 46;
         altmanagerButton.x = 38;
         altmanagerButton.y = navStart + 92;
+        updatesButton.x = 38;
+        updatesButton.y = navStart + 138;
         optionsButton.x = 38;
         optionsButton.y = height - 72;
         quitButton.x = 148;
@@ -71,6 +75,7 @@ public class MainMenu extends Screen {
         singleplayerButton.render(context, mouseX, mouseY, delta);
         multiplayerButton.render(context, mouseX, mouseY, delta);
         altmanagerButton.render(context, mouseX, mouseY, delta);
+        updatesButton.render(context, mouseX, mouseY, delta);
         optionsButton.render(context, mouseX, mouseY, delta);
         quitButton.render(context, mouseX, mouseY, delta);
 
@@ -128,6 +133,10 @@ public class MainMenu extends Screen {
         }
         if (altmanagerButton.isHovered(mouseX, mouseY)) {
             client.setScreen(new AltManager(this));
+            return true;
+        }
+        if (updatesButton.isHovered(mouseX, mouseY)) {
+            client.setScreen(new UpdatesScreen(this));
             return true;
         }
         if (optionsButton.isHovered(mouseX, mouseY)) {
