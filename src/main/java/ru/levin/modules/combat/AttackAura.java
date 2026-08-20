@@ -62,6 +62,7 @@ public class AttackAura extends Function {
             "testspooky",
             "SlothAC",
             "SpookyPooky",
+            "ManusRotation",
             "Snap",
             "KoopinAc",
             "LonyGrief",
@@ -296,6 +297,11 @@ public class AttackAura extends Function {
 
         if (isRotationMode("SpookyPooky")) {
             spookyPookyRotation(t, canAttackNow, noPotion);
+            return;
+        }
+
+        if (isRotationMode("ManusRotation")) {
+            manusRotation(t, canAttackNow, noPotion);
             return;
         }
 
@@ -566,6 +572,54 @@ public class AttackAura extends Function {
         }
     }
 
+
+    private void manusRotation(LivingEntity entity, boolean canAttackNow, boolean noPotion) {
+        Vec3d eye = mc.player.getEyePos();
+        Vec3d center = entity.getBoundingBox().getCenter();
+        double[] heights = {0.18D, 0.38D, 0.52D, 0.68D, 0.86D};
+        Vec3d bestPoint = center;
+        double bestScore = Double.MAX_VALUE;
+        float currentYaw = Manager.ROTATION.getYaw();
+        float currentPitch = Manager.ROTATION.getPitch();
+
+        for (double height : heights) {
+            Vec3d point = new Vec3d(center.x, entity.getY() + entity.getHeight() * height, center.z);
+            double dx = point.x - eye.x;
+            double dy = point.y - eye.y;
+            double dz = point.z - eye.z;
+            double horizontal = Math.hypot(dx, dz);
+            float pointYaw = (float) Math.toDegrees(Math.atan2(dz, dx)) - 90.0F;
+            float pointPitch = (float) -Math.toDegrees(Math.atan2(dy, horizontal));
+            double angularScore = Math.abs(MathHelper.wrapDegrees(pointYaw - currentYaw))
+                    + Math.abs(pointPitch - currentPitch) * 0.55D;
+            double distanceScore = eye.distanceTo(point) * 0.04D;
+            if (angularScore + distanceScore < bestScore) {
+                bestScore = angularScore + distanceScore;
+                bestPoint = point;
+            }
+        }
+
+        double dx = bestPoint.x - eye.x;
+        double dy = bestPoint.y - eye.y;
+        double dz = bestPoint.z - eye.z;
+        float targetYaw = (float) Math.toDegrees(Math.atan2(dz, dx)) - 90.0F;
+        float targetPitch = MathHelper.clamp(
+                (float) -Math.toDegrees(Math.atan2(dy, Math.hypot(dx, dz))), -90.0F, 90.0F);
+        float yawDelta = MathHelper.wrapDegrees(targetYaw - currentYaw);
+        float pitchDelta = targetPitch - currentPitch;
+        float distanceToPoint = (float) eye.distanceTo(bestPoint);
+        float yawStep = MathHelper.clamp(8.0F + distanceToPoint * 3.0F, 8.0F, 22.0F);
+        float pitchStep = MathHelper.clamp(6.0F + distanceToPoint * 2.0F, 6.0F, 14.0F);
+        float nextYaw = currentYaw + MathHelper.clamp(yawDelta, -yawStep, yawStep);
+        float nextPitch = MathHelper.clamp(currentPitch + MathHelper.clamp(pitchDelta, -pitchStep, pitchStep), -90.0F, 90.0F);
+
+        Manager.ROTATION.set(nextYaw, nextPitch);
+        boolean aligned = !raycast.get()
+                || RayTraceUtil.getMouseOver(entity, nextYaw, nextPitch, distance.get().floatValue()) == entity;
+        if (canAttackNow && canAttack() && aligned && noPotion) {
+            attackTarget(mc.player);
+        }
+    }
 
     private void slothAcRotation(LivingEntity entity, boolean canAttackNow, boolean noPotion) {
         Vec3d targetPos = predictPos(entity);
