@@ -29,6 +29,7 @@ public class FunctionManager {
     public final HitBox xbox;
     public final NoCommands noCommands;
     public final SwingAnimations swingAnimations;
+    public final HoldMyItems holdMyItems;
     public final ViewModel viewModel;
     public final NoPush noPush;
     public final FreeCamera freeCamera;
@@ -152,6 +153,7 @@ public class FunctionManager {
                 clickGUI = new ClickGUI(),
                 hud = new HUD(),
                 swingAnimations = new SwingAnimations(),
+                holdMyItems = new HoldMyItems(),
                 viewModel = new ViewModel(),
                 aspectRatio = new AspectRatio(),
                 crossHair = new CrossHair(),

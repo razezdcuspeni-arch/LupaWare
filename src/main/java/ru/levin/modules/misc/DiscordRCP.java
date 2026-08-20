@@ -56,6 +56,14 @@ public class DiscordRCP extends Function {
     }
 
     private void updatePresenceFields() {
+        // Clear every user-facing field before writing the current values. This prevents
+        // Discord's native RPC structure from retaining text from an older client build.
+        presence.details = null;
+        presence.state = null;
+        presence.largeImageKey = null;
+        presence.largeImageText = null;
+        presence.smallImageKey = null;
+        presence.smallImageText = null;
         presence.details = "LupaWare 1.21.4";
         presence.state = "User: free  |  Role: owner";
 
