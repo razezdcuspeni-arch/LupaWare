@@ -18,7 +18,7 @@ import java.util.Map;
 
 public class BooleanSettingRenderer implements SettingRenderer<BooleanSetting>, IMinecraft {
 
-    private static final int HEIGHT = 16, WIDTH = 22, SWITCH_HEIGHT = 12, KNOB_RADIUS = 8;
+    private static final int HEIGHT = 13, BOX_SIZE = 9;
     private final Map<BooleanSetting, Float> toggleMap = new HashMap<>(), scrollMap = new HashMap<>();
 
     @Override
@@ -32,20 +32,20 @@ public class BooleanSettingRenderer implements SettingRenderer<BooleanSetting>, 
         progress += ((setting.get() ? 1f : 0f) - progress) * 0.15f;
         toggleMap.put(setting, progress);
 
-        int switchX = x + width - WIDTH + 4;
-        int switchY = y + (HEIGHT - SWITCH_HEIGHT) / 2 - 2;
-
-        Color offColor = new Color(LupaWareTheme.SURFACE_SOFT, true);
+        int boxX = x + 4;
+        int boxY = y + 2;
+        int offColor = LupaWareTheme.withAlpha(LupaWareTheme.SURFACE_RAISED, 235);
         int onColor = LupaWareTheme.withAlpha(LupaWareTheme.GOLD, 235);
-        int bgColor = ColorUtil.interpolateColor(offColor.getRGB(), onColor, progress);
-
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), switchX, switchY, WIDTH, SWITCH_HEIGHT, 5, bgColor);
-        RenderUtil.drawCircle(ctx.getMatrices(), switchX + 3 + (WIDTH - KNOB_RADIUS - 5) * progress + KNOB_RADIUS / 2f, switchY + (SWITCH_HEIGHT - KNOB_RADIUS) / 2f + KNOB_RADIUS / 2f, KNOB_RADIUS, LupaWareTheme.WHITE);
+        int bgColor = ColorUtil.interpolateColor(offColor, onColor, progress);
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), boxX, boxY, BOX_SIZE, BOX_SIZE, 1.5f, bgColor);
+        if (progress > 0.15f) {
+            FontUtils.icomoon[6].drawLeftAligned(ctx.getMatrices(), "S", boxX + 1.2f, boxY + 1.1f, LupaWareTheme.WHITE);
+        }
 
         var font = FontUtils.durman[13];
         String text = setting.getName();
-        int textY = (int) (y + (HEIGHT - font.getHeight()) / 2) - 2;
-        float maxTextWidth = switchX - x - 4;
+        int textY = (int) (y + (HEIGHT - font.getHeight()) / 2) - 1;
+        float maxTextWidth = width - 16;
         float textWidth = font.getWidth(text);
 
         double scale = mc.getWindow().getScaleFactor();
@@ -70,7 +70,7 @@ public class BooleanSettingRenderer implements SettingRenderer<BooleanSetting>, 
         Scissor.pop();
 
 
-        boolean isHovered = mX >= switchX && mX <= switchX + WIDTH && mY >= switchY && mY <= switchY + SWITCH_HEIGHT;
+        boolean isHovered = mX >= boxX && mX <= boxX + BOX_SIZE && mY >= boxY && mY <= boxY + BOX_SIZE;
         if (isHovered && setting.getDesc() != null && !setting.getDesc().isEmpty()) {
             DescriptionRenderQueue.add(setting.getDesc(), (float) mX + 6, (float) mY + 6);
         }
@@ -79,9 +79,9 @@ public class BooleanSettingRenderer implements SettingRenderer<BooleanSetting>, 
     @Override
     public boolean mouseClicked(BooleanSetting setting, double mouseX, double mouseY, int button, int x, int y, int width, int height) {
         if (button != 0) return false;
-        int switchX = x + width - WIDTH + 4;
-        int switchY = y + (HEIGHT - SWITCH_HEIGHT) / 2 - 2;
-        if (mouseX >= switchX && mouseX <= switchX + WIDTH && mouseY >= switchY && mouseY <= switchY + SWITCH_HEIGHT) {
+        int boxX = x + 4;
+        int boxY = y + 2;
+        if (mouseX >= boxX && mouseX <= boxX + BOX_SIZE && mouseY >= boxY && mouseY <= boxY + BOX_SIZE) {
             setting.set(!setting.get());
             return true;
         }

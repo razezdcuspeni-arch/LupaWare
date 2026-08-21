@@ -29,18 +29,19 @@ import java.util.Map;
 import java.util.Set;
 
 public class ClickGUI extends Screen implements IMinecraft {
-    private static final int SHELL_WIDTH = 400;
-    private static final int SHELL_HEIGHT = 250;
-    private static final int RAIL_WIDTH = 85;
+    private static final int SHELL_WIDTH = 353;
+    private static final int SHELL_HEIGHT = 199;
+    private static final int RAIL_WIDTH = 74;
     private static final int CONTENT_PADDING = 9;
-    private static final int CONTENT_HEADER_HEIGHT = 30;
-    private static final int MODULE_ROW_HEIGHT = 17;
-    private static final int MODULE_GAP = 3;
-    private static final int COLUMN_GAP = 6;
-    private static final int SEARCH_WIDTH = 80;
-    private static final int SEARCH_HEIGHT = 15;
-    private static final int SEARCH_X_OFFSET = 6;
-    private static final int SCROLL_STEP = 16;
+    private static final int CONTENT_HEADER_HEIGHT = 31;
+    private static final int MODULE_ROW_HEIGHT = 18;
+    private static final int MODULE_GAP = 5;
+    private static final int COLUMN_GAP = 4;
+    private static final int COLUMN_WIDTH = 129;
+    private static final int SEARCH_WIDTH = 38;
+    private static final int SEARCH_HEIGHT = 11;
+    private static final int SEARCH_X_OFFSET = 9;
+    private static final int SCROLL_STEP = 12;
 
     private static final Set<Type> CATEGORIES = EnumSet.of(Type.Combat, Type.Move, Type.Render, Type.Player, Type.Misc);
     private final Map<Type, Float> scroll = new EnumMap<>(Type.class);
@@ -91,21 +92,24 @@ public class ClickGUI extends Screen implements IMinecraft {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        openProgress += (1f - openProgress) * 0.22f;
         if (closeRequested) {
             openProgress += (0f - openProgress) * 0.25f;
             if (openProgress < 0.02f) {
                 super.close();
                 return;
             }
+        } else {
+            openProgress += (1f - openProgress) * 0.22f;
         }
 
+        lastMouseX = mouseX;
+        lastMouseY = mouseY;
         int shellX = (width - SHELL_WIDTH) / 2;
         int shellY = (height - SHELL_HEIGHT) / 2;
-        float scale = 0.94f + openProgress * 0.06f;
+        float scale = 0.97f + openProgress * 0.03f;
 
         RenderUtil.drawRoundedRect(context.getMatrices(), 0, 0, width, height, 0,
-                LupaWareTheme.withAlpha(LupaWareTheme.INK, 142));
+                LupaWareTheme.withAlpha(LupaWareTheme.INK, 82));
 
         context.getMatrices().push();
         context.getMatrices().translate(width / 2f, height / 2f, 0);
@@ -121,70 +125,66 @@ public class ClickGUI extends Screen implements IMinecraft {
     }
 
     private void renderShell(DrawContext context, int x, int y) {
-        RenderUtil.drawRoundedRect(context.getMatrices(), x, y, SHELL_WIDTH, SHELL_HEIGHT, 6,
-                LupaWareTheme.withAlpha(LupaWareTheme.SURFACE, 244));
-        RenderUtil.drawRoundedBorder(context.getMatrices(), x, y, SHELL_WIDTH, SHELL_HEIGHT, 6, 1.4f,
-                LupaWareTheme.withAlpha(LupaWareTheme.BORDER, 230));
-        RenderUtil.drawRoundedRect(context.getMatrices(), x + RAIL_WIDTH, y, SHELL_WIDTH - RAIL_WIDTH, SHELL_HEIGHT, 5,
-                LupaWareTheme.withAlpha(LupaWareTheme.SURFACE_RAISED, 230));
-        RenderUtil.drawRoundedRect(context.getMatrices(), x + RAIL_WIDTH, y + 28, 0.7f, SHELL_HEIGHT - 28,
+        RenderUtil.drawBlur(context.getMatrices(), x, y, SHELL_WIDTH, SHELL_HEIGHT, 10, 15f,
+                LupaWareTheme.withAlpha(LupaWareTheme.SURFACE, 232));
+        RenderUtil.drawRoundedRect(context.getMatrices(), x, y, SHELL_WIDTH, SHELL_HEIGHT, 10,
+                LupaWareTheme.withAlpha(LupaWareTheme.SURFACE, 222));
+        RenderUtil.drawRoundedBorder(context.getMatrices(), x, y, SHELL_WIDTH, SHELL_HEIGHT, 10, 0.7f,
+                LupaWareTheme.withAlpha(LupaWareTheme.BORDER, 150));
+        RenderUtil.drawRoundedRect(context.getMatrices(), x + RAIL_WIDTH, y, 0.35f, SHELL_HEIGHT,
                 0, LupaWareTheme.withAlpha(LupaWareTheme.BORDER_SOFT, 180));
+        RenderUtil.drawRoundedRect(context.getMatrices(), x, y + 31, SHELL_WIDTH, 0.35f,
+                0, LupaWareTheme.withAlpha(LupaWareTheme.BORDER_SOFT, 150));
     }
 
     private void renderRail(DrawContext context, int x, int y, int mouseX, int mouseY) {
         int accent = LupaWareTheme.GOLD;
         String username = mc.getSession().getUsername();
-        RenderUtil.drawRoundedRect(context.getMatrices(), x + 5, y - 30, 75, 25, 4,
-                LupaWareTheme.withAlpha(LupaWareTheme.SURFACE_SOFT, 220));
-        RenderUtil.drawRoundedBorder(context.getMatrices(), x + 5, y - 30, 75, 25, 4, 0.8f,
-                LupaWareTheme.withAlpha(LupaWareTheme.BORDER_SOFT, 180));
-        RenderUtil.drawRoundedRect(context.getMatrices(), x + 22, y - 15, 5, 5, 2.5f, LupaWareTheme.MINT);
-        FontUtils.sf_medium[8].drawLeftAligned(context.getMatrices(), username.length() > 12 ? username.substring(0, 12) : username,
-                x + 31, y - 21, LupaWareTheme.WHITE);
-        FontUtils.sf_medium[6].drawLeftAligned(context.getMatrices(), "CLIENT ONLINE", x + 31, y - 12, LupaWareTheme.DIM);
-        RenderUtil.drawRoundedRect(context.getMatrices(), x + 6, y + 8, 29, 29, 8, accent);
-        FontUtils.sf_bold[13].centeredDraw(context.getMatrices(), "LW", x + 20.5f, y + 16, LupaWareTheme.INK);
-        FontUtils.sf_bold[11].drawLeftAligned(context.getMatrices(), "LUPAWARE", x + 8, y + 47, LupaWareTheme.WHITE);
-        FontUtils.sf_medium[7].drawLeftAligned(context.getMatrices(), "CONTROL DECK", x + 8, y + 61, LupaWareTheme.DIM);
-        RenderUtil.drawRoundedRect(context.getMatrices(), x + 8, y + 76, RAIL_WIDTH - 16, 0.6f, 0,
-                LupaWareTheme.withAlpha(LupaWareTheme.BORDER_SOFT, 160));
-        FontUtils.sf_medium[7].drawLeftAligned(context.getMatrices(), "CATEGORIES", x + 8, y + 87, LupaWareTheme.DIM);
+        FontUtils.sf_medium[8].drawLeftAligned(context.getMatrices(), "LupaWare", x + 22, y + 10, LupaWareTheme.WHITE);
+        FontUtils.sf_medium[6].drawLeftAligned(context.getMatrices(), "Minecraft client", x + 22, y + 18, LupaWareTheme.DIM);
+        FontUtils.sf_bold[13].centeredDraw(context.getMatrices(), "L", x + 10, y + 11, accent);
+        FontUtils.sf_medium[7].drawLeftAligned(context.getMatrices(), "LupaWare", x + 17, y + 41, LupaWareTheme.MUTED);
+        FontUtils.sf_medium[6].drawLeftAligned(context.getMatrices(), "Categories", x + 17, y + 49, LupaWareTheme.DIM);
 
-        int rowY = y + 101;
+        int rowY = y + 62;
         for (Type category : CATEGORIES) {
             boolean active = category == selectedCategory;
-            boolean hovered = isHovered(mouseX, mouseY, x + 5, rowY, RAIL_WIDTH - 10, 20);
+            boolean hovered = isHovered(mouseX, mouseY, x + 5, rowY - 2, RAIL_WIDTH - 10, 17);
             if (active || hovered) {
-                RenderUtil.drawRoundedRect(context.getMatrices(), x + 5, rowY, RAIL_WIDTH - 10, 20, 5,
-                        active ? LupaWareTheme.withAlpha(LupaWareTheme.GOLD, 48) : LupaWareTheme.withAlpha(LupaWareTheme.SURFACE_SOFT, 130));
+                RenderUtil.drawRoundedRect(context.getMatrices(), x + 5, rowY - 2, RAIL_WIDTH - 10, 17, 3,
+                        active ? LupaWareTheme.withAlpha(LupaWareTheme.SURFACE_SOFT, 150) : LupaWareTheme.withAlpha(LupaWareTheme.SURFACE_RAISED, 100));
             }
             if (active) {
-                RenderUtil.drawRoundedRect(context.getMatrices(), x + 5, rowY + 4, 2, 12, 1,
-                        accent);
+                RenderUtil.drawRoundedRect(context.getMatrices(), x + RAIL_WIDTH - 3, rowY + 2, 2, 8, 1, accent);
             }
-            FontUtils.icomoon[11].drawLeftAligned(context.getMatrices(), category.icon, x + 12, rowY + 5,
-                    active ? accent : LupaWareTheme.MUTED);
-            FontUtils.sf_medium[8].drawLeftAligned(context.getMatrices(), category.name().toUpperCase(), x + 28, rowY + 6,
-                    active ? LupaWareTheme.WHITE : LupaWareTheme.MUTED);
-            rowY += 23;
+            FontUtils.icomoon[9].drawLeftAligned(context.getMatrices(), category.icon, x + 8, rowY + 2,
+                    active ? accent : LupaWareTheme.DIM);
+            FontUtils.sf_medium[7].drawLeftAligned(context.getMatrices(), category.name(), x + 20, rowY + 2,
+                    active ? LupaWareTheme.WHITE : LupaWareTheme.DIM);
+            rowY += 19;
         }
-        FontUtils.sf_medium[7].drawLeftAligned(context.getMatrices(), "H  HUD LAYOUT", x + 8, y + SHELL_HEIGHT - 15, LupaWareTheme.DIM);
+        RenderUtil.drawRoundedRect(context.getMatrices(), x, y + SHELL_HEIGHT - 26, RAIL_WIDTH, 0.35f, 0,
+                LupaWareTheme.withAlpha(LupaWareTheme.BORDER_SOFT, 140));
+        FontUtils.sf_medium[7].drawLeftAligned(context.getMatrices(), username, x + 22, y + SHELL_HEIGHT - 19, LupaWareTheme.WHITE);
+        FontUtils.sf_medium[6].drawLeftAligned(context.getMatrices(), "LupaWare", x + 22, y + SHELL_HEIGHT - 11, LupaWareTheme.DIM);
+        RenderUtil.drawRoundedRect(context.getMatrices(), x + 8, y + SHELL_HEIGHT - 18, 9, 9, 4.5f, accent);
+        FontUtils.sf_bold[7].centeredDraw(context.getMatrices(), username.isEmpty() ? "L" : username.substring(0, 1).toUpperCase(), x + 12.5f, y + SHELL_HEIGHT - 15, LupaWareTheme.INK);
     }
 
     private void renderContent(DrawContext context, int x, int y, int mouseX, int mouseY) {
         int contentX = x + CONTENT_PADDING;
-        int contentY = y + CONTENT_HEADER_HEIGHT;
+        int contentY = y + 40;
         int contentWidth = SHELL_WIDTH - RAIL_WIDTH - CONTENT_PADDING * 2;
-        int contentHeight = SHELL_HEIGHT - CONTENT_HEADER_HEIGHT - 8;
+        int contentHeight = SHELL_HEIGHT - 40 - 4;
 
-        String title = selectedCategory.name().toUpperCase();
-        FontUtils.icomoon[12].drawLeftAligned(context.getMatrices(), selectedCategory.icon, contentX, y + 8, LupaWareTheme.GOLD);
-        FontUtils.sf_bold[14].drawLeftAligned(context.getMatrices(), title, contentX + 20, y + 7, LupaWareTheme.WHITE);
-        FontUtils.sf_medium[7].drawLeftAligned(context.getMatrices(), "MODULES / RIGHT CLICK FOR SETTINGS", contentX + 20, y + 21, LupaWareTheme.DIM);
-        FontUtils.sf_medium[7].drawRightAligned(context.getMatrices(), countVisible(selectedCategory) + " MODULES",
-                x + SHELL_WIDTH - 16, y + 10, LupaWareTheme.DIM);
-        RenderUtil.drawRoundedRect(context.getMatrices(), contentX, y + CONTENT_HEADER_HEIGHT - 1, contentWidth, 0.6f, 0,
-                LupaWareTheme.withAlpha(LupaWareTheme.BORDER_SOFT, 140));
+        FontUtils.sf_medium[7].drawLeftAligned(context.getMatrices(), "LupaWare", contentX, y + 12, LupaWareTheme.DIM);
+        FontUtils.sf_medium[6].drawLeftAligned(context.getMatrices(), ">", contentX + 35, y + 13, LupaWareTheme.DIM);
+        FontUtils.sf_medium[7].drawLeftAligned(context.getMatrices(), "Categories", contentX + 46, y + 12, LupaWareTheme.DIM);
+        FontUtils.sf_medium[6].drawLeftAligned(context.getMatrices(), ">", contentX + 91, y + 13, LupaWareTheme.DIM);
+        FontUtils.icomoon[8].drawLeftAligned(context.getMatrices(), selectedCategory.icon, contentX + 101, y + 12, LupaWareTheme.GOLD);
+        FontUtils.sf_medium[7].drawLeftAligned(context.getMatrices(), selectedCategory.name(), contentX + 112, y + 12, LupaWareTheme.WHITE);
+        FontUtils.sf_medium[7].drawRightAligned(context.getMatrices(), countVisible(selectedCategory) + " modules",
+                x + SHELL_WIDTH - 50, y + 12, LupaWareTheme.DIM);
 
         float target = scrollTarget.getOrDefault(selectedCategory, 0f);
         float current = scroll.getOrDefault(selectedCategory, 0f);
@@ -193,8 +193,8 @@ public class ClickGUI extends Screen implements IMinecraft {
 
         visibleLayout.clear();
         List<Function> functions = visibleFunctions(selectedCategory);
-        float[] columnY = {contentY + 5, contentY + 5};
-        float columnWidth = (contentWidth - COLUMN_GAP) / 2f;
+        float[] columnY = {contentY, contentY};
+        float columnWidth = COLUMN_WIDTH;
         float totalBottom = contentY;
 
         context.getMatrices().push();
@@ -202,8 +202,8 @@ public class ClickGUI extends Screen implements IMinecraft {
         Scissor.setFromComponentCoordinates(contentX, contentY, contentWidth, contentHeight);
         for (int index = 0; index < functions.size(); index++) {
             Function function = functions.get(index);
-            int column = index % 2;
-            float moduleX = contentX + column * (columnWidth + COLUMN_GAP);
+            int column = columnY[0] <= columnY[1] ? 0 : 1;
+            float moduleX = contentX + column * (COLUMN_WIDTH + COLUMN_GAP);
             float moduleY = columnY[column] - current;
             float moduleHeight = getModuleHeight(function, (int) columnWidth - 10);
             ModuleLayout layout = new ModuleLayout(function, moduleX, moduleY, columnWidth, moduleHeight);
@@ -414,10 +414,10 @@ public class ClickGUI extends Screen implements IMinecraft {
         lastMouseY = mouseY;
         int shellX = (width - SHELL_WIDTH) / 2;
         int shellY = (height - SHELL_HEIGHT) / 2;
-        int railRowY = shellY + 101;
+        int railRowY = shellY + 62;
         int row = 0;
         for (Type category : CATEGORIES) {
-            if (isHovered(mouseX, mouseY, shellX + 5, railRowY + row * 23, RAIL_WIDTH - 10, 20)) {
+            if (isHovered(mouseX, mouseY, shellX + 5, railRowY + row * 19 - 2, RAIL_WIDTH - 10, 17)) {
                 selectedCategory = category;
                 return true;
             }
@@ -498,9 +498,9 @@ public class ClickGUI extends Screen implements IMinecraft {
         int shellX = (width - SHELL_WIDTH) / 2;
         int shellY = (height - SHELL_HEIGHT) / 2;
         int contentX = shellX + RAIL_WIDTH + CONTENT_PADDING;
-        int contentY = shellY + CONTENT_HEADER_HEIGHT;
+        int contentY = shellY + 40;
         int contentWidth = SHELL_WIDTH - RAIL_WIDTH - CONTENT_PADDING * 2;
-        int contentHeight = SHELL_HEIGHT - CONTENT_HEADER_HEIGHT - 8;
+        int contentHeight = SHELL_HEIGHT - 40 - 4;
         if (isHovered(mouseX, mouseY, contentX, contentY, contentWidth, contentHeight)) {
             scrollTarget.put(selectedCategory, Math.max(0f, scrollTarget.get(selectedCategory) - (float) verticalAmount * SCROLL_STEP));
             return true;
