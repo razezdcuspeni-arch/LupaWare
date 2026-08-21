@@ -38,16 +38,16 @@ public class ClickGUI extends Screen implements IMinecraft {
     private boolean isClose;
     private boolean hudLayoutMode = false;
 
-    private final int PANEL_WIDTH = 206;
-    private final int PANEL_HEIGHT = 430;
-    private final int PANEL_MARGIN = 14;
+    private final int PANEL_WIDTH = 188;
+    private final int PANEL_HEIGHT = 414;
+    private final int PANEL_MARGIN = 9;
 
-    private final Color GUI_COLOR = new Color(14, 24, 38, 246);
+    private final Color GUI_COLOR = new Color(12, 12, 12, 245);
 
     private final int TITLE_MARGIN_TOP = 9;
     private final int TITLE_HEIGHT = 42;
 
-    private final int FUNCTION_HEIGHT = 31;
+    private final int FUNCTION_HEIGHT = 28;
 
     private final int SCROLL_AREA_Y_OFFSET = TITLE_MARGIN_TOP + TITLE_HEIGHT;
     private final int SCROLL_AREA_HEIGHT = PANEL_HEIGHT - SCROLL_AREA_Y_OFFSET - 5;
@@ -77,9 +77,9 @@ public class ClickGUI extends Screen implements IMinecraft {
     private final SliderSettingRenderer sliderSettingRenderer = new SliderSettingRenderer();
     private final TextSettingRenderer textSettingRenderer = new TextSettingRenderer();
 
-    private final int SEARCH_HEIGHT = 34;
+    private final int SEARCH_HEIGHT = 28;
     private final int SEARCH_MARGIN_BOTTOM = 9;
-    private final int SEARCH_MAX_WIDTH = 360;
+    private final int SEARCH_MAX_WIDTH = 310;
 
     private final int THEME_HEIGHT = 30;
     private final int THEME_MARGIN_BOTTOM = 8;
@@ -285,25 +285,25 @@ public class ClickGUI extends Screen implements IMinecraft {
 
     private void renderPanel(DrawContext ctx, int x, int y, Type category, int mouseX, int mouseY) {
         ru.levin.modules.render.ClickGUI clickGUI = Manager.FUNCTION_MANAGER.clickGUI;
-        int panelColor = new Color(13, 24, 39, 238).getRGB();
-        int headerColor = new Color(22, 39, 58, 248).getRGB();
-        int borderColor = new Color(71, 111, 137, 190).getRGB();
-        int accentColor = ColorUtil.rgba(93, 226, 209, 255);
+        int panelColor = new Color(8, 8, 8, 232).getRGB();
+        int headerColor = new Color(25, 25, 25, 244).getRGB();
+        int borderColor = new Color(92, 92, 92, 150).getRGB();
+        int accentColor = Color.WHITE.getRGB();
 
         if (clickGUI.blur.get() && clickGUI.blurSetting.get("Панели")) {
-            drawBlur(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 18, 12, -1);
+            drawBlur(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 16, 10, -1);
         }
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 18, panelColor);
-        RenderUtil.drawRoundedBorder(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 18, 1.15f, borderColor);
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 1, y + 1, PANEL_WIDTH - 2, TITLE_HEIGHT + 11, 17, headerColor);
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 16, y + TITLE_HEIGHT + 12, PANEL_WIDTH - 32, 1, 0, new Color(76, 112, 133, 150).getRGB());
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 16, y + 14, 4, 25, 2, accentColor);
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 11, panelColor);
+        RenderUtil.drawRoundedBorder(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 11, 0.75f, borderColor);
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 1, y + 1, PANEL_WIDTH - 2, TITLE_HEIGHT + 5, 10, headerColor);
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 12, y + TITLE_HEIGHT + 7, PANEL_WIDTH - 24, 1, 0, new Color(70, 70, 70, 155).getRGB());
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 12, y + 12, 3, 27, 1.5f, accentColor);
 
         String title = category.name().toUpperCase();
         String icon = category.icon;
-        FontUtils.icomoon[16].drawLeftAligned(ctx.getMatrices(), icon, x + 29, y + TITLE_MARGIN_TOP + 7, ColorUtil.rgba(169, 246, 232, 255));
-        FontUtils.sf_bold[14].drawLeftAligned(ctx.getMatrices(), title, x + 53, y + TITLE_MARGIN_TOP + 7, Color.WHITE.getRGB());
-        FontUtils.sf_medium[9].drawRightAligned(ctx.getMatrices(), "ACTIVE / MODULES", x + PANEL_WIDTH - 13, y + TITLE_MARGIN_TOP + 9, new Color(150, 182, 194).getRGB());
+        FontUtils.icomoon[16].drawLeftAligned(ctx.getMatrices(), icon, x + 23, y + TITLE_MARGIN_TOP + 7, Color.WHITE.getRGB());
+        FontUtils.sf_bold[14].drawLeftAligned(ctx.getMatrices(), title, x + 45, y + TITLE_MARGIN_TOP + 7, Color.WHITE.getRGB());
+        FontUtils.sf_medium[9].drawRightAligned(ctx.getMatrices(), "MODULES", x + PANEL_WIDTH - 11, y + TITLE_MARGIN_TOP + 9, new Color(150, 150, 150).getRGB());
 
         {
             int maxBefore = calculateMaxScroll(category);
@@ -347,12 +347,11 @@ public class ClickGUI extends Screen implements IMinecraft {
             int col1 = f.state ? Color.WHITE.getRGB() : new Color(184, 184, 184).getRGB();
             int col2 = col1;
 
-            int colorModule = f.state ? new Color(35, 91, 91, clickGUI.alphaModules.get().intValue()).getRGB() : new Color(18, 34, 51, 224).getRGB();
+            int colorModule = f.state ? new Color(64, 64, 64, clickGUI.alphaModules.get().intValue()).getRGB() : new Color(24, 24, 24, 220).getRGB();
             int colorModule2 = colorModule;
 
             if (clickGUI.filling.get() || f.state) {
-                RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 10, currentY + 3, PANEL_WIDTH - 20, Math.max(25, totalHeight - 7), 9, colorModule2);
-                RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 16, currentY + 12, 4, 8, 2, f.state ? ColorUtil.rgba(93, 226, 209, 255) : ColorUtil.rgba(89, 116, 139, 220));
+                RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 8, currentY + 2, PANEL_WIDTH - 16, Math.max(22, totalHeight - 5), 6, colorModule2);
             }
 
             String textToRender;
@@ -364,7 +363,7 @@ public class ClickGUI extends Screen implements IMinecraft {
                 textToRender = f.name;
             }
 
-            FontUtils.sf_medium[12].drawClipped(ctx.getMatrices(), textToRender, PANEL_WIDTH - 51, x + 28, currentY + 9, f.state ? Color.WHITE.getRGB() : ColorUtil.rgba(178, 199, 211, 255));
+            FontUtils.sf_medium[12].drawClipped(ctx.getMatrices(), textToRender, PANEL_WIDTH - 37, x + 14, currentY + 8, f.state ? Color.WHITE.getRGB() : col1);
 
             if (animatedSettingsHeight > 0) {
                 float settingY = currentY + functionHeight;
@@ -413,7 +412,7 @@ public class ClickGUI extends Screen implements IMinecraft {
                 if (Math.abs((f.expanded ? 1f : 0f) - currentProgress) < 0.001f) currentProgress = f.expanded ? 1f : 0f;
                 arrowRotationProgress.put(f, currentProgress);
 
-                int arrowX = x + PANEL_WIDTH - 23;
+                int arrowX = x + PANEL_WIDTH - 13;
                 int arrowY = (int) (currentY + FUNCTION_HEIGHT / 2);
 
                 ctx.getMatrices().push();
@@ -421,7 +420,7 @@ public class ClickGUI extends Screen implements IMinecraft {
                 float angleRad = (float) Math.toRadians(90.0f * currentProgress);
                 Quaternionf rotation = new Quaternionf().fromAxisAngleRad(new Vector3f(0, 0, 1), angleRad);
                 ctx.getMatrices().multiply(rotation);
-                FontUtils.sf_medium[16].drawLeftAligned(ctx.getMatrices(), "+", -4, -FontUtils.sf_medium[16].getHeight() / 2, f.state ? ColorUtil.rgba(169, 246, 232, 255) : ColorUtil.rgba(150, 174, 191, 255));
+                FontUtils.sf_medium[16].drawLeftAligned(ctx.getMatrices(), "→", -4, -FontUtils.sf_medium[16].getHeight() / 2, col1);
                 ctx.getMatrices().pop();
             }
 
@@ -680,9 +679,7 @@ public class ClickGUI extends Screen implements IMinecraft {
         if (clickGUI.blur.get() && clickGUI.blurSetting.get("Поиск")) {
             drawBlur(ctx.getMatrices(), searchX, searchY, searchWidth, SEARCH_HEIGHT, 6, 12, -1);
         }
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), searchX, searchY, searchWidth, SEARCH_HEIGHT, 12, ColorUtil.rgba(17, 31, 48, 248));
-        RenderUtil.drawRoundedBorder(ctx.getMatrices(), searchX, searchY, searchWidth, SEARCH_HEIGHT, 12, 0.9f, ColorUtil.rgba(74, 112, 135, 220));
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), searchX + 12, searchY + 12, 7, 7, 4, ColorUtil.rgba(93, 226, 209, 255));
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), searchX, searchY, searchWidth, SEARCH_HEIGHT, 6, GUI_COLOR.getRGB());
 
         String displayText;
         int textColor;
@@ -691,7 +688,7 @@ public class ClickGUI extends Screen implements IMinecraft {
         if (searchState.text.isEmpty() && !searchState.focused) {
             displayText = "Поиск...";
             textColor = new Color(255, 255, 255, 120).getRGB();
-            int textWidth = (int) FontUtils.sf_medium[15].getWidth(displayText);
+            int textWidth = (int) FontUtils.sf_medium[18].getWidth(displayText);
             textX = searchX + (searchWidth - textWidth) / 2;
         } else {
             String text = searchState.text;
@@ -701,10 +698,10 @@ public class ClickGUI extends Screen implements IMinecraft {
             }
             displayText = text;
             textColor = Color.WHITE.getRGB();
-            textX = searchX + 28;
+            textX = searchX + 6;
         }
-        int textY = (int) (searchY + (SEARCH_HEIGHT - FontUtils.sf_medium[15].getHeight()) / 2);
-        FontUtils.sf_medium[15].drawLeftAligned(ctx.getMatrices(), displayText, textX, textY, textColor);
+        int textY = (int) (searchY + (SEARCH_HEIGHT - FontUtils.sf_medium[18].getHeight()) / 2);
+        FontUtils.sf_medium[18].drawLeftAligned(ctx.getMatrices(), displayText, textX, textY, textColor);
     }
 
     private int getThemeWidth() {
@@ -754,8 +751,7 @@ public class ClickGUI extends Screen implements IMinecraft {
         if (Manager.FUNCTION_MANAGER.clickGUI.blur.get() && Manager.FUNCTION_MANAGER.clickGUI.blurSetting.get("Темы")) {
             drawBlur(ctx.getMatrices(), themeX, themeY + offsetY, themeWidth, THEME_HEIGHT, 3, 12, -1);
         }
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), themeX, themeY + offsetY, themeWidth, THEME_HEIGHT, 12, panelColor);
-        RenderUtil.drawRoundedBorder(ctx.getMatrices(), themeX, themeY + offsetY, themeWidth, THEME_HEIGHT, 12, 0.8f, ColorUtil.rgba(74, 112, 135, 210));
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), themeX, themeY + offsetY, themeWidth, THEME_HEIGHT, 3, panelColor);
 
         int circleSize = THEME_HEIGHT - 5;
         int padding = 5;
@@ -1341,13 +1337,7 @@ public class ClickGUI extends Screen implements IMinecraft {
 
     @Override
     public void renderBackground(DrawContext drawContext, int mouseX, int mouseY, float delta) {
-        int background = ColorUtil.rgba(7, 13, 23, 255);
-        RenderUtil.drawRoundedRect(drawContext.getMatrices(), 0, 0, width, height, 0, background);
-        for (int i = -height; i < width + height; i += 72) {
-            RenderUtil.drawRoundedRect(drawContext.getMatrices(), i, 0, 1, height, 0, ColorUtil.rgba(43, 68, 93, 46));
-        }
-        RenderUtil.drawRoundedRect(drawContext.getMatrices(), width - 300, -160, 460, 460, 230, ColorUtil.rgba(39, 107, 121, 34));
-        RenderUtil.drawRoundedRect(drawContext.getMatrices(), -170, height - 210, 420, 420, 210, ColorUtil.rgba(77, 54, 138, 28));
+
     }
 
     @Override
