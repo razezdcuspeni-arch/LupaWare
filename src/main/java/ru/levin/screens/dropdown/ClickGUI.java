@@ -38,16 +38,16 @@ public class ClickGUI extends Screen implements IMinecraft {
     private boolean isClose;
     private boolean hudLayoutMode = false;
 
-    private final int PANEL_WIDTH = 220;
-    private final int PANEL_HEIGHT = 480;
-    private final int PANEL_MARGIN = 14;
+    private final int PANEL_WIDTH = 188;
+    private final int PANEL_HEIGHT = 414;
+    private final int PANEL_MARGIN = 9;
 
     private final Color GUI_COLOR = new Color(12, 12, 12, 245);
 
-    private final int TITLE_MARGIN_TOP = 11;
-    private final int TITLE_HEIGHT = 46;
+    private final int TITLE_MARGIN_TOP = 9;
+    private final int TITLE_HEIGHT = 42;
 
-    private final int FUNCTION_HEIGHT = 32;
+    private final int FUNCTION_HEIGHT = 28;
 
     private final int SCROLL_AREA_Y_OFFSET = TITLE_MARGIN_TOP + TITLE_HEIGHT;
     private final int SCROLL_AREA_HEIGHT = PANEL_HEIGHT - SCROLL_AREA_Y_OFFSET - 5;
@@ -77,13 +77,13 @@ public class ClickGUI extends Screen implements IMinecraft {
     private final SliderSettingRenderer sliderSettingRenderer = new SliderSettingRenderer();
     private final TextSettingRenderer textSettingRenderer = new TextSettingRenderer();
 
-    private final int SEARCH_HEIGHT = 32;
-    private final int SEARCH_MARGIN_BOTTOM = 12;
-    private final int SEARCH_MAX_WIDTH = 420;
+    private final int SEARCH_HEIGHT = 28;
+    private final int SEARCH_MARGIN_BOTTOM = 9;
+    private final int SEARCH_MAX_WIDTH = 310;
 
-    private final int THEME_HEIGHT = 36;
-    private final int THEME_MARGIN_BOTTOM = 12;
-    private final int THEME_MAX_WIDTH = 360;
+    private final int THEME_HEIGHT = 30;
+    private final int THEME_MARGIN_BOTTOM = 8;
+    private final int THEME_MAX_WIDTH = 280;
     private static float themeScrollOffset = 0;
     private static float themeScrollTarget = 0;
     private final int VISIBLE_THEMES = 8;
@@ -144,10 +144,10 @@ public class ClickGUI extends Screen implements IMinecraft {
         if (animation <= 0.01) return;
 
         super.render(ctx, mouseX, mouseY, delta);
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), 18, 18, 44, 44, 12, Color.WHITE.getRGB());
-        FontUtils.sf_bold[18].centeredDraw(ctx.getMatrices(), "LW", 40, 31, Color.BLACK.getRGB());
-        FontUtils.sf_bold[20].drawLeftAligned(ctx.getMatrices(), "LupaWare", 74, 22, Color.WHITE.getRGB());
-        FontUtils.sf_medium[12].drawLeftAligned(ctx.getMatrices(), "CLIENT CONTROL CENTER  /  RIGHT SHIFT", 75, 46, new Color(135, 135, 135).getRGB());
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), 16, 16, 36, 36, 10, Color.WHITE.getRGB());
+        FontUtils.sf_bold[15].centeredDraw(ctx.getMatrices(), "LW", 34, 26, Color.BLACK.getRGB());
+        FontUtils.sf_bold[18].drawLeftAligned(ctx.getMatrices(), "LupaWare", 62, 17, Color.WHITE.getRGB());
+        FontUtils.sf_medium[10].drawLeftAligned(ctx.getMatrices(), "CONTROL CENTER  /  RIGHT SHIFT", 63, 37, new Color(145, 145, 145).getRGB());
         ctx.getMatrices().push();
 
         for (Type category : renderCategories) {
@@ -285,25 +285,25 @@ public class ClickGUI extends Screen implements IMinecraft {
 
     private void renderPanel(DrawContext ctx, int x, int y, Type category, int mouseX, int mouseY) {
         ru.levin.modules.render.ClickGUI clickGUI = Manager.FUNCTION_MANAGER.clickGUI;
-        int panelColor = new Color(15, 15, 15, 238).getRGB();
-        int headerColor = new Color(30, 30, 30, 250).getRGB();
-        int borderColor = new Color(65, 65, 65, 180).getRGB();
+        int panelColor = new Color(8, 8, 8, 232).getRGB();
+        int headerColor = new Color(25, 25, 25, 244).getRGB();
+        int borderColor = new Color(92, 92, 92, 150).getRGB();
         int accentColor = Color.WHITE.getRGB();
 
         if (clickGUI.blur.get() && clickGUI.blurSetting.get("Панели")) {
             drawBlur(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 16, 10, -1);
         }
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 16, panelColor);
-        RenderUtil.drawRoundedBorder(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 16, 1f, borderColor);
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), x, y, PANEL_WIDTH, TITLE_HEIGHT + 8, 12, headerColor);
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 14, y + TITLE_HEIGHT + 8, PANEL_WIDTH - 28, 1, 0, new Color(72, 72, 72, 190).getRGB());
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 14, y + 15, 4, 30, 2, accentColor);
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 11, panelColor);
+        RenderUtil.drawRoundedBorder(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 11, 0.75f, borderColor);
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 1, y + 1, PANEL_WIDTH - 2, TITLE_HEIGHT + 5, 10, headerColor);
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 12, y + TITLE_HEIGHT + 7, PANEL_WIDTH - 24, 1, 0, new Color(70, 70, 70, 155).getRGB());
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 12, y + 12, 3, 27, 1.5f, accentColor);
 
         String title = category.name().toUpperCase();
         String icon = category.icon;
-        FontUtils.icomoon[18].drawLeftAligned(ctx.getMatrices(), icon, x + 28, y + TITLE_MARGIN_TOP + 8, Color.WHITE.getRGB());
-        FontUtils.sf_bold[16].drawLeftAligned(ctx.getMatrices(), title, x + 54, y + TITLE_MARGIN_TOP + 8, Color.WHITE.getRGB());
-        FontUtils.sf_medium[10].drawRightAligned(ctx.getMatrices(), "MODULES", x + PANEL_WIDTH - 14, y + TITLE_MARGIN_TOP + 11, new Color(150, 150, 150).getRGB());
+        FontUtils.icomoon[16].drawLeftAligned(ctx.getMatrices(), icon, x + 23, y + TITLE_MARGIN_TOP + 7, Color.WHITE.getRGB());
+        FontUtils.sf_bold[14].drawLeftAligned(ctx.getMatrices(), title, x + 45, y + TITLE_MARGIN_TOP + 7, Color.WHITE.getRGB());
+        FontUtils.sf_medium[9].drawRightAligned(ctx.getMatrices(), "MODULES", x + PANEL_WIDTH - 11, y + TITLE_MARGIN_TOP + 9, new Color(150, 150, 150).getRGB());
 
         {
             int maxBefore = calculateMaxScroll(category);
@@ -351,7 +351,7 @@ public class ClickGUI extends Screen implements IMinecraft {
             int colorModule2 = colorModule;
 
             if (clickGUI.filling.get() || f.state) {
-                RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 10, currentY + 2, PANEL_WIDTH - 20, Math.max(24, totalHeight - 5), 8, colorModule2);
+                RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 8, currentY + 2, PANEL_WIDTH - 16, Math.max(22, totalHeight - 5), 6, colorModule2);
             }
 
             String textToRender;
@@ -363,7 +363,7 @@ public class ClickGUI extends Screen implements IMinecraft {
                 textToRender = f.name;
             }
 
-            FontUtils.sf_medium[13].drawClipped(ctx.getMatrices(), textToRender, PANEL_WIDTH - 42, x + 18, currentY + 9, f.state ? Color.WHITE.getRGB() : col1);
+            FontUtils.sf_medium[12].drawClipped(ctx.getMatrices(), textToRender, PANEL_WIDTH - 37, x + 14, currentY + 8, f.state ? Color.WHITE.getRGB() : col1);
 
             if (animatedSettingsHeight > 0) {
                 float settingY = currentY + functionHeight;
@@ -412,7 +412,7 @@ public class ClickGUI extends Screen implements IMinecraft {
                 if (Math.abs((f.expanded ? 1f : 0f) - currentProgress) < 0.001f) currentProgress = f.expanded ? 1f : 0f;
                 arrowRotationProgress.put(f, currentProgress);
 
-                int arrowX = x + PANEL_WIDTH - 16;
+                int arrowX = x + PANEL_WIDTH - 13;
                 int arrowY = (int) (currentY + FUNCTION_HEIGHT / 2);
 
                 ctx.getMatrices().push();
