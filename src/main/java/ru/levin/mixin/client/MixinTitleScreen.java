@@ -18,7 +18,9 @@ public class MixinTitleScreen implements IMinecraft {
     @Inject(method = "init", at = @At("TAIL"))
     private void addLupaWareTabs(CallbackInfo ci) {
         int centerX = mc.getWindow().getScaledWidth() / 2;
-        int y = mc.getWindow().getScaledHeight() / 4 + 144;
+        // Keep AltManager on its own row below the vanilla Options/Quit row.
+        // The extra 8 scaled pixels prevent the button hitbox from touching the row above.
+        int y = mc.getWindow().getScaledHeight() / 4 + 152;
         int buttonWidth = 200;
         int left = centerX - buttonWidth / 2;
         TitleScreen parent = (TitleScreen) (Object) this;
