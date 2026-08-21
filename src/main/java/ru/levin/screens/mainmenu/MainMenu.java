@@ -9,7 +9,6 @@ import net.minecraft.text.Text;
 import ru.levin.screens.altmanager.AltManager;
 import ru.levin.util.color.ColorUtil;
 import ru.levin.manager.fontManager.FontUtils;
-import ru.levin.manager.Manager;
 import ru.levin.util.render.RenderUtil;
 
 import java.awt.Color;
@@ -25,7 +24,6 @@ public class MainMenu extends Screen {
 
     private static final String TITLE = "LupaWare 1.21.4";
     private static final String WINDOW_LABEL = "LupaWare | by: wasdd";
-    private int activePulse;
 
     public MainMenu() {
         super(Text.literal(WINDOW_LABEL));
@@ -33,122 +31,101 @@ public class MainMenu extends Screen {
 
     @Override
     protected void init() {
-        singleplayerButton = new Button("Singleplayer", 0, 0, 206, 34, true);
-        multiplayerButton = new Button("Multiplayer", 0, 0, 206, 34, true);
-        altmanagerButton = new Button("AltManager", 0, 0, 206, 34, true);
-        updatesButton = new Button("Updates", 0, 0, 206, 34, true);
-        optionsButton = new Button("Options", 0, 0, 98, 32, false);
-        quitButton = new Button("Quit", 0, 0, 98, 32, false);
+        singleplayerButton = new Button("Singleplayer", 0, 0, 210, 38, true);
+        multiplayerButton = new Button("Multiplayer", 0, 0, 210, 38, true);
+        altmanagerButton = new Button("AltManager", 0, 0, 210, 38, true);
+        updatesButton = new Button("Updates", 0, 0, 210, 38, true);
+        optionsButton = new Button("Options", 0, 0, 102, 32, false);
+        quitButton = new Button("Quit", 0, 0, 102, 32, false);
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        int accent = Color.WHITE.getRGB();
-        int secondary = ColorUtil.rgba(210, 210, 210, 255);
-        int muted = ColorUtil.rgba(155, 155, 155, 255);
-        int panel = ColorUtil.rgba(18, 18, 18, 248);
-        int panelLight = ColorUtil.rgba(28, 28, 28, 248);
+        int cyan = ColorUtil.rgba(93, 226, 209, 255);
+        int violet = ColorUtil.rgba(150, 126, 255, 255);
+        int white = Color.WHITE.getRGB();
+        int muted = ColorUtil.rgba(164, 177, 194, 255);
+        int ink = ColorUtil.rgba(9, 14, 24, 255);
+        int surface = ColorUtil.rgba(16, 25, 40, 245);
+        int surface2 = ColorUtil.rgba(22, 34, 54, 238);
 
-        RenderUtil.drawRoundedRect(context.getMatrices(), 0, 0, width, height, 0, ColorUtil.rgba(13, 15, 20, 255));
-        RenderUtil.drawRoundedRect(context.getMatrices(), 18, 18, 250, height - 36, 12, panel);
-        RenderUtil.drawRoundedBorder(context.getMatrices(), 18, 18, 250, height - 36, 12, 1f, ColorUtil.rgba(95, 95, 95, 190));
+        RenderUtil.drawRoundedRect(context.getMatrices(), 0, 0, width, height, 0, ink);
+        // Subtle depth grid: deliberately unlike the previous flat menu.
+        for (int i = -height; i < width + height; i += 64) {
+            RenderUtil.drawRoundedRect(context.getMatrices(), i, 0, 1, height, 0, ColorUtil.rgba(37, 57, 78, 70));
+        }
+        RenderUtil.drawRoundedRect(context.getMatrices(), width - 330, -90, 430, 430, 215, ColorUtil.rgba(54, 93, 118, 70));
+        RenderUtil.drawRoundedRect(context.getMatrices(), width - 245, height - 175, 330, 330, 165, ColorUtil.rgba(85, 61, 138, 45));
 
-        // Brand block.
-        RenderUtil.drawRoundedRect(context.getMatrices(), 38, 40, 42, 42, 10, accent);
-        FontUtils.sf_bold[24].centeredDraw(context.getMatrices(), "LW", 59, 49, Color.WHITE.getRGB());
-        FontUtils.sf_bold[24].drawLeftAligned(context.getMatrices(), "LupaWare", 94, 42, Color.WHITE.getRGB());
-        FontUtils.sf_medium[16].drawLeftAligned(context.getMatrices(), "by: wasdd", 95, 68, muted);
-        RenderUtil.drawRoundedRect(context.getMatrices(), 38, 101, 210, 1, 0, ColorUtil.rgba(90, 90, 90, 180));
+        int railX = 28;
+        int railW = 248;
+        RenderUtil.drawRoundedRect(context.getMatrices(), railX, 26, railW, height - 52, 18, surface);
+        RenderUtil.drawRoundedBorder(context.getMatrices(), railX, 26, railW, height - 52, 18, 1f, ColorUtil.rgba(77, 103, 128, 210));
+        RenderUtil.drawRoundedRect(context.getMatrices(), railX + 20, 48, 48, 48, 14, cyan);
+        FontUtils.sf_bold[23].centeredDraw(context.getMatrices(), "LW", railX + 44, 59, ink);
+        FontUtils.sf_bold[24].drawLeftAligned(context.getMatrices(), "LupaWare", railX + 82, 51, white);
+        FontUtils.sf_medium[12].drawLeftAligned(context.getMatrices(), "CONTROL DECK", railX + 83, 78, muted);
+        RenderUtil.drawRoundedRect(context.getMatrices(), railX + 22, 120, railW - 44, 1, 0, ColorUtil.rgba(88, 113, 137, 180));
+        FontUtils.sf_medium[11].drawLeftAligned(context.getMatrices(), "NAVIGATION", railX + 24, 139, muted);
 
-        int navStart = 132;
-        singleplayerButton.x = 38;
-        singleplayerButton.y = navStart;
-        multiplayerButton.x = 38;
-        multiplayerButton.y = navStart + 46;
-        altmanagerButton.x = 38;
-        altmanagerButton.y = navStart + 92;
-        updatesButton.x = 38;
-        updatesButton.y = navStart + 138;
-        optionsButton.x = 38;
-        optionsButton.y = height - 72;
-        quitButton.x = 148;
-        quitButton.y = height - 72;
-
+        int navY = 164;
+        singleplayerButton.x = railX + 19; singleplayerButton.y = navY;
+        multiplayerButton.x = railX + 19; multiplayerButton.y = navY + 48;
+        altmanagerButton.x = railX + 19; altmanagerButton.y = navY + 96;
+        updatesButton.x = railX + 19; updatesButton.y = navY + 144;
         singleplayerButton.render(context, mouseX, mouseY, delta);
         multiplayerButton.render(context, mouseX, mouseY, delta);
         altmanagerButton.render(context, mouseX, mouseY, delta);
         updatesButton.render(context, mouseX, mouseY, delta);
+
+        optionsButton.x = railX + 19; optionsButton.y = height - 72;
+        quitButton.x = railX + 127; quitButton.y = height - 72;
         optionsButton.render(context, mouseX, mouseY, delta);
         quitButton.render(context, mouseX, mouseY, delta);
 
-        // Main content area.
-        int contentX = 302;
-        int contentWidth = width - contentX - 36;
-        FontUtils.sf_medium[16].drawLeftAligned(context.getMatrices(), "DASHBOARD / HOME", contentX, 46, accent);
-        FontUtils.sf_bold[42].drawLeftAligned(context.getMatrices(), "Welcome back", contentX, 73, Color.WHITE.getRGB());
-        FontUtils.sf_medium[18].drawLeftAligned(context.getMatrices(), "Your client is ready for the next session.", contentX, 121, muted);
+        int contentX = 314;
+        int contentW = width - contentX - 34;
+        FontUtils.sf_medium[12].drawLeftAligned(context.getMatrices(), "OVERVIEW  /  SESSION READY", contentX, 48, cyan);
+        FontUtils.sf_bold[40].drawLeftAligned(context.getMatrices(), "Welcome back.", contentX, 76, white);
+        FontUtils.sf_medium[17].drawLeftAligned(context.getMatrices(), "A quiet command surface for your next Minecraft session.", contentX + 2, 126, muted);
 
-        int heroY = 166;
-        int heroHeight = 178;
-        RenderUtil.drawRoundedRect(context.getMatrices(), contentX, heroY, contentWidth, heroHeight, 14, panelLight);
-        RenderUtil.drawRoundedBorder(context.getMatrices(), contentX, heroY, contentWidth, heroHeight, 14, 1f, ColorUtil.rgba(70, 82, 105, 180));
-        RenderUtil.drawRoundedRect(context.getMatrices(), contentX, heroY, 5, heroHeight, 3, accent);
-        FontUtils.sf_bold[28].drawLeftAligned(context.getMatrices(), TITLE, contentX + 28, heroY + 28, Color.WHITE.getRGB());
-        FontUtils.sf_medium[17].drawLeftAligned(context.getMatrices(), "A clean space for your Minecraft experience.", contentX + 29, heroY + 68, muted);
-        FontUtils.sf_medium[17].drawLeftAligned(context.getMatrices(), "Choose a section from the navigation to continue.", contentX + 29, heroY + 94, muted);
+        int heroY = 174;
+        RenderUtil.drawRoundedRect(context.getMatrices(), contentX, heroY, contentW, 190, 18, surface2);
+        RenderUtil.drawRoundedBorder(context.getMatrices(), contentX, heroY, contentW, 190, 18, 1f, ColorUtil.rgba(82, 121, 145, 220));
+        RenderUtil.drawRoundedRect(context.getMatrices(), contentX + 24, heroY + 24, 7, 142, 3, cyan);
+        FontUtils.sf_medium[12].drawLeftAligned(context.getMatrices(), "CURRENT PROFILE", contentX + 53, heroY + 28, muted);
+        FontUtils.sf_bold[29].drawLeftAligned(context.getMatrices(), TITLE, contentX + 51, heroY + 53, white);
+        FontUtils.sf_medium[16].drawLeftAligned(context.getMatrices(), "Fabric runtime / 1.21.4", contentX + 53, heroY + 94, muted);
+        RenderUtil.drawRoundedRect(context.getMatrices(), contentX + 53, heroY + 132, 11, 11, 6, cyan);
+        FontUtils.sf_medium[15].drawLeftAligned(context.getMatrices(), "CLIENT ONLINE", contentX + 75, heroY + 129, white);
+        FontUtils.sf_medium[15].drawRightAligned(context.getMatrices(), "READY", contentX + contentW - 30, heroY + 129, cyan);
 
-        int statusX = contentX + 29;
-        int statusY = heroY + 130;
-        RenderUtil.drawRoundedRect(context.getMatrices(), statusX, statusY, 10, 10, 5, Color.WHITE.getRGB());
-        FontUtils.sf_medium[16].drawLeftAligned(context.getMatrices(), "Client online", statusX + 18, statusY - 3, ColorUtil.rgba(225, 225, 225, 255));
-        FontUtils.sf_medium[16].drawLeftAligned(context.getMatrices(), "Fabric 1.21.4", statusX + 142, statusY - 3, muted);
-
-        int cardY = heroY + heroHeight + 20;
-        int cardWidth = (contentWidth - 20) / 2;
-        drawInfoCard(context, contentX, cardY, cardWidth, "QUICK ACCESS", "AltManager", "Manage your accounts", accent);
-        drawInfoCard(context, contentX + cardWidth + 20, cardY, cardWidth, "BUILD", "Stable release", "LupaWare 1.21.4", secondary);
-
-        FontUtils.sf_medium[15].drawLeftAligned(context.getMatrices(), "LupaWare | by: wasdd", contentX, height - 32, muted);
-        String versionText = "v1.21.4";
-        float versionX = width - 36 - FontUtils.sf_medium[15].getWidth(versionText);
-        FontUtils.sf_medium[15].drawLeftAligned(context.getMatrices(), versionText, versionX, height - 32, muted);
+        int cardsY = heroY + 214;
+        int cardW = (contentW - 18) / 2;
+        drawInfoCard(context, contentX, cardsY, cardW, "ACCOUNTS", "AltManager", "Manage your login profiles", violet);
+        drawInfoCard(context, contentX + cardW + 18, cardsY, cardW, "CHANGELOG", "Updates", "See what changed recently", cyan);
+        FontUtils.sf_medium[14].drawLeftAligned(context.getMatrices(), "LupaWare / by: wasdd", contentX, height - 35, muted);
+        FontUtils.sf_medium[14].drawRightAligned(context.getMatrices(), "v1.21.4", width - 34, height - 35, muted);
     }
 
     private void drawInfoCard(DrawContext context, int x, int y, int cardWidth, String eyebrow, String title, String subtitle, int accent) {
-        RenderUtil.drawRoundedRect(context.getMatrices(), x, y, cardWidth, 94, 12, ColorUtil.rgba(25, 28, 35, 245));
-        RenderUtil.drawRoundedBorder(context.getMatrices(), x, y, cardWidth, 94, 12, 1f, ColorUtil.rgba(95, 95, 95, 190));
-        RenderUtil.drawRoundedRect(context.getMatrices(), x + 18, y + 19, 4, 52, 2, accent);
-        FontUtils.sf_medium[13].drawLeftAligned(context.getMatrices(), eyebrow, x + 34, y + 16, accent);
-        FontUtils.sf_bold[20].drawLeftAligned(context.getMatrices(), title, x + 34, y + 36, Color.WHITE.getRGB());
-        FontUtils.sf_medium[14].drawLeftAligned(context.getMatrices(), subtitle, x + 34, y + 64, ColorUtil.rgba(155, 155, 155, 255));
+        RenderUtil.drawRoundedRect(context.getMatrices(), x, y, cardWidth, 92, 15, ColorUtil.rgba(19, 30, 48, 245));
+        RenderUtil.drawRoundedBorder(context.getMatrices(), x, y, cardWidth, 92, 15, 1f, ColorUtil.rgba(77, 107, 133, 200));
+        RenderUtil.drawRoundedRect(context.getMatrices(), x + 20, y + 20, 42, 42, 12, ColorUtil.applyAlpha(accent, 42));
+        RenderUtil.drawRoundedRect(context.getMatrices(), x + 20, y + 20, 4, 42, 2, accent);
+        FontUtils.sf_medium[11].drawLeftAligned(context.getMatrices(), eyebrow, x + 79, y + 20, accent);
+        FontUtils.sf_bold[20].drawLeftAligned(context.getMatrices(), title, x + 79, y + 39, Color.WHITE.getRGB());
+        FontUtils.sf_medium[13].drawLeftAligned(context.getMatrices(), subtitle, x + 79, y + 65, ColorUtil.rgba(164, 177, 194, 255));
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (singleplayerButton.isHovered(mouseX, mouseY)) {
-            client.setScreen(new SelectWorldScreen(this));
-            return true;
-        }
-        if (multiplayerButton.isHovered(mouseX, mouseY)) {
-            client.setScreen(new MultiplayerScreen(this));
-            return true;
-        }
-        if (altmanagerButton.isHovered(mouseX, mouseY)) {
-            client.setScreen(new AltManager(this));
-            return true;
-        }
-        if (updatesButton.isHovered(mouseX, mouseY)) {
-            client.setScreen(new UpdatesScreen(this));
-            return true;
-        }
-        if (optionsButton.isHovered(mouseX, mouseY)) {
-            client.setScreen(new OptionsScreen(this, client.options));
-            return true;
-        }
-        if (quitButton.isHovered(mouseX, mouseY)) {
-            client.scheduleStop();
-            return true;
-        }
+        if (singleplayerButton.isHovered(mouseX, mouseY)) { client.setScreen(new SelectWorldScreen(this)); return true; }
+        if (multiplayerButton.isHovered(mouseX, mouseY)) { client.setScreen(new MultiplayerScreen(this)); return true; }
+        if (altmanagerButton.isHovered(mouseX, mouseY)) { client.setScreen(new AltManager(this)); return true; }
+        if (updatesButton.isHovered(mouseX, mouseY)) { client.setScreen(new UpdatesScreen(this)); return true; }
+        if (optionsButton.isHovered(mouseX, mouseY)) { client.setScreen(new OptionsScreen(this, client.options)); return true; }
+        if (quitButton.isHovered(mouseX, mouseY)) { client.scheduleStop(); return true; }
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
@@ -157,36 +134,19 @@ public class MainMenu extends Screen {
         int x, y, width, height;
         final boolean prominent;
         private float hoverAnim;
-
-        Button(String name, int x, int y, int width, int height, boolean prominent) {
-            this.name = name;
-            this.x = x;
-            this.y = y;
-            this.width = width;
-            this.height = height;
-            this.prominent = prominent;
-        }
-
+        Button(String name, int x, int y, int width, int height, boolean prominent) { this.name = name; this.x = x; this.y = y; this.width = width; this.height = height; this.prominent = prominent; }
         void render(DrawContext context, int mouseX, int mouseY, float delta) {
             boolean hovered = isHovered(mouseX, mouseY);
-            hoverAnim += ((hovered ? 1f : 0f) - hoverAnim) * 0.16f;
-            int base = prominent ? ColorUtil.rgba(30, 30, 30, 255) : ColorUtil.rgba(24, 24, 24, 255);
-            int hover = prominent ? ColorUtil.rgba(92, 92, 92, 255) : ColorUtil.rgba(70, 70, 70, 255);
-            int background = ColorUtil.blendColorsInt(base, hover, hoverAnim);
-            int border = prominent ? ColorUtil.rgba(105, 105, 105, 220) : ColorUtil.rgba(85, 85, 85, 180);
-            RenderUtil.drawRoundedRect(context.getMatrices(), x, y, width, height, 9, background);
-            RenderUtil.drawRoundedBorder(context.getMatrices(), x, y, width, height, 9, 1f, border);
-            int textColor = hovered ? Color.WHITE.getRGB() : ColorUtil.rgba(210, 210, 210, 255);
-            FontUtils.sf_medium[17].centeredDraw(context.getMatrices(), name, x + width / 2f, y + height / 2f - 6, textColor);
+            hoverAnim += ((hovered ? 1f : 0f) - hoverAnim) * 0.18f;
+            int base = prominent ? ColorUtil.rgba(24, 38, 57, 255) : ColorUtil.rgba(20, 31, 48, 255);
+            int active = prominent ? ColorUtil.rgba(53, 85, 102, 255) : ColorUtil.rgba(42, 62, 83, 255);
+            int background = ColorUtil.blendColorsInt(base, active, hoverAnim);
+            RenderUtil.drawRoundedRect(context.getMatrices(), x, y, width, height, 11, background);
+            if (hovered) RenderUtil.drawRoundedRect(context.getMatrices(), x, y, 4, height, 2, ColorUtil.rgba(93, 226, 209, 255));
+            FontUtils.sf_medium[16].drawLeftAligned(context.getMatrices(), name, x + 18, y + 10, hovered ? Color.WHITE.getRGB() : ColorUtil.rgba(202, 214, 226, 255));
+            FontUtils.sf_medium[16].drawRightAligned(context.getMatrices(), ">", x + width - 16, y + 10, ColorUtil.rgba(135, 156, 176, 255));
         }
-
-        boolean isHovered(double mouseX, double mouseY) {
-            return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
-        }
+        boolean isHovered(double mouseX, double mouseY) { return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height; }
     }
-
-    @Override
-    public boolean shouldCloseOnEsc() {
-        return false;
-    }
+    @Override public boolean shouldCloseOnEsc() { return false; }
 }
