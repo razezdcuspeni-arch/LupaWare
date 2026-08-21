@@ -26,6 +26,7 @@ import ru.levin.util.render.RenderUtil;
 import ru.levin.util.render.providers.ResourceProvider;
 
 import java.awt.*;
+import java.util.LinkedList;
 
 import static ru.levin.util.math.MathUtil.interpolate;
 import static ru.levin.util.math.MathUtil.interpolateFloat;
@@ -34,12 +35,17 @@ import static ru.levin.util.render.RenderUtil.*;
 @SuppressWarnings("All")
 @FunctionAnnotation(name = "TargetESP", desc = "Красивый указатель на вашем противнике", type = Type.Render)
 public class TargetESP extends Function {
-    private final ModeSetting mode = new ModeSetting("Мод","Призраки","Маркер","Маркер2","Skeleton","Призраки","Кружок");
+    private final ModeSetting mode = new ModeSetting("Мод","Призраки","Маркер","Маркер2","Skeleton","Призраки","Кружок","Pulse");
 
     private final float[] SCALE_CACHE = new float[101];
     private final EaseInOutQuad animation = new EaseInOutQuad(800, 1);
     private Entity lastTarget = null;
     private double scale = 0.0D;
+    @SuppressWarnings("unchecked")
+    private final LinkedList<Vec3d>[] pulseTrails = new LinkedList[]{
+            new LinkedList<>(), new LinkedList<>(), new LinkedList<>(), new LinkedList<>(), new LinkedList<>()
+    };
+
     public TargetESP() {
         addSettings(mode);
         for (int i = 0; i <= 100; i++) SCALE_CACHE[i] = Math.max(0.28f * (i / 100f), 0.2f);
@@ -65,12 +71,91 @@ public class TargetESP extends Function {
                 renderGhosts(14, 8, 1.8f, 3f, currentTarget);
             } else if (mode.is("Кружок")) {
                 cicle(currentTarget, renderEvent.getMatrixStack(), renderEvent.getDeltatick().getTickDelta(true));
+            } else if (mode.is("Pulse")) {
+                renderPulse(renderEvent, currentTarget);
             }
         }
     }
     @Override
     public void onDisable() {
+        clearPulseTrails();
         super.onDisable();
+    }
+
+    private void renderPulse(EventRender3D event, Entity target) {
+        if (target == null) return;
+        float progress = (float) animation.getOutput();
+        if (progress <= 0.01f) {
+            clearPulseTrails();
+            return;
+        }
+
+        Camera camera = mc.gameRenderer.getCamera();
+        if (camera == null) return;
+        float tickDelta = event.getDeltatick().getTickDelta(false);
+        Vec3d cameraPos = camera.getPos();
+        double targetX = interpolate(target.prevX, target.getX(), tickDelta);
+        double targetY = interpolate(target.prevY, target.getY(), tickDelta);
+        double targetZ = interpolate(target.prevZ, target.getZ(), tickDelta);
+        long time = System.currentTimeMillis();
+
+        RenderUtil.enableRender(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_TEX_COLOR);
+        RenderSystem.setShaderTexture(0, ResourceProvider.bloom);
+        RenderSystem.disableCull();
+        RenderSystem.disableDepthTest();
+        RenderSystem.depthMask(false);
+
+        BufferBuilder buffer = IMinecraft.tessellator().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
+        for (int i = 0; i < pulseTrails.length; i++) {
+            double phase = time * 0.005 + i * (Math.PI * 2.0 / pulseTrails.length);
+            double radius = target.getWidth() + 0.15;
+            double tx = Math.sin(phase) * radius;
+            double tz = Math.cos(phase) * radius;
+            double ty = Math.sin(phase * 0.8) * (target.getHeight() * 0.55) * (i % 2 == 0 ? 1.0 : -1.0)
+                    + target.getHeight() * 0.5;
+
+            pulseTrails[i].addFirst(new Vec3d(tx, ty, tz));
+            while (pulseTrails[i].size() > 35) pulseTrails[i].removeLast();
+
+            int segment = 0;
+            for (Vec3d relative : pulseTrails[i]) {
+                float fade = 1f - segment / (float) pulseTrails[i].size();
+                float pointScale = (segment == 0 ? 0.34f : 0.21f) * fade * progress;
+                int alpha = (int) (255f * Math.pow(fade, 1.8f) * progress);
+                int color = ColorUtil.applyAlpha(ColorUtil.getColorStyle((int) (360f * (i / 5f))), alpha / 255f);
+
+                MatrixStack billboard = new MatrixStack();
+                billboard.translate(
+                        targetX + relative.x - cameraPos.x,
+                        targetY + relative.y - cameraPos.y,
+                        targetZ + relative.z - cameraPos.z
+                );
+                billboard.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-camera.getYaw()));
+                billboard.multiply(RotationAxis.POSITIVE_X.rotationDegrees(camera.getPitch()));
+                Matrix4f matrix = billboard.peek().getPositionMatrix();
+                drawPulseQuad(buffer, matrix, pointScale, color);
+                segment++;
+            }
+        }
+
+        RenderUtil.render3D.endBuilding(buffer);
+        RenderSystem.depthMask(true);
+        RenderSystem.enableDepthTest();
+        RenderSystem.enableCull();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.disableBlend();
+    }
+
+    private void drawPulseQuad(BufferBuilder buffer, Matrix4f matrix, float scale, int color) {
+        buffer.vertex(matrix, -scale, scale, 0).texture(0f, 1f).color(color);
+        buffer.vertex(matrix, scale, scale, 0).texture(1f, 1f).color(color);
+        buffer.vertex(matrix, scale, -scale, 0).texture(1f, 0f).color(color);
+        buffer.vertex(matrix, -scale, -scale, 0).texture(0f, 0f).color(color);
+    }
+
+    private void clearPulseTrails() {
+        for (LinkedList<Vec3d> trail : pulseTrails) trail.clear();
     }
 
     public void renderGhosts(int espLength, int factor, float shaking, float amplitude, Entity target) {

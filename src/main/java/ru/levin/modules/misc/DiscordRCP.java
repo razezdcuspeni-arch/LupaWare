@@ -31,8 +31,6 @@ public class DiscordRCP extends Function {
         DiscordEventHandlers handlers = new DiscordEventHandlers();
         rpc.Discord_Initialize("1540046262332694588", handlers, true, "");
         presence.startTimestamp = System.currentTimeMillis() / 1000L;
-        presence.largeImageText = "LupaWare | by: wasdd";
-
         updatePresenceFields();
 
         rpc.Discord_UpdatePresence(presence);
@@ -64,6 +62,7 @@ public class DiscordRCP extends Function {
         presence.largeImageText = null;
         presence.smallImageKey = null;
         presence.smallImageText = null;
+        // Keep the client name only in Discord's main activity title.
         presence.details = "LupaWare 1.21.4";
         presence.state = "User: free  |  Role: owner";
 

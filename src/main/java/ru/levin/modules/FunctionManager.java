@@ -71,6 +71,7 @@ public class FunctionManager {
     public final AutoTotem autoTotem;
     public final BlockHighLight blockHighLight;
     public final ntiAFK ntiAFK;
+    public final AucHelper aucHelper;
     //public final KTLeave ktLeave;
     //public final MaceExploit maceExploit;
     public FunctionManager() {
@@ -170,6 +171,7 @@ public class FunctionManager {
                 extraTab = new ExtraTab(),
                 arrows = new Arrows(),
                 new ESP(),
+                aucHelper = new AucHelper(),
                 nameTags = new NameTags(),
                 new Prediction(),
                 blockHighLight = new BlockHighLight(),

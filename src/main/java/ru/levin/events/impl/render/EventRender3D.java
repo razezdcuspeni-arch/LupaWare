@@ -6,18 +6,29 @@ import ru.levin.events.Event;
 
 @SuppressWarnings("All")
 public class EventRender3D extends Event {
-    private RenderTickCounter deltatick;
-    private MatrixStack matrixStack;
+    private final MatrixStack matrixStack;
+    private final RenderTickCounter deltatick;
+    private final boolean worldSpace;
 
     public EventRender3D(MatrixStack matrixStack, RenderTickCounter deltatick) {
+        this(matrixStack, deltatick, false);
+    }
+
+    public EventRender3D(MatrixStack matrixStack, RenderTickCounter deltatick, boolean worldSpace) {
         this.matrixStack = matrixStack;
         this.deltatick = deltatick;
+        this.worldSpace = worldSpace;
     }
 
     public MatrixStack getMatrixStack() {
         return matrixStack;
     }
+
     public RenderTickCounter getDeltatick() {
         return deltatick;
+    }
+
+    public boolean isWorldSpace() {
+        return worldSpace;
     }
 }

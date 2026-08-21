@@ -26,7 +26,9 @@ public class AutoFish extends Function {
             "Останавливается, если поплавок не находится в открытой воде");
 
     private long biteDetectedAt = -1L;
-    private long nextRecastAt = 0L;
+    private long nextRecastAt = -1L;
+    private FishingBobberEntity processedHook;
+    private boolean biteHandled;
     private boolean waitingForRecast;
 
     public AutoFish() {
@@ -36,13 +38,18 @@ public class AutoFish extends Function {
     @Override
     protected void onEnable() {
         biteDetectedAt = -1L;
-        nextRecastAt = System.currentTimeMillis() + 250L;
+        nextRecastAt = System.currentTimeMillis() + 300L;
+        processedHook = null;
+        biteHandled = false;
         waitingForRecast = false;
     }
 
     @Override
     protected void onDisable() {
         biteDetectedAt = -1L;
+        nextRecastAt = -1L;
+        processedHook = null;
+        biteHandled = false;
         waitingForRecast = false;
     }
 
@@ -55,31 +62,56 @@ public class AutoFish extends Function {
 
         Hand hand = mc.player.getMainHandStack().isOf(Items.FISHING_ROD) ? Hand.MAIN_HAND : Hand.OFF_HAND;
         FishingBobberEntity hook = mc.player.fishHook;
+        long now = System.currentTimeMillis();
 
         if (hook == null) {
-            if (waitingForRecast && System.currentTimeMillis() >= nextRecastAt) {
+            // Initial cast and every recast are both delayed, but only one action
+            // may be sent for each empty-hook state.
+            if (!waitingForRecast && processedHook == null && now >= nextRecastAt) {
+                useRod(hand);
+                nextRecastAt = now + recastDelay.get().longValue();
+                return;
+            }
+
+            // Recast only after the previous bobber has actually disappeared.
+            if (waitingForRecast && now >= nextRecastAt) {
                 useRod(hand);
                 waitingForRecast = false;
                 biteDetectedAt = -1L;
-            } else if (!waitingForRecast && System.currentTimeMillis() >= nextRecastAt) {
-                useRod(hand);
-                biteDetectedAt = -1L;
+                processedHook = null;
+                biteHandled = false;
+            } else if (!waitingForRecast && processedHook != null) {
+                // The player may have reeled manually; allow a normal delayed cast again.
+                nextRecastAt = Math.max(nextRecastAt, now + recastDelay.get().longValue());
+                waitingForRecast = true;
             }
             return;
         }
 
-        if (requireOpenWater.get() && !hook.isInOpenWater()) return;
+        // A new hook starts a new bite cycle. The caughtFish flag can remain true for
+        // several ticks, so the hook identity and biteHandled guard are both required.
+        if (hook != processedHook) {
+            processedHook = hook;
+            biteDetectedAt = -1L;
+            biteHandled = false;
+            waitingForRecast = false;
+        }
 
-        boolean caughtFish = ((FishingBobberEntityAccessor) hook).lupaware$isCaughtFish();
-        if (!caughtFish) {
+        if (requireOpenWater.get() && !hook.isInOpenWater()) {
             biteDetectedAt = -1L;
             return;
         }
 
-        long now = System.currentTimeMillis();
+        boolean caughtFish = ((FishingBobberEntityAccessor) hook).lupaware$isCaughtFish();
+        if (!caughtFish || biteHandled) {
+            if (!caughtFish) biteDetectedAt = -1L;
+            return;
+        }
+
         if (biteDetectedAt < 0L) biteDetectedAt = now;
         if (now - biteDetectedAt >= reactionDelay.get().longValue()) {
             useRod(hand);
+            biteHandled = true;
             waitingForRecast = true;
             nextRecastAt = now + recastDelay.get().longValue();
             biteDetectedAt = -1L;

@@ -18,6 +18,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import ru.levin.manager.IMinecraft;
+import ru.levin.events.Event;
+import ru.levin.events.impl.render.EventHandledScreen;
 import ru.levin.manager.Manager;
 import ru.levin.util.player.TimerUtil;
 
@@ -37,6 +39,11 @@ public abstract class MixinHandledScreen<T extends ScreenHandler> extends Screen
 
     @Shadow
     protected abstract void onMouseClick(Slot slot, int slotId, int button, SlotActionType actionType);
+
+    @Inject(method = "render", at = @At("TAIL"))
+    private void onHandledScreenRender(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+        Event.call(new EventHandledScreen(context, (HandledScreen<?>) (Object) this));
+    }
 
     @Inject(method = "drawMouseoverTooltip", at = @At("HEAD"))
     private void onDrawMouseoverTooltip(DrawContext context, int x, int y, CallbackInfo ci) {

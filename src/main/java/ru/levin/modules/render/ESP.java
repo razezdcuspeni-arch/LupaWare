@@ -29,6 +29,7 @@ import ru.levin.modules.FunctionAnnotation;
 import ru.levin.modules.Type;
 import ru.levin.modules.setting.BooleanSetting;
 import ru.levin.modules.setting.MultiSetting;
+import ru.levin.modules.setting.ModeSetting;
 import ru.levin.util.color.ColorUtil;
 import ru.levin.util.render.LupaWareTheme;
 import ru.levin.util.render.Render3DUtil;
@@ -48,19 +49,18 @@ public class ESP extends Function {
             Arrays.asList("Игроков", "Друзей", "Меня"),
             new String[]{"Игроков", "Друзей", "Меня", "Предметы"}
     );
-    private final BooleanSetting skeletonESP = new BooleanSetting("SkeletonESP", false,
-            "Рисует скелетные линии на игроках");
+    private final ModeSetting espMode = new ModeSetting("Режим", "Прямоугольник", "Прямоугольник", "SkeletonESP");
     private final BooleanSetting skeletonSelf = new BooleanSetting("Render Self", true,
-            "Показывает скелет собственного игрока", () -> skeletonESP.get());
+            "Показывает скелет собственного игрока", () -> espMode.is("SkeletonESP"));
 
     public ESP() {
-        addSettings(targets, skeletonESP, skeletonSelf);
+        addSettings(targets, espMode, skeletonSelf);
     }
 
     @Override
     public void onEvent(Event event) {
         if (event instanceof EventRender2D e) {
-            if (mc.options.hudHidden) return;
+            if (mc.options.hudHidden || espMode.is("SkeletonESP")) return;
 
             Matrix4f matrix = e.getDrawContext().getMatrices().peek().getPositionMatrix();
 
@@ -151,7 +151,7 @@ public class ESP extends Function {
     }
 
     private void renderSkeleton(EventRender3D event) {
-        if (!skeletonESP.get() || mc.player == null || mc.world == null) return;
+        if (!espMode.is("SkeletonESP") || event.isWorldSpace() || mc.player == null || mc.world == null) return;
         float tickDelta = event.getDeltatick().getTickDelta(false);
         Vec3d cameraPos = mc.gameRenderer.getCamera().getPos();
         MatrixStack matrix = event.getMatrixStack();
@@ -163,12 +163,13 @@ public class ESP extends Function {
         RenderSystem.blendFuncSeparate(GlStateManager.SrcFactor.SRC_ALPHA,
                 GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA,
                 GlStateManager.SrcFactor.ONE, GlStateManager.DstFactor.ZERO);
-        RenderSystem.setShader(ShaderProgramKeys.RENDERTYPE_LINES);
+        RenderSystem.setShader(ShaderProgramKeys.POSITION_COLOR);
         RenderSystem.lineWidth(2.0f);
 
-        BufferBuilder buffer = IMinecraft.tessellator().begin(VertexFormat.DrawMode.LINES, VertexFormats.LINES);
+        BufferBuilder buffer = IMinecraft.tessellator().begin(VertexFormat.DrawMode.DEBUG_LINES, VertexFormats.POSITION_COLOR);
         for (Entity entity : mc.world.getEntities()) {
             if (!(entity instanceof PlayerEntity player)) continue;
+            if (!shouldRender(player)) continue;
             if (player == mc.player && !skeletonSelf.get()) continue;
             if (player.isInvisible()) continue;
 
@@ -204,7 +205,9 @@ public class ESP extends Function {
     }
 
     private void line(BufferBuilder buffer, MatrixStack matrix, Vec3d start, Vec3d end, int color) {
-        Render3DUtil.vertexLine(matrix, buffer, start, end, color, color);
+        Matrix4f positionMatrix = matrix.peek().getPositionMatrix();
+        buffer.vertex(positionMatrix, (float) start.x, (float) start.y, (float) start.z).color(color);
+        buffer.vertex(positionMatrix, (float) end.x, (float) end.y, (float) end.z).color(color);
     }
 
     private List<Vec3d[]> getBones(double x, double y, double z, float bodyYaw, float headYaw, float pitch,
@@ -237,7 +240,7 @@ public class ESP extends Function {
         swingAmount = Math.min(swingAmount, 1.0f) * 0.5f;
 
         matrices.push();
-        matrices.translate(0.25, 0, 0);
+        matrices.translate(0.375, 0, 0);
         Vec3d leftShoulder = getPos(matrices);
         float leftArmRot = elytra ? -0.2f : MathHelper.cos(swing * 0.6662f + (float) Math.PI) * 0.8f * swingAmount;
         if (elytra) matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(-5));
@@ -250,7 +253,7 @@ public class ESP extends Function {
         matrices.pop();
 
         matrices.push();
-        matrices.translate(-0.25, 0, 0);
+        matrices.translate(-0.375, 0, 0);
         Vec3d rightShoulder = getPos(matrices);
         float rightArmRot = elytra ? -0.2f : MathHelper.cos(swing * 0.6662f) * 0.8f * swingAmount;
         if (elytra) matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(5));
@@ -308,16 +311,42 @@ public class ESP extends Function {
         matrices.pop();
         matrices.pop();
 
+        Vec3d headLeft = head.add(-0.13, 0, 0);
+        Vec3d headRight = head.add(0.13, 0, 0);
+        Vec3d headTopLeft = head.add(-0.18, 0.22, -0.16);
+        Vec3d headTopRight = head.add(0.18, 0.22, -0.16);
+        Vec3d headBottomLeft = head.add(-0.18, -0.22, -0.16);
+        Vec3d headBottomRight = head.add(0.18, -0.22, -0.16);
+        Vec3d headBackTopLeft = head.add(-0.18, 0.22, 0.16);
+        Vec3d headBackTopRight = head.add(0.18, 0.22, 0.16);
+        Vec3d headBackBottomLeft = head.add(-0.18, -0.22, 0.16);
+        Vec3d headBackBottomRight = head.add(0.18, -0.22, 0.16);
+
         bones.add(new Vec3d[]{neck, head});
+        bones.add(new Vec3d[]{headLeft, headRight});
+        bones.add(new Vec3d[]{headTopLeft, headTopRight});
+        bones.add(new Vec3d[]{headTopRight, headBottomRight});
+        bones.add(new Vec3d[]{headBottomRight, headBottomLeft});
+        bones.add(new Vec3d[]{headBottomLeft, headTopLeft});
+        bones.add(new Vec3d[]{headBackTopLeft, headBackTopRight});
+        bones.add(new Vec3d[]{headBackTopRight, headBackBottomRight});
+        bones.add(new Vec3d[]{headBackBottomRight, headBackBottomLeft});
+        bones.add(new Vec3d[]{headBackBottomLeft, headBackTopLeft});
+        bones.add(new Vec3d[]{headTopLeft, headBackTopLeft});
+        bones.add(new Vec3d[]{headTopRight, headBackTopRight});
+        bones.add(new Vec3d[]{headBottomLeft, headBackBottomLeft});
+        bones.add(new Vec3d[]{headBottomRight, headBackBottomRight});
         bones.add(new Vec3d[]{neck, waist});
         bones.add(new Vec3d[]{waist, pelvis});
         bones.add(new Vec3d[]{neck, leftShoulder});
+        bones.add(new Vec3d[]{leftShoulder, rightShoulder});
         bones.add(new Vec3d[]{neck, rightShoulder});
         bones.add(new Vec3d[]{leftShoulder, leftElbow});
         bones.add(new Vec3d[]{leftElbow, leftHand});
         bones.add(new Vec3d[]{rightShoulder, rightElbow});
         bones.add(new Vec3d[]{rightElbow, rightHand});
         bones.add(new Vec3d[]{pelvis, leftHip});
+        bones.add(new Vec3d[]{leftHip, rightHip});
         bones.add(new Vec3d[]{pelvis, rightHip});
         bones.add(new Vec3d[]{leftHip, leftKnee});
         bones.add(new Vec3d[]{leftKnee, leftFoot});

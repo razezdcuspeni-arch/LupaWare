@@ -56,7 +56,7 @@ public abstract class MixinGameRenderer implements IMinecraft {
 
         Render3DUtil.setLastProjMat(RenderSystem.getProjectionMatrix());
         Render3DUtil.setLastWorldSpaceMatrix(matrixStack.peek());
-        EventRender3D event = new EventRender3D(matrixStack, tickCounter);
+        EventRender3D event = new EventRender3D(matrixStack, tickCounter, true);
         Event.call(event);
         Render3DUtil.onWorldRender(event);
     }
@@ -70,7 +70,7 @@ public abstract class MixinGameRenderer implements IMinecraft {
         matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(camera.getYaw() + 180.0f));
         RenderSystem.setShaderFog(Fog.DUMMY);
         RenderUtil.render3D.setTranslation(matrixStack);
-        Event.call(new EventRender3D(matrixStack, tickCounter));
+        Event.call(new EventRender3D(matrixStack, tickCounter, false));
         RenderSystem.getModelViewStack().popMatrix();
         RenderSystem.getModelViewMatrix();
     }

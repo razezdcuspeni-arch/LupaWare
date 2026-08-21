@@ -1331,9 +1331,9 @@ public class ClickGUI extends Screen implements IMinecraft {
             } else if (setting instanceof BindSetting) {
                 settingsHeight += bindSettingRenderer.getHeight() + 1;
             } else if (setting instanceof ModeSetting) {
-                settingsHeight += modeSettingRenderer.getHeight((ModeSetting) setting, PANEL_WIDTH - 20) + 2;
+                settingsHeight += modeSettingRenderer.getHeight((ModeSetting) setting, PANEL_WIDTH - 20) + 1;
             } else if (setting instanceof MultiSetting) {
-                settingsHeight += multiSettingRenderer.getHeight((MultiSetting) setting, PANEL_WIDTH - 20) + 2;
+                settingsHeight += multiSettingRenderer.getHeight((MultiSetting) setting, PANEL_WIDTH - 20) + 1;
             } else if (setting instanceof SliderSetting) {
                 settingsHeight += sliderSettingRenderer.getHeight() + 1;
             } else if (setting instanceof TextSetting) {

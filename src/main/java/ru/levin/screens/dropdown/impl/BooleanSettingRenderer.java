@@ -47,7 +47,8 @@ public class BooleanSettingRenderer implements SettingRenderer<BooleanSetting>, 
         var font = FontUtils.durman[13];
         String text = setting.getName();
         int textY = (int) (y + Math.max(1, (HEIGHT - font.getHeight()) / 2));
-        float maxTextWidth = width - 16;
+        float textX = x + BOX_SIZE + 6;
+        float maxTextWidth = width - (textX - x) - 2;
         float textWidth = font.getWidth(text);
 
         double scale = mc.getWindow().getScaleFactor();
@@ -57,7 +58,7 @@ public class BooleanSettingRenderer implements SettingRenderer<BooleanSetting>, 
         float overflow = textWidth - maxTextWidth;
         float offset = scrollMap.getOrDefault(setting, 0f);
 
-        boolean textHovered = RenderUtil.isHovered((int) mX, (int) mY, x, textY - 1, maxTextWidth, font.getHeight() + 2);
+        boolean textHovered = RenderUtil.isHovered((int) mX, (int) mY, textX, textY - 1, maxTextWidth, font.getHeight() + 2);
 
         if (textHovered && overflow > 0) {
             offset = Math.min(offset + 0.5f, overflow);
@@ -67,8 +68,8 @@ public class BooleanSettingRenderer implements SettingRenderer<BooleanSetting>, 
         scrollMap.put(setting, offset);
 
         Scissor.push();
-        Scissor.setFromComponentCoordinates(x, y, maxTextWidth, HEIGHT);
-        font.drawLeftAligned(ctx.getMatrices(), text, x - offset, textY, LupaWareTheme.WHITE);
+        Scissor.setFromComponentCoordinates(textX, y, maxTextWidth, HEIGHT);
+        font.drawLeftAligned(ctx.getMatrices(), text, textX - offset, textY, LupaWareTheme.WHITE);
         Scissor.pop();
 
 
