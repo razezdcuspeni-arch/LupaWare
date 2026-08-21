@@ -146,6 +146,7 @@ public class ClickGUI extends Screen implements IMinecraft {
         }
         if (animation <= 0.01) return;
         super.render(ctx, mouseX, mouseY, delta);
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), 0, 0, width, height, 0, LupaWareTheme.withAlpha(LupaWareTheme.INK, 150));
         ctx.getMatrices().push();
         RenderAddon.sizeAnimation(ctx.getMatrices(), width / 2, height / 2, animation);
 
@@ -335,13 +336,12 @@ public class ClickGUI extends Screen implements IMinecraft {
             int col1 = f.state ? Color.WHITE.getRGB() : LupaWareTheme.MUTED;
             int col2 = col1;
 
-            int colorModule = f.state ? LupaWareTheme.withAlpha(LupaWareTheme.SURFACE_SOFT, clickGUI.alphaModules.get().intValue()) : LupaWareTheme.withAlpha(LupaWareTheme.SURFACE_RAISED, 225);
+            int colorModule = f.state ? LupaWareTheme.withAlpha(LupaWareTheme.SURFACE_SOFT, Math.max(190, clickGUI.alphaModules.get().intValue())) : LupaWareTheme.withAlpha(LupaWareTheme.SURFACE_RAISED, 185);
             int colorModule2 = colorModule;
-
-            if (clickGUI.filling.get() || f.state) {
-                RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 18, currentY + 3, PANEL_WIDTH - 36, Math.max(29, totalHeight - 7), 11, colorModule2);
-                RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 31, currentY + 14, 5, 9, 2, f.state ? accentColor : LupaWareTheme.DIM);
-            }
+            int moduleHeight = Math.max(29, totalHeight - 7);
+            RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 18, currentY + 3, PANEL_WIDTH - 36, moduleHeight, 11, colorModule2);
+            RenderUtil.drawRoundedBorder(ctx.getMatrices(), x + 18, currentY + 3, PANEL_WIDTH - 36, moduleHeight, 11, 0.6f, f.state ? LupaWareTheme.withAlpha(accentColor, 110) : LupaWareTheme.withAlpha(LupaWareTheme.BORDER_SOFT, 70));
+            RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 31, currentY + 14, 5, 9, 2, f.state ? accentColor : LupaWareTheme.DIM);
 
             String textToRender;
             if (functionBinding && functions == f) {

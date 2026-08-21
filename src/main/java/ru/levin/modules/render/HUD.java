@@ -79,7 +79,7 @@ public class HUD extends Function {
     private final ModeSetting hudColor = new ModeSetting("Цвет худа","Обычный","Обычный","Зависит от темы");
     private final ModeSetting gradientType = new ModeSetting(() -> hudColor.is("Зависит от темы"),"Тип градиента", "Слева направо", "Слева направо", "Справа налево");
 
-    private final SliderSetting customAlpha = new SliderSetting("Прозрачность", 120, 120, 255, 5);
+    private final SliderSetting customAlpha = new SliderSetting("Прозрачность", 180, 170, 255, 5);
     private final BooleanSetting visibleCrosshair = new BooleanSetting("Показывать TargetHUD при навидении", false, "показывает таргетхуд при навидении на игрока", () -> setting.get("TargetHUD"));
     private final BooleanSetting blur = new BooleanSetting("Размытие", false, "Рендерит размытие на все элементы худа");
     private final SliderSetting roundingSilaSanya = new SliderSetting("Закругление головы", 2f, 0f, 12f, 1f);
@@ -259,7 +259,7 @@ public class HUD extends Function {
             width = Math.max(width, font.getWidth(label) + font.getWidth(formatDuration(effect)) + 62);
         }
         potionListHeightDynamic = MathUtil.fast(potionListHeightDynamic, effects.size() * 17, 15);
-        int alpha = MathHelper.clamp(customAlpha.get().intValue(), 150, 255);
+        int alpha = MathHelper.clamp(customAlpha.get().intValue(), 175, 255);
         float height = 28 + potionListHeightDynamic;
         drawRoundedRect(matrices, x, y, width, height, 11, LupaWareTheme.withAlpha(LupaWareTheme.SURFACE, alpha));
         drawRoundedBorder(matrices, x, y, width, height, 11, 0.8f, LupaWareTheme.withAlpha(LupaWareTheme.BORDER, alpha));
@@ -337,7 +337,7 @@ public class HUD extends Function {
         cooldownListHeightDynamic = MathUtil.fast(cooldownListHeightDynamic, listHeightTarget, 15);
         float totalHeight = headerHeight + cooldownListHeightDynamic;
 
-        int alpha = MathHelper.clamp(customAlpha.get().intValue(), 150, 255);
+        int alpha = MathHelper.clamp(customAlpha.get().intValue(), 175, 255);
         if (alpha <= 240) {
             if (blur.get()) {
                 drawBlur(eventRender2D.getDrawContext().getMatrices(), posX, posY + headerHeight - 1, maxWidth, cooldownListHeightDynamic + 6, new Vector4f(0, 3, 3, 0), 12, Color.white.getRGB());
@@ -428,7 +428,7 @@ public class HUD extends Function {
         activeStaff = staffPlayers.size();
         hDynam = MathUtil.fast(hDynam, activeStaff * 14, 15);
         widthDynamic = MathUtil.fast(widthDynamic, width, 10);
-        int alpha = MathHelper.clamp(customAlpha.get().intValue(), 150, 255);
+        int alpha = MathHelper.clamp(customAlpha.get().intValue(), 175, 255);
         float height = 28 + hDynam;
         drawRoundedRect(matrices, x, y, widthDynamic, height, 11, LupaWareTheme.withAlpha(LupaWareTheme.SURFACE, alpha));
         drawRoundedBorder(matrices, x, y, widthDynamic, height, 11, 0.8f, LupaWareTheme.withAlpha(LupaWareTheme.BORDER, alpha));
@@ -468,7 +468,7 @@ public class HUD extends Function {
         MatrixStack matrices = render2D.getDrawContext().getMatrices();
         matrices.push();
         RenderAddon.sizeAnimation(matrices, x + 104, y + 29, scale);
-        int alpha = MathHelper.clamp(customAlpha.get().intValue(), 150, 255);
+        int alpha = MathHelper.clamp(customAlpha.get().intValue(), 175, 255);
         drawRoundedRect(matrices, x, y, 208, 58, 13, LupaWareTheme.withAlpha(LupaWareTheme.SURFACE, alpha));
         drawRoundedBorder(matrices, x, y, 208, 58, 13, 0.9f, LupaWareTheme.withAlpha(LupaWareTheme.BORDER, alpha));
         drawRoundedRect(matrices, x, y, 208, 3, 1, LupaWareTheme.withAlpha(LupaWareTheme.MINT, alpha));
@@ -484,7 +484,7 @@ public class HUD extends Function {
     private void waterMark(EventRender2D render2D) {
         float x = watermarkDrag.getX(), y = watermarkDrag.getY();
         MatrixStack matrices = render2D.getDrawContext().getMatrices();
-        int alpha = MathHelper.clamp(customAlpha.get().intValue(), 150, 255);
+        int alpha = MathHelper.clamp(customAlpha.get().intValue(), 175, 255);
         int muted = LupaWareTheme.withAlpha(LupaWareTheme.MUTED, alpha);
         drawRoundedRect(matrices, x, y, 260, 48, 14, LupaWareTheme.withAlpha(LupaWareTheme.SURFACE, alpha));
         drawRoundedBorder(matrices, x, y, 260, 48, 14, 0.9f, LupaWareTheme.withAlpha(LupaWareTheme.BORDER, alpha));
@@ -505,7 +505,7 @@ public class HUD extends Function {
         MatrixStack matrices = render2D.getDrawContext().getMatrices();
         float x = coordinateshudDrag.getX(), y = coordinateshudDrag.getY();
         String coords = String.format(Locale.ENGLISH, "%d, %d, %d", (int) mc.player.getX(), (int) mc.player.getY(), (int) mc.player.getZ());
-        int alpha = MathHelper.clamp(customAlpha.get().intValue(), 150, 255);
+        int alpha = MathHelper.clamp(customAlpha.get().intValue(), 175, 255);
         int muted = LupaWareTheme.withAlpha(LupaWareTheme.MUTED, alpha);
         drawRoundedRect(matrices, x, y, 206, 34, 11, LupaWareTheme.withAlpha(LupaWareTheme.SURFACE, alpha));
         drawRoundedBorder(matrices, x, y, 206, 34, 11, 0.8f, LupaWareTheme.withAlpha(LupaWareTheme.BORDER, alpha));
@@ -521,7 +521,7 @@ public class HUD extends Function {
         float x = keybindsDrag.getX(), y = keybindsDrag.getY();
         MatrixStack matrices = render2D.getDrawContext().getMatrices();
         var font = FontUtils.sf_medium[12];
-        int alpha = MathHelper.clamp(customAlpha.get().intValue(), 150, 255);
+        int alpha = MathHelper.clamp(customAlpha.get().intValue(), 175, 255);
         int muted = LupaWareTheme.withAlpha(LupaWareTheme.DIM, alpha);
         int count = 0; float width = 176;
         for (Function f : Manager.FUNCTION_MANAGER.getFunctions()) {

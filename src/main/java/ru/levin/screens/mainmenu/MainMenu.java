@@ -50,9 +50,9 @@ public class MainMenu extends Screen {
         for (int line = -height; line < width + height; line += 76) {
             RenderUtil.drawRoundedRect(context.getMatrices(), line, 0, 1, height, 0, LupaWareTheme.withAlpha(LupaWareTheme.BORDER, 30));
         }
-        RenderUtil.drawRoundedRect(context.getMatrices(), width - 260, -150, 430, 430, 215, LupaWareTheme.withAlpha(LupaWareTheme.MINT, 24));
-        RenderUtil.drawRoundedRect(context.getMatrices(), -160, height - 190, 380, 380, 190, LupaWareTheme.withAlpha(LupaWareTheme.VIOLET, 22));
-        RenderUtil.drawRoundedRect(context.getMatrices(), width / 2 - 170, height - 50, 340, 1, 0, LupaWareTheme.withAlpha(LupaWareTheme.GOLD, 75));
+        RenderUtil.drawRoundedRect(context.getMatrices(), width - 210, -110, 320, 320, 160, LupaWareTheme.withAlpha(LupaWareTheme.SURFACE_RAISED, 150));
+        RenderUtil.drawRoundedRect(context.getMatrices(), -160, height - 190, 380, 380, 190, LupaWareTheme.withAlpha(LupaWareTheme.SURFACE_SOFT, 150));
+        RenderUtil.drawRoundedRect(context.getMatrices(), width / 2 - 170, height - 50, 340, 1, 0, LupaWareTheme.withAlpha(LupaWareTheme.GOLD, 55));
     }
 
     private void drawRail(DrawContext context, int x, int y, int railW, int railH, int mouseX, int mouseY, float delta) {
