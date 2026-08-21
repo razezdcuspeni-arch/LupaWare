@@ -29,20 +29,19 @@ import java.util.Map;
 import java.util.Set;
 
 public class ClickGUI extends Screen implements IMinecraft {
-    private static final float GUI_SCALE = 1.15f;
-    private static final int SHELL_WIDTH = 353;
-    private static final int SHELL_HEIGHT = 199;
-    private static final int RAIL_WIDTH = 74;
-    private static final int CONTENT_PADDING = 9;
-    private static final int CONTENT_HEADER_HEIGHT = 31;
-    private static final int MODULE_ROW_HEIGHT = 18;
-    private static final int MODULE_GAP = 5;
-    private static final int COLUMN_GAP = 4;
-    private static final int COLUMN_WIDTH = 129;
+    private static final int SHELL_WIDTH = 390;
+    private static final int SHELL_HEIGHT = 220;
+    private static final int RAIL_WIDTH = 82;
+    private static final int CONTENT_PADDING = 10;
+    private static final int CONTENT_HEADER_HEIGHT = 34;
+    private static final int MODULE_ROW_HEIGHT = 20;
+    private static final int MODULE_GAP = 6;
+    private static final int COLUMN_GAP = 6;
+    private static final int COLUMN_WIDTH = 140;
     private static final int SEARCH_WIDTH = 38;
     private static final int SEARCH_HEIGHT = 11;
     private static final int SEARCH_X_OFFSET = 9;
-    private static final int SCROLL_STEP = 12;
+    private static final int SCROLL_STEP = 24;
 
     private static final Set<Type> CATEGORIES = EnumSet.of(Type.Combat, Type.Move, Type.Render, Type.Player, Type.Misc);
     private final Map<Type, Float> scroll = new EnumMap<>(Type.class);
@@ -103,11 +102,11 @@ public class ClickGUI extends Screen implements IMinecraft {
             openProgress += (1f - openProgress) * 0.22f;
         }
 
-        lastMouseX = toGuiX(mouseX);
-        lastMouseY = toGuiY(mouseY);
+        lastMouseX = mouseX;
+        lastMouseY = mouseY;
         int shellX = (width - SHELL_WIDTH) / 2;
         int shellY = (height - SHELL_HEIGHT) / 2;
-        float scale = (0.97f + openProgress * 0.03f) * GUI_SCALE;
+        float scale = 0.97f + openProgress * 0.03f;
 
         RenderUtil.drawRoundedRect(context.getMatrices(), 0, 0, width, height, 0,
                 LupaWareTheme.withAlpha(LupaWareTheme.INK, 82));
@@ -118,10 +117,8 @@ public class ClickGUI extends Screen implements IMinecraft {
         context.getMatrices().translate(-width / 2f, -height / 2f, 0);
 
         renderShell(context, shellX, shellY);
-        int guiMouseX = (int) toGuiX(mouseX);
-        int guiMouseY = (int) toGuiY(mouseY);
-        renderRail(context, shellX, shellY, guiMouseX, guiMouseY);
-        renderContent(context, shellX + RAIL_WIDTH, shellY, guiMouseX, guiMouseY);
+        renderRail(context, shellX, shellY, mouseX, mouseY);
+        renderContent(context, shellX + RAIL_WIDTH, shellY, mouseX, mouseY);
         renderSearch(context, shellX + RAIL_WIDTH, shellY);
         renderBindPopup(context);
         context.getMatrices().pop();
@@ -136,8 +133,7 @@ public class ClickGUI extends Screen implements IMinecraft {
                 LupaWareTheme.withAlpha(LupaWareTheme.BORDER, 150));
         RenderUtil.drawRoundedRect(context.getMatrices(), x + RAIL_WIDTH, y, 0.35f, SHELL_HEIGHT,
                 0, LupaWareTheme.withAlpha(LupaWareTheme.BORDER_SOFT, 180));
-        RenderUtil.drawRoundedRect(context.getMatrices(), x, y + 31, SHELL_WIDTH, 0.35f,
-                0, LupaWareTheme.withAlpha(LupaWareTheme.BORDER_SOFT, 150));
+                RenderUtil.drawRoundedRect(context.getMatrices(), x, y + CONTENT_HEADER_HEIGHT, SHELL_WIDTH, 0.35f, 0, LupaWareTheme.withAlpha(LupaWareTheme.BORDER_SOFT, 150));
     }
 
     private void renderRail(DrawContext context, int x, int y, int mouseX, int mouseY) {
@@ -176,9 +172,9 @@ public class ClickGUI extends Screen implements IMinecraft {
 
     private void renderContent(DrawContext context, int x, int y, int mouseX, int mouseY) {
         int contentX = x + CONTENT_PADDING;
-        int contentY = y + 40;
+        int contentY = y + 43;
         int contentWidth = SHELL_WIDTH - RAIL_WIDTH - CONTENT_PADDING * 2;
-        int contentHeight = SHELL_HEIGHT - 40 - 4;
+        int contentHeight = SHELL_HEIGHT - 43 - 5;
 
         FontUtils.sf_medium[7].drawLeftAligned(context.getMatrices(), "LupaWare", contentX, y + 12, LupaWareTheme.DIM);
         FontUtils.sf_medium[6].drawLeftAligned(context.getMatrices(), ">", contentX + 35, y + 13, LupaWareTheme.DIM);
@@ -311,13 +307,6 @@ public class ClickGUI extends Screen implements IMinecraft {
     private double mouseX() { return lastMouseX; }
     private double mouseY() { return lastMouseY; }
 
-    private double toGuiX(double mouseX) {
-        return width / 2.0 + (mouseX - width / 2.0) / GUI_SCALE;
-    }
-
-    private double toGuiY(double mouseY) {
-        return height / 2.0 + (mouseY - height / 2.0) / GUI_SCALE;
-    }
 
     private List<Function> visibleFunctions(Type category) {
         String query = searchState.text.trim().toLowerCase();
@@ -421,8 +410,6 @@ public class ClickGUI extends Screen implements IMinecraft {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        mouseX = toGuiX(mouseX);
-        mouseY = toGuiY(mouseY);
         lastMouseX = mouseX;
         lastMouseY = mouseY;
         int shellX = (width - SHELL_WIDTH) / 2;
@@ -476,8 +463,6 @@ public class ClickGUI extends Screen implements IMinecraft {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        mouseX = toGuiX(mouseX);
-        mouseY = toGuiY(mouseY);
         for (ModuleLayout layout : visibleLayout) {
             if (!layout.function.expanded) continue;
             int settingY = (int) layout.y + MODULE_ROW_HEIGHT + 5;
@@ -494,10 +479,6 @@ public class ClickGUI extends Screen implements IMinecraft {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        mouseX = toGuiX(mouseX);
-        mouseY = toGuiY(mouseY);
-        deltaX /= GUI_SCALE;
-        deltaY /= GUI_SCALE;
         for (ModuleLayout layout : visibleLayout) {
             if (!layout.function.expanded) continue;
             int settingY = (int) layout.y + MODULE_ROW_HEIGHT + 5;
@@ -514,14 +495,12 @@ public class ClickGUI extends Screen implements IMinecraft {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
-        mouseX = toGuiX(mouseX);
-        mouseY = toGuiY(mouseY);
         int shellX = (width - SHELL_WIDTH) / 2;
         int shellY = (height - SHELL_HEIGHT) / 2;
         int contentX = shellX + RAIL_WIDTH + CONTENT_PADDING;
-        int contentY = shellY + 40;
+        int contentY = shellY + 43;
         int contentWidth = SHELL_WIDTH - RAIL_WIDTH - CONTENT_PADDING * 2;
-        int contentHeight = SHELL_HEIGHT - 40 - 4;
+        int contentHeight = SHELL_HEIGHT - 43 - 5;
         if (isHovered(mouseX, mouseY, contentX, contentY, contentWidth, contentHeight)) {
             scrollTarget.put(selectedCategory, Math.max(0f, scrollTarget.get(selectedCategory) - (float) verticalAmount * SCROLL_STEP));
             return true;
