@@ -72,8 +72,8 @@ import static ru.levin.util.render.RenderUtil.*;
 public class HUD extends Function {
     public final MultiSetting setting = new MultiSetting(
             "Элементы",
-            Arrays.asList("WaterMark", "TargetHUD", "KeyBinds", "StaffList", "PotionHUD", "ItemCoolDownHUD", "Coordinates / TPS","ArmorHUD", "Notifications"),
-            new String[]{"WaterMark", "TargetHUD", "KeyBinds", "StaffList", "PotionHUD", "ItemCoolDownHUD", "Coordinates / TPS","ArmorHUD", "Notifications"});
+            Arrays.asList("WaterMark", "TargetHUD", "KeyBinds", "StaffList", "PotionHUD", "ItemCoolDownHUD", "Coordinates / TPS", "Speed", "ArmorHUD", "Notifications"),
+            new String[]{"WaterMark", "TargetHUD", "KeyBinds", "StaffList", "PotionHUD", "ItemCoolDownHUD", "Coordinates / TPS", "Speed", "ArmorHUD", "Notifications"});
 
 
     private final ModeSetting hudColor = new ModeSetting("Цвет худа","Обычный","Обычный","Зависит от темы");
@@ -116,13 +116,14 @@ public class HUD extends Function {
         addSettings(setting,hudColor,gradientType, customAlpha, visibleCrosshair, blur,roundingSilaSanya);
     }
 
-    public final Dragging watermarkDrag = LupaWare.getInstance().createDrag(this, "WaterMark", 286, 10);
-    public final Dragging targethudDrag = LupaWare.getInstance().createDrag(this, "TargetHUD", 338, 256);
-    public final Dragging keybindsDrag = LupaWare.getInstance().createDrag(this, "KeyBindsHUD", 390, 178);
-    public final Dragging stafflistDrag = LupaWare.getInstance().createDrag(this, "StaffListHUD", 686, 124);
-    public final Dragging itemcooldownDrag = LupaWare.getInstance().createDrag(this, "CoolDownHUD", 18, 302);
-    public final Dragging potionhudDrag = LupaWare.getInstance().createDrag(this, "PotionHUD", 610, 255);
-    public final Dragging coordinateshudDrag = LupaWare.getInstance().createDrag(this, "CoordinatesHUD", 18, 150);
+    public final Dragging watermarkDrag = LupaWare.getInstance().createDrag(this, "WaterMark", 3, 3);
+    public final Dragging targethudDrag = LupaWare.getInstance().createDrag(this, "TargetHUD", 300, 185);
+    public final Dragging keybindsDrag = LupaWare.getInstance().createDrag(this, "KeyBindsHUD", 3, 150);
+    public final Dragging stafflistDrag = LupaWare.getInstance().createDrag(this, "StaffListHUD", 500, 105);
+    public final Dragging itemcooldownDrag = LupaWare.getInstance().createDrag(this, "CoolDownHUD", 3, 205);
+    public final Dragging potionhudDrag = LupaWare.getInstance().createDrag(this, "PotionHUD", 700, 105);
+    public final Dragging coordinateshudDrag = LupaWare.getInstance().createDrag(this, "CoordinatesHUD", 3, 25);
+    public final Dragging bpsDrag = LupaWare.getInstance().createDrag(this, "SpeedHUD", 3, 45);
     public final Dragging armorDrag = LupaWare.getInstance().createDrag(this, "ArmorHUD", 478, 468);
 
     Animation tHudAnimation = new EaseBackIn(300, 1, 1.5f);
@@ -156,6 +157,7 @@ public class HUD extends Function {
             boolean sItemCooldown = setting.get("ItemCoolDownHUD");
             boolean sPotion = setting.get("PotionHUD");
             boolean sCoordinates = setting.get("Coordinates / TPS");
+            boolean sSpeed = setting.get("Speed");
             boolean sArmorHUD = setting.get("ArmorHUD");
             boolean sMediaPlayer = setting.get("MediaPlayer");
 
@@ -166,36 +168,54 @@ public class HUD extends Function {
             if (sItemCooldown) cooldown(eventRender2D);
             if (sPotion) potion(eventRender2D);
             if (sCoordinates) сoordinates(eventRender2D);
+            if (sSpeed) speed(eventRender2D);
             if (sArmorHUD) armor(eventRender2D);
         }
     }
     private void armor(EventRender2D eventRender2D) {
         float x = armorDrag.getX();
         float y = armorDrag.getY();
-        int armorCount = 0;
+        MatrixStack matrices = eventRender2D.getDrawContext().getMatrices();
+        float width = 112;
+        float height = 31;
+        drawRoundedRect(matrices, x, y, width, height, 3, new Color(0, 0, 0, 195).getRGB());
+        FontUtils.sf_bold[8].centeredDraw(matrices, "Armor", x + width / 2f, y + 4, Color.WHITE.getRGB());
         for (int i = 0; i < 4; i++) {
-            if (!mc.player.getInventory().armor.get(i).isEmpty()) armorCount++;
+            ItemStack itemStack = mc.player.getInventory().armor.get(3 - i);
+            matrices.push();
+            matrices.translate(x + 6 + i * 19, y + 13, 0);
+            matrices.scale(0.72f, 0.72f, 1f);
+            eventRender2D.getDrawContext().drawItem(itemStack, 0, 0, 0);
+            eventRender2D.getDrawContext().drawStackOverlay(mc.textRenderer, itemStack, 0, 0);
+            matrices.pop();
         }
-
-        int width = armorCount > 0 ? 20 * armorCount : 35;
+        ItemStack totem = new ItemStack(Items.TOTEM_OF_UNDYING);
+        matrices.push();
+        matrices.translate(x + 82, y + 13, 0);
+        matrices.scale(0.72f, 0.72f, 1f);
+        eventRender2D.getDrawContext().drawItem(totem, 0, 0, 0);
+        matrices.pop();
+        FontUtils.sf_bold[7].drawLeftAligned(matrices, "Totems: " + mc.player.getInventory().count(Items.TOTEM_OF_UNDYING), x + 96, y + 17, Color.WHITE.getRGB());
         armorDrag.setWidth(width);
-        armorDrag.setHeight(18);
-
-        float startX = x + width - 20;
-        for (int i = 0; i < 4; i++) {
-            ItemStack itemStack = mc.player.getInventory().armor.get(i);
-            if (!itemStack.isEmpty()) {
-                eventRender2D.getDrawContext().getMatrices().push();
-                eventRender2D.getDrawContext().getMatrices().translate(startX, y + 0.2f, 0);
-                eventRender2D.getDrawContext().getMatrices().scale(1, 1, 1);
-                eventRender2D.getDrawContext().drawItem(itemStack, 0, 0, 0);
-                eventRender2D.getDrawContext().drawStackOverlay(mc.textRenderer, itemStack, 0, 0);
-                eventRender2D.getDrawContext().getMatrices().pop();
-                startX -= 20;
-            }
-        }
+        armorDrag.setHeight(height);
     }
 
+
+    private void speed(EventRender2D eventRender2D) {
+        float x = bpsDrag.getX();
+        float y = bpsDrag.getY();
+        if (mc.player == null) return;
+        double dx = mc.player.getX() - mc.player.prevX;
+        double dz = mc.player.getZ() - mc.player.prevZ;
+        double blocksPerSecond = Math.hypot(dx, dz) * 20.0;
+        String text = String.format(Locale.ENGLISH, "Speed: %.2f", blocksPerSecond);
+        float width = FontUtils.sf_bold[9].getWidth(text) + 10;
+        drawRoundedRect(eventRender2D.getDrawContext().getMatrices(), x, y, width, 15, 3,
+                new Color(0, 0, 0, 195).getRGB());
+        FontUtils.sf_bold[9].drawLeftAligned(eventRender2D.getDrawContext().getMatrices(), text, x + 4.5f, y + 4, Color.WHITE.getRGB());
+        bpsDrag.setWidth(width);
+        bpsDrag.setHeight(15);
+    }
 
     private void updateStaffPlayers(MinecraftClient mc) {
         staffPlayers.clear();
@@ -252,35 +272,26 @@ public class HUD extends Function {
         float x = potionhudDrag.getX(), y = potionhudDrag.getY();
         MatrixStack matrices = eventRender2D.getDrawContext().getMatrices();
         List<StatusEffectInstance> effects = new ArrayList<>(mc.player.getStatusEffects());
-        var font = FontUtils.sf_medium[11];
-        float width = 138;
+        var font = FontUtils.sf_bold[8];
+        float width = 78;
         for (StatusEffectInstance effect : effects) {
             String label = I18n.translate(effect.getEffectType().value().getTranslationKey()) + " " + (effect.getAmplifier() + 1);
-            width = Math.max(width, font.getWidth(label) + font.getWidth(formatDuration(effect)) + 62);
+            width = Math.max(width, font.getWidth(label) + font.getWidth(formatDuration(effect)) + 31);
         }
-        potionListHeightDynamic = MathUtil.fast(potionListHeightDynamic, effects.size() * 17, 15);
-        int alpha = MathHelper.clamp(customAlpha.get().intValue(), 175, 255);
-        float height = 28 + potionListHeightDynamic;
-        drawRoundedRect(matrices, x, y, width, height, 11, LupaWareTheme.withAlpha(LupaWareTheme.SURFACE, alpha));
-        drawRoundedBorder(matrices, x, y, width, height, 11, 0.8f, LupaWareTheme.withAlpha(LupaWareTheme.BORDER, alpha));
-        drawRoundedRect(matrices, x, y, width, 3, 1, LupaWareTheme.withAlpha(LupaWareTheme.GOLD, alpha));
-        FontUtils.sf_bold[13].drawLeftAligned(matrices, "EFFECTS", x + 13, y + 8, Color.WHITE.getRGB());
-        FontUtils.sf_medium[9].drawRightAligned(matrices, effects.size() + " ACTIVE", x + width - 13, y + 9, LupaWareTheme.withAlpha(LupaWareTheme.MUTED, alpha));
         StatusEffectSpriteManager sprites = mc.getStatusEffectSpriteManager();
-        float rowY = y + 28;
+        float rowY = y;
         for (StatusEffectInstance effect : effects) {
-            RegistryEntry<StatusEffect> holder = effect.getEffectType();
-            Sprite sprite = sprites.getSprite(holder);
-            eventRender2D.getDrawContext().drawSpriteStretched(RenderLayer::getGuiTextured, sprite, (int) x + 9, (int) rowY + 2, 12, 12, -1);
             String label = I18n.translate(effect.getEffectType().value().getTranslationKey()) + " " + (effect.getAmplifier() + 1);
-            font.drawLeftAligned(matrices, label, x + 27, rowY + 5, Color.WHITE.getRGB());
             String duration = formatDuration(effect);
-            float durationWidth = font.getWidth(duration);
-            drawRoundedRect(matrices, x + width - durationWidth - 12, rowY + 1, durationWidth + 9, 16, 8, LupaWareTheme.withAlpha(LupaWareTheme.SURFACE_SOFT, alpha));
-            font.centeredDraw(matrices, duration, x + width - durationWidth - 12 + (durationWidth + 9) / 2f, rowY + 4, LupaWareTheme.withAlpha(LupaWareTheme.WHITE, alpha));
-            rowY += 17;
+            drawRoundedRect(matrices, x, rowY, width, 21.3f, 3, new Color(0, 0, 0, 195).getRGB());
+            Sprite sprite = sprites.getSprite(effect.getEffectType());
+            eventRender2D.getDrawContext().drawSpriteStretched(RenderLayer::getGuiTextured, sprite, (int) x + 2, (int) rowY + 4, 12, 12, -1);
+            font.drawLeftAligned(matrices, label, x + 22, rowY + 4, Color.WHITE.getRGB());
+            font.drawRightAligned(matrices, duration, x + width - 4, rowY + 4, new Color(185, 190, 202, 235).getRGB());
+            rowY += 24;
         }
-        potionhudDrag.setWidth(width); potionhudDrag.setHeight(height);
+        potionhudDrag.setWidth(width);
+        potionhudDrag.setHeight(Math.max(21.3f, effects.size() * 24f - 2.7f));
     }
     private String formatDuration(StatusEffectInstance eff) {
         if (eff.isInfinite() || eff.getDuration() > 18000) {
@@ -484,17 +495,22 @@ public class HUD extends Function {
     private void waterMark(EventRender2D render2D) {
         float x = watermarkDrag.getX(), y = watermarkDrag.getY();
         MatrixStack matrices = render2D.getDrawContext().getMatrices();
-        int alpha = MathHelper.clamp(customAlpha.get().intValue(), 175, 255);
-        int muted = LupaWareTheme.withAlpha(LupaWareTheme.MUTED, alpha);
-        drawRoundedRect(matrices, x, y, 260, 48, 14, LupaWareTheme.withAlpha(LupaWareTheme.SURFACE, alpha));
-        drawRoundedBorder(matrices, x, y, 260, 48, 14, 0.9f, LupaWareTheme.withAlpha(LupaWareTheme.BORDER, alpha));
-        drawRoundedRect(matrices, x, y, 48, 48, 14, LupaWareTheme.GOLD);
-        FontUtils.sf_bold[18].centeredDraw(matrices, "LW", x + 24, y + 14, LupaWareTheme.INK);
-        FontUtils.sf_bold[16].drawLeftAligned(matrices, "LupaWare", x + 63, y + 8, Color.WHITE.getRGB());
-        FontUtils.sf_medium[9].drawLeftAligned(matrices, "CLIENT ONLINE  /  1.21.4", x + 63, y + 27, muted);
-        FontUtils.sf_medium[10].drawRightAligned(matrices, ClientManager.getFps() + " FPS", x + 205, y + 9, muted);
-        FontUtils.sf_medium[10].drawRightAligned(matrices, ClientManager.getPing() + " MS", x + 242, y + 27, LupaWareTheme.withAlpha(LupaWareTheme.MINT, alpha));
-        watermarkDrag.setWidth(260); watermarkDrag.setHeight(48);
+        String title = "LupaWare";
+        String fpsText = ClientManager.getFps() + " fps";
+        float titleWidth = FontUtils.sf_bold[9].getWidth(title);
+        float separatorWidth = FontUtils.sf_bold[9].getWidth("|");
+        float fpsWidth = FontUtils.sf_bold[9].getWidth(fpsText);
+        float topWidth = titleWidth + separatorWidth + fpsWidth + 17;
+        drawRoundedRect(matrices, x, y, topWidth, 17, 3, new Color(0, 0, 0, 195).getRGB());
+        FontUtils.sf_bold[9].drawLeftAligned(matrices, title, x + 4.5f, y + 4.5f, Color.WHITE.getRGB());
+        FontUtils.sf_bold[9].drawLeftAligned(matrices, "|", x + 4.5f + titleWidth + 3, y + 4.5f, new Color(128, 128, 128, 255).getRGB());
+        FontUtils.sf_bold[9].drawLeftAligned(matrices, fpsText, x + 4.5f + titleWidth + separatorWidth + 6, y + 4.5f, Color.WHITE.getRGB());
+        String ticksText = "TPS: " + Math.max(0, Math.round(ClientManager.getTPS()));
+        float ticksWidth = FontUtils.sf_bold[8].getWidth(ticksText) + 8;
+        drawRoundedRect(matrices, x, y + 20, ticksWidth, 15, 3, new Color(0, 0, 0, 195).getRGB());
+        FontUtils.sf_bold[8].drawLeftAligned(matrices, ticksText, x + 4, y + 24.2f, Color.WHITE.getRGB());
+        watermarkDrag.setWidth(Math.max(topWidth, ticksWidth));
+        watermarkDrag.setHeight(35);
     }
     private int applyHudAlpha(int color, int alpha) {
         Color c = new Color(color, true);
@@ -504,51 +520,50 @@ public class HUD extends Function {
     private void сoordinates(EventRender2D render2D) {
         MatrixStack matrices = render2D.getDrawContext().getMatrices();
         float x = coordinateshudDrag.getX(), y = coordinateshudDrag.getY();
-        String coords = String.format(Locale.ENGLISH, "%d, %d, %d", (int) mc.player.getX(), (int) mc.player.getY(), (int) mc.player.getZ());
-        int alpha = MathHelper.clamp(customAlpha.get().intValue(), 175, 255);
-        int muted = LupaWareTheme.withAlpha(LupaWareTheme.MUTED, alpha);
-        drawRoundedRect(matrices, x, y, 206, 34, 11, LupaWareTheme.withAlpha(LupaWareTheme.SURFACE, alpha));
-        drawRoundedBorder(matrices, x, y, 206, 34, 11, 0.8f, LupaWareTheme.withAlpha(LupaWareTheme.BORDER, alpha));
-        drawRoundedRect(matrices, x, y, 4, 34, 2, LupaWareTheme.withAlpha(LupaWareTheme.MINT, alpha));
-        FontUtils.sf_medium[9].drawLeftAligned(matrices, "POSITION", x + 15, y + 5, muted);
-        FontUtils.sf_bold[11].drawLeftAligned(matrices, coords, x + 15, y + 17, Color.WHITE.getRGB());
-        FontUtils.sf_medium[9].drawRightAligned(matrices, "TPS " + ClientManager.getTPS(), x + 195, y + 17, LupaWareTheme.withAlpha(LupaWareTheme.MINT, alpha));
-        coordinateshudDrag.setWidth(206); coordinateshudDrag.setHeight(34);
+        String coords = String.format(Locale.ENGLISH, "Coords: %d %d %d", (int) mc.player.getX(), (int) mc.player.getY(), (int) mc.player.getZ());
+        float width = FontUtils.sf_bold[9].getWidth(coords) + 10;
+        drawRoundedRect(matrices, x, y, width, 15, 3, new Color(0, 0, 0, 195).getRGB());
+        FontUtils.sf_bold[9].drawLeftAligned(matrices, coords, x + 4.5f, y + 4, Color.WHITE.getRGB());
+        coordinateshudDrag.setWidth(width);
+        coordinateshudDrag.setHeight(15);
     }
     private float keybindsHeightDynamic = 0;
 
     private void keybindHud(EventRender2D render2D) {
         float x = keybindsDrag.getX(), y = keybindsDrag.getY();
         MatrixStack matrices = render2D.getDrawContext().getMatrices();
-        var font = FontUtils.sf_medium[12];
-        int alpha = MathHelper.clamp(customAlpha.get().intValue(), 175, 255);
-        int muted = LupaWareTheme.withAlpha(LupaWareTheme.DIM, alpha);
-        int count = 0; float width = 176;
+        var font = FontUtils.sf_bold[8];
+        int count = 0;
+        float width = 75;
         for (Function f : Manager.FUNCTION_MANAGER.getFunctions()) {
-            if (f.bind != 0 && f.state) { count++; width = Math.max(width, font.getWidth(f.name) + font.getWidth(getShortKey(ClientManager.getKey(f.bind))) + 38); }
-            for (Setting setting : f.getSettings()) if (setting instanceof BindBooleanSetting b && b.isVisible() && b.getBindKey() != 0 && b.get()) { count++; width = Math.max(width, font.getWidth(b.getName()) + font.getWidth(getShortKey(ClientManager.getKey(b.getBindKey()))) + 38); }
+            if (f.bind != 0 && f.state) {
+                count++;
+                width = Math.max(width, font.getWidth(f.name) + font.getWidth(getShortKey(ClientManager.getKey(f.bind))) + 14);
+            }
+            for (Setting setting : f.getSettings()) {
+                if (setting instanceof BindBooleanSetting b && b.isVisible() && b.getBindKey() != 0 && b.get()) {
+                    count++;
+                    width = Math.max(width, font.getWidth(b.getName()) + font.getWidth(getShortKey(ClientManager.getKey(b.getBindKey()))) + 14);
+                }
+            }
         }
         activeModules = count;
-        keybindsHeightDynamic = MathUtil.fast(keybindsHeightDynamic, count * 16, 15);
-        float height = 31 + keybindsHeightDynamic;
-        drawRoundedRect(matrices, x, y, width, height, 11, LupaWareTheme.withAlpha(LupaWareTheme.SURFACE, alpha));
-        drawRoundedBorder(matrices, x, y, width, height, 11, 0.8f, LupaWareTheme.withAlpha(LupaWareTheme.BORDER, alpha));
-        drawRoundedRect(matrices, x, y, width, 3, 1, LupaWareTheme.withAlpha(LupaWareTheme.GOLD, alpha));
-        FontUtils.sf_bold[13].drawLeftAligned(matrices, "BINDS", x + 14, y + 8, Color.WHITE.getRGB());
-        FontUtils.sf_medium[9].drawRightAligned(matrices, count + " ACTIVE", x + width - 14, y + 9, LupaWareTheme.withAlpha(LupaWareTheme.MUTED, alpha));
-        float rowY = y + 31;
+        keybindsHeightDynamic = MathUtil.fast(keybindsHeightDynamic, count * 10, 15);
+        float height = 18 + keybindsHeightDynamic;
+        drawRoundedRect(matrices, x, y, width, height, 3, new Color(0, 0, 0, 195).getRGB());
+        FontUtils.sf_bold[8].centeredDraw(matrices, "Key Binds", x + width / 2f, y + 5, Color.WHITE.getRGB());
+        float rowY = y + 16;
         for (Function f : Manager.FUNCTION_MANAGER.getFunctions()) {
-            if (f.bind != 0 && f.state) rowY = drawBindRow(matrices, font, f.name, getShortKey(ClientManager.getKey(f.bind)), x, rowY, width, Color.WHITE.getRGB(), 10);
-            for (Setting setting : f.getSettings()) if (setting instanceof BindBooleanSetting b && b.isVisible() && b.getBindKey() != 0 && b.get()) rowY = drawBindRow(matrices, font, b.getName(), getShortKey(ClientManager.getKey(b.getBindKey())), x, rowY, width, Color.WHITE.getRGB(), 10);
+            if (f.bind != 0 && f.state) rowY = drawBindRow(matrices, font, f.name, getShortKey(ClientManager.getKey(f.bind)), x, rowY, width, Color.WHITE.getRGB(), 4);
+            for (Setting setting : f.getSettings()) if (setting instanceof BindBooleanSetting b && b.isVisible() && b.getBindKey() != 0 && b.get()) rowY = drawBindRow(matrices, font, b.getName(), getShortKey(ClientManager.getKey(b.getBindKey())), x, rowY, width, Color.WHITE.getRGB(), 4);
         }
         keybindsDrag.setWidth(width); keybindsDrag.setHeight(height);
     }
     private float drawBindRow(MatrixStack matrices, ru.levin.manager.fontManager.RenderFonts font, String name, String key, float x, float y, float width, int accent, int padding) {
-        font.drawLeftAligned(matrices, name, x + 18, y + 4, LupaWareTheme.WHITE);
-        float keyWidth = Math.max(34, font.getWidth(key) + 14);
-        drawRoundedRect(matrices, x + width - keyWidth - 12, y + 1, keyWidth, 15, 7, LupaWareTheme.withAlpha(LupaWareTheme.SURFACE_SOFT, 230));
-        font.centeredDraw(matrices, key, x + width - keyWidth / 2f - 12, y + 4, new Color(150, 242, 225).getRGB());
-        return y + 17;
+        String trimmed = name.length() > 12 ? name.substring(0, 12) + ".." : name;
+        font.drawLeftAligned(matrices, trimmed, x + padding, y + 2, LupaWareTheme.WHITE);
+        font.drawRightAligned(matrices, key, x + width - padding, y + 2, LupaWareTheme.withAlpha(LupaWareTheme.MUTED, 230));
+        return y + 10;
     }
 
     private String getShortKey(String key) {

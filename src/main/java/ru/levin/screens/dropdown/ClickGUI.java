@@ -3,1328 +3,547 @@ package ru.levin.screens.dropdown;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Text;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.MathHelper;
-import org.joml.Quaternionf;
-import org.joml.Vector3f;
-import org.joml.Vector4f;
-import org.joml.Vector4i;
 import org.lwjgl.glfw.GLFW;
 import ru.levin.manager.ClientManager;
-import ru.levin.manager.dragManager.Dragging;
 import ru.levin.manager.IMinecraft;
 import ru.levin.manager.Manager;
-import ru.levin.manager.themeManager.Style;
 import ru.levin.modules.Function;
 import ru.levin.modules.Type;
 import ru.levin.modules.setting.*;
-import ru.levin.protect.AES;
 import ru.levin.screens.dropdown.impl.*;
 import ru.levin.screens.dropdown.search.SearchState;
-import ru.levin.util.animations.impl.EaseInOutQuad;
 import ru.levin.util.color.ColorUtil;
-import ru.levin.manager.fontManager.FontUtils;
 import ru.levin.util.math.MathUtil;
-import ru.levin.util.render.RenderAddon;
-import ru.levin.util.render.RenderUtil;
 import ru.levin.util.render.LupaWareTheme;
+import ru.levin.util.render.RenderUtil;
 import ru.levin.util.render.Scissor;
-import ru.levin.util.render.providers.ResourceProvider;
-import java.awt.*;
-import java.util.*;
+import ru.levin.manager.fontManager.FontUtils;
 
-import static ru.levin.util.render.RenderUtil.drawBlur;
+import java.awt.Color;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class ClickGUI extends Screen implements IMinecraft {
-    private boolean isClose;
-    private boolean hudLayoutMode = false;
+    private static final int SHELL_WIDTH = 400;
+    private static final int SHELL_HEIGHT = 250;
+    private static final int RAIL_WIDTH = 85;
+    private static final int CONTENT_PADDING = 9;
+    private static final int CONTENT_HEADER_HEIGHT = 30;
+    private static final int MODULE_ROW_HEIGHT = 17;
+    private static final int MODULE_GAP = 3;
+    private static final int COLUMN_GAP = 6;
+    private static final int SEARCH_WIDTH = 80;
+    private static final int SEARCH_HEIGHT = 15;
+    private static final int SEARCH_X_OFFSET = 6;
+    private static final int SCROLL_STEP = 16;
 
-    private final int PANEL_WIDTH = 480;
-    private final int PANEL_HEIGHT = 500;
-    private final int PANEL_MARGIN = 0;
-    private final int RAIL_WIDTH = 164;
+    private static final Set<Type> CATEGORIES = EnumSet.of(Type.Combat, Type.Move, Type.Render, Type.Player, Type.Misc);
+    private final Map<Type, Float> scroll = new EnumMap<>(Type.class);
+    private final Map<Type, Float> scrollTarget = new EnumMap<>(Type.class);
+    private final List<ModuleLayout> visibleLayout = new ArrayList<>();
+    private final SearchState searchState = new SearchState();
+
     private Type selectedCategory = Type.Combat;
+    private Function bindingFunction;
+    private boolean closeRequested;
+    private float openProgress;
 
-    private final Color GUI_COLOR = new Color(LupaWareTheme.SURFACE, true);
-
-    private final int TITLE_MARGIN_TOP = 9;
-    private final int TITLE_HEIGHT = 42;
-
-    private final int FUNCTION_HEIGHT = 34;
-
-    private final int SCROLL_AREA_Y_OFFSET = 96;
-    private final int SCROLL_AREA_HEIGHT = PANEL_HEIGHT - SCROLL_AREA_Y_OFFSET - 10;
-
-    private final Set<Type> renderCategories = EnumSet.of(Type.Combat, Type.Move, Type.Render, Type.Player, Type.Misc);
-    private static final Map<Type, Float> scrollOffsets = new HashMap<>();
-    private static final Map<Type, Float> scrollTargets = new HashMap<>();
-    private final Map<Function, Float> arrowRotationProgress = new HashMap<>();
-    private final EaseInOutQuad animationOpen = new EaseInOutQuad(250, 1);
-    private double animation;
-
-    private final Map<Function, Float> expandProgress = new HashMap<>();
-
-    private final SearchState searchState;
-    private boolean functionBinding = false;
-    private Function functions = null;
-
-    private SliderSetting draggingSlider = null;
-    private int draggingSliderX = 0;
-    private int draggingSliderWidth = 0;
-
-    private final BooleanSettingRenderer booleanSettingRenderer = new BooleanSettingRenderer();
-    private final BindBooleanSettingRenderer bindbooleanSettingRenderer = new BindBooleanSettingRenderer();
-    private final BindSettingRenderer bindSettingRenderer = new BindSettingRenderer();
-    private final ModeSettingRenderer modeSettingRenderer = new ModeSettingRenderer();
-    private final MultiSettingRenderer multiSettingRenderer = new MultiSettingRenderer();
-    private final SliderSettingRenderer sliderSettingRenderer = new SliderSettingRenderer();
-    private final TextSettingRenderer textSettingRenderer = new TextSettingRenderer();
-
-    private final int SEARCH_HEIGHT = 28;
-    private final int SEARCH_MARGIN_BOTTOM = 9;
-    private final int SEARCH_MAX_WIDTH = 310;
-
-    private final int THEME_HEIGHT = 30;
-    private final int THEME_MARGIN_BOTTOM = 8;
-    private final int THEME_MAX_WIDTH = 280;
-    private static float themeScrollOffset = 0;
-    private static float themeScrollTarget = 0;
-    private final int VISIBLE_THEMES = 8;
-
-    private float themeMenuAnim = 0f;
-    private float themeMenuTarget = 0f;
-    private float themeAlphaAnim = 0f;
-    private static final float THEME_ANIM_SPEED = 0.2f;
-    private static boolean themeMenu;
-    private float themeNameAnim = 0f;
-
-    private final float SCROLL_SPEED = 12f;
-    private final float SCROLL_LERP_FACTOR = 20f;
-    private final float SCROLL_SMOOTH_FACTOR = 12f;
-
-    private final float THEME_SCROLL_SPEED = 15f;
-    private final float THEME_SCROLL_LERP_FACTOR = 15f;
-
-    private static boolean colorPickerOpen = false;
-    private static int selectedColor1 = Color.WHITE.getRGB();
-    private static int selectedColor2 = Color.WHITE.getRGB();
-
-    private float picker1CursorX = 0.5f;
-    private float picker1CursorY = 0.5f;
-    private float picker2CursorX = 0.5f;
-    private float picker2CursorY = 0.5f;
-    private boolean draggingPicker1 = false;
-    private boolean draggingPicker2 = false;
-    private float colorPickerAnim = 0f;
+    private final BooleanSettingRenderer booleanRenderer = new BooleanSettingRenderer();
+    private final BindBooleanSettingRenderer bindBooleanRenderer = new BindBooleanSettingRenderer();
+    private final BindSettingRenderer bindRenderer = new BindSettingRenderer();
+    private final ModeSettingRenderer modeRenderer = new ModeSettingRenderer();
+    private final MultiSettingRenderer multiRenderer = new MultiSettingRenderer();
+    private final SliderSettingRenderer sliderRenderer = new SliderSettingRenderer();
+    private final TextSettingRenderer textRenderer = new TextSettingRenderer();
 
     public ClickGUI() {
         super(Text.literal("ClickGUI"));
-        this.searchState = new SearchState();
-        if (scrollOffsets.isEmpty() && scrollTargets.isEmpty()) {
-            renderCategories.forEach(cat -> {
-                scrollOffsets.put(cat, 0f);
-                scrollTargets.put(cat, 0f);
-            });
+        for (Type category : CATEGORIES) {
+            scroll.put(category, 0f);
+            scrollTarget.put(category, 0f);
         }
     }
 
     @Override
-    public void init() {
+    protected void init() {
         super.init();
-
-        isClose = false;
-        animationOpen.setDirection(Direction.AxisDirection.POSITIVE);
-        animationOpen.reset();
-    }
-
-    @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
-        animation = animationOpen.getOutput();
-        if (isClose && animationOpen.finished(Direction.AxisDirection.NEGATIVE)) {
-            super.close();
-            return;
-        }
-        if (animation <= 0.01) return;
-        super.render(ctx, mouseX, mouseY, delta);
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), 0, 0, width, height, 0, LupaWareTheme.withAlpha(LupaWareTheme.INK, 150));
-        ctx.getMatrices().push();
-        RenderAddon.sizeAnimation(ctx.getMatrices(), width / 2, height / 2, animation);
-
-        int panelX = (width - (RAIL_WIDTH + PANEL_WIDTH + 18)) / 2 + RAIL_WIDTH + 18;
-        int panelY = (height - PANEL_HEIGHT) / 2;
-        int railX = panelX - RAIL_WIDTH - 18;
-        renderNavigationRail(ctx, railX, panelY, mouseX, mouseY);
-
-        for (Type category : renderCategories) {
-            float target = scrollTargets.get(category);
-            float current = scrollOffsets.get(category);
-            scrollOffsets.put(category, MathUtil.lerp(current, target, SCROLL_LERP_FACTOR));
-        }
-        renderPanel(ctx, panelX, panelY, selectedCategory, mouseX, mouseY);
-        Function hoveredFunction = getHoveredFunction(mouseX, mouseY, panelX, panelY);
-        if (hoveredFunction != null && hoveredFunction.desc != null && !hoveredFunction.desc.isEmpty()) drawDescription(ctx, hoveredFunction.desc, panelY);
-        DescriptionRenderQueue.renderAll(ctx);
-        renderSearchField(ctx);
-        renderButtomTheme(ctx, mouseX, mouseY);
-        renderTheme(ctx, mouseX, mouseY);
-        renderExpiryText(ctx);
-        renderHudLayoutOverlay(ctx, mouseX, mouseY);
-        ctx.getMatrices().pop();
-    }
-
-    private void renderNavigationRail(DrawContext ctx, int x, int y, int mouseX, int mouseY) {
-        int railHeight = PANEL_HEIGHT;
-        int rail = LupaWareTheme.SURFACE;
-        int border = LupaWareTheme.BORDER;
-        int accent = LupaWareTheme.GOLD;
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), x, y, RAIL_WIDTH, railHeight, 18, rail);
-        RenderUtil.drawRoundedBorder(ctx.getMatrices(), x, y, RAIL_WIDTH, railHeight, 18, 1f, border);
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 18, y + 18, 42, 42, 13, accent);
-        FontUtils.sf_bold[17].centeredDraw(ctx.getMatrices(), "LW", x + 39, y + 29, ColorUtil.rgba(8, 22, 29, 255));
-        FontUtils.sf_bold[17].drawLeftAligned(ctx.getMatrices(), "LUPAWARE", x + 18, y + 76, Color.WHITE.getRGB());
-        FontUtils.sf_medium[9].drawLeftAligned(ctx.getMatrices(), "CONTROL DECK", x + 18, y + 96, ColorUtil.rgba(147, 176, 194, 255));
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 18, y + 119, RAIL_WIDTH - 36, 1, 0, ColorUtil.rgba(63, 91, 114, 180));
-        FontUtils.sf_medium[9].drawLeftAligned(ctx.getMatrices(), "CATEGORIES", x + 18, y + 137, ColorUtil.rgba(132, 163, 182, 255));
-        int rowY = y + 160;
-        for (Type category : renderCategories) {
-            boolean active = category == selectedCategory;
-            boolean hovered = mouseX >= x + 10 && mouseX <= x + RAIL_WIDTH - 10 && mouseY >= rowY && mouseY <= rowY + 38;
-            int rowColor = active ? ColorUtil.rgba(38, 77, 82, 235) : (hovered ? ColorUtil.rgba(26, 48, 67, 230) : ColorUtil.rgba(0, 0, 0, 0));
-            if (rowColor != 0) RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 10, rowY, RAIL_WIDTH - 20, 38, 10, rowColor);
-            if (active) RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 10, rowY + 8, 3, 22, 2, accent);
-            FontUtils.icomoon[15].drawLeftAligned(ctx.getMatrices(), category.icon, x + 22, rowY + 11, active ? accent : ColorUtil.rgba(157, 182, 197, 255));
-            FontUtils.sf_medium[12].drawLeftAligned(ctx.getMatrices(), category.name().toUpperCase(), x + 48, rowY + 11, active ? Color.WHITE.getRGB() : ColorUtil.rgba(189, 205, 215, 255));
-            rowY += 43;
-        }
-        FontUtils.sf_medium[9].drawLeftAligned(ctx.getMatrices(), "H  HUD LAYOUT", x + 18, y + railHeight - 36, ColorUtil.rgba(147, 176, 194, 255));
-    }
-    private void renderHudLayoutOverlay(DrawContext ctx, int mouseX, int mouseY) {
-        if (!hudLayoutMode) return;
-        int accent = new Color(210, 210, 210).getRGB();
-        int text = ColorUtil.applyAlpha(Color.WHITE.getRGB(), 220);
-        FontUtils.sf_medium[14].drawLeftAligned(ctx.getMatrices(), "HUD LAYOUT  •  drag modules with mouse", 16, 16, text);
-        Manager.DRAG_MANAGER.draggables.values().forEach(dragging -> {
-            if (dragging.getModule() != null && dragging.getModule().state) {
-                dragging.onDraw(mouseX, mouseY, mc.getWindow());
-            }
-        });
-        RenderUtil.drawRoundedBorder(ctx.getMatrices(), 10, 10, 235, 22, 6, 1f, ColorUtil.applyAlpha(accent, 180));
-    }
-
-    private Function getHoveredFunction(int mouseX, int mouseY, int panelX, int panelY) {
-        if (mouseX < panelX || mouseX > panelX + PANEL_WIDTH || mouseY < panelY || mouseY > panelY + PANEL_HEIGHT) return null;
-        float offset = scrollOffsets.get(selectedCategory);
-        float currentY = panelY + SCROLL_AREA_Y_OFFSET - offset;
-        for (Function function : Manager.FUNCTION_MANAGER.getFunctions(selectedCategory)) {
-            if (!isFunctionVisible(function)) continue;
-            int functionHeight = FUNCTION_HEIGHT;
-            int fullSettingsHeight = computeSettingsHeight(function);
-            float progress = expandProgress.getOrDefault(function, function.expanded ? 1f : 0f);
-            int animatedSettingsHeight = (int) Math.round(fullSettingsHeight * progress);
-            int totalHeight = functionHeight + animatedSettingsHeight;
-            if (mouseX >= panelX && mouseX <= panelX + PANEL_WIDTH && mouseY >= currentY && mouseY <= currentY + functionHeight && mouseY >= panelY + SCROLL_AREA_Y_OFFSET && mouseY <= panelY + SCROLL_AREA_Y_OFFSET + SCROLL_AREA_HEIGHT) return function;
-            if (animatedSettingsHeight > 0) {
-                float settingY = currentY + functionHeight;
-                int remaining = animatedSettingsHeight;
-                for (Setting setting : function.getSettings()) {
-                    if (!setting.isVisible()) continue;
-                    int settingHeight = getSettingRendererHeight(setting, PANEL_WIDTH - 28);
-                    if (settingHeight <= 0) continue;
-                    int visible = Math.max(0, Math.min(settingHeight, remaining));
-                    if (visible <= 0) break;
-                    if (mouseX >= panelX && mouseX <= panelX + PANEL_WIDTH && mouseY >= settingY && mouseY <= settingY + visible && mouseY >= panelY + SCROLL_AREA_Y_OFFSET && mouseY <= panelY + SCROLL_AREA_Y_OFFSET + SCROLL_AREA_HEIGHT) return function;
-                    settingY += settingHeight + 1;
-                    remaining -= settingHeight + 1;
-                    if (remaining <= 0) break;
-                }
-            }
-            currentY += totalHeight;
-        }
-        return null;
-    }
-
-    private void drawDescription(DrawContext ctx, String desc, int startY) {
-        int descWidth = (int) FontUtils.durman[19].getWidth(desc);
-        int descHeight = 20;
-
-        int descX = (width - descWidth) / 2;
-        int descY = startY - descHeight - 10;
-
-
-        if (Manager.FUNCTION_MANAGER.clickGUI.blur.get() && Manager.FUNCTION_MANAGER.clickGUI.blurSetting.get("Описание")) {
-            drawBlur(ctx.getMatrices(), descX - 6, descY - 3.5f, descWidth + 12, descHeight, 12, 8, -1);
-        }
-
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), descX - 6, descY - 3.5f, descWidth + 12, descHeight, 6, GUI_COLOR.getRGB());
-        FontUtils.durman[19].drawLeftAligned(ctx.getMatrices(), desc, descX, descY, Color.WHITE.getRGB());
-    }
-
-    private float updateExpandAnimation(Function f) {
-        float target = f.expanded ? 1f : 0f;
-        float prog = expandProgress.getOrDefault(f, target);
-
-        prog = MathUtil.lerp(prog, target, 15f);
-
-        if (Math.abs(target - prog) < 0.001f) prog = target;
-        expandProgress.put(f, prog);
-
-        return prog;
-    }
-
-    private void renderPanel(DrawContext ctx, int x, int y, Type category, int mouseX, int mouseY) {
-        ru.levin.modules.render.ClickGUI clickGUI = Manager.FUNCTION_MANAGER.clickGUI;
-        int panelColor = LupaWareTheme.SURFACE;
-        int headerColor = LupaWareTheme.SURFACE_RAISED;
-        int borderColor = LupaWareTheme.BORDER;
-        int accentColor = LupaWareTheme.GOLD;
-
-        if (clickGUI.blur.get() && clickGUI.blurSetting.get("Панели")) {
-            drawBlur(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 18, 12, -1);
-        }
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 18, panelColor);
-        RenderUtil.drawRoundedBorder(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 18, 1f, borderColor);
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 1, y + 1, PANEL_WIDTH - 2, 82, 17, headerColor);
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 20, y + 20, 5, 42, 2, accentColor);
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 20, y + 82, PANEL_WIDTH - 40, 1, 0, ColorUtil.rgba(74, 112, 135, 180));
-
-        String title = category.name().toUpperCase();
-        String icon = category.icon;
-        FontUtils.icomoon[18].drawLeftAligned(ctx.getMatrices(), icon, x + 40, y + 25, accentColor);
-        FontUtils.sf_bold[22].drawLeftAligned(ctx.getMatrices(), title, x + 70, y + 20, Color.WHITE.getRGB());
-        FontUtils.sf_medium[11].drawLeftAligned(ctx.getMatrices(), "MODULE LIBRARY  /  RIGHT CLICK FOR SETTINGS", x + 70, y + 48, LupaWareTheme.MUTED);
-        FontUtils.sf_medium[11].drawRightAligned(ctx.getMatrices(), Manager.FUNCTION_MANAGER.getFunctions(category).size() + " MODULES", x + PANEL_WIDTH - 24, y + 28, LupaWareTheme.MUTED);
-
-        {
-            int maxBefore = calculateMaxScroll(category);
-            float clampedTarget = MathHelper.clamp(scrollTargets.get(category), 0f, (float) maxBefore);
-            float clampedOffset = MathHelper.clamp(scrollOffsets.get(category), 0f, (float) maxBefore);
-            scrollTargets.put(category, clampedTarget);
-            scrollOffsets.put(category, clampedOffset);
-        }
-
-        float offset = scrollOffsets.compute(category, (k, v) -> {
-            float target = scrollTargets.get(k);
-            float current = v;
-            float lerped = MathUtil.lerp(current, target, SCROLL_LERP_FACTOR);
-            float smoothed = MathUtil.lerp(current, lerped, SCROLL_SMOOTH_FACTOR);
-
-            return smoothed;
-        });
-
-        renderScrollbar(ctx, x, y, category, offset);
-        ctx.getMatrices().push();
-        Scissor.push();
-        Scissor.setFromComponentCoordinates(x + 1, y + 90, PANEL_WIDTH - 2, PANEL_HEIGHT - 100);
-
-        float currentY = y + 96 - offset;
-
-        for (Function f : Manager.FUNCTION_MANAGER.getFunctions(category)) {
-            if (!isFunctionVisible(f)) continue;
-
-            int functionHeight = FUNCTION_HEIGHT;
-            float prog = updateExpandAnimation(f);
-
-            int fullSettingsHeight = computeSettingsHeight(f);
-            int animatedSettingsHeight = (int) (fullSettingsHeight * prog);
-            int totalHeight = functionHeight + animatedSettingsHeight;
-
-            if (currentY + totalHeight < y + SCROLL_AREA_Y_OFFSET || currentY > y + PANEL_HEIGHT) {
-                currentY += totalHeight;
-                continue;
-            }
-
-            int col1 = f.state ? Color.WHITE.getRGB() : LupaWareTheme.MUTED;
-            int col2 = col1;
-
-            int colorModule = f.state ? LupaWareTheme.withAlpha(LupaWareTheme.SURFACE_SOFT, Math.max(190, clickGUI.alphaModules.get().intValue())) : LupaWareTheme.withAlpha(LupaWareTheme.SURFACE_RAISED, 185);
-            int colorModule2 = colorModule;
-            int moduleHeight = Math.max(29, totalHeight - 7);
-            RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 18, currentY + 3, PANEL_WIDTH - 36, moduleHeight, 11, colorModule2);
-            RenderUtil.drawRoundedBorder(ctx.getMatrices(), x + 18, currentY + 3, PANEL_WIDTH - 36, moduleHeight, 11, 0.6f, f.state ? LupaWareTheme.withAlpha(accentColor, 110) : LupaWareTheme.withAlpha(LupaWareTheme.BORDER_SOFT, 70));
-            RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 31, currentY + 14, 5, 9, 2, f.state ? accentColor : LupaWareTheme.DIM);
-
-            String textToRender;
-            if (functionBinding && functions == f) {
-                int bindCode = f.getBindCode();
-                String keyName = bindCode != 0 ? ClientManager.getKey(bindCode) : "";
-                textToRender = bindCode == 0 ? "Binding..." : "Binding... [" + keyName + "]";
-            } else {
-                textToRender = f.name;
-            }
-
-            FontUtils.sf_medium[14].drawClipped(ctx.getMatrices(), textToRender, PANEL_WIDTH - 74, x + 50, currentY + 10, f.state ? Color.WHITE.getRGB() : col1);
-
-            if (animatedSettingsHeight > 0) {
-                float settingY = currentY + functionHeight;
-                ctx.getMatrices().push();
-                Scissor.push();
-                Scissor.setFromComponentCoordinates(x + 1, (int) settingY, PANEL_WIDTH - 2, animatedSettingsHeight);
-
-                for (Setting setting : f.getSettings()) {
-                    if (!setting.isVisible()) continue;
-                    int settingHeight = 0;
-
-                    if (setting instanceof BooleanSetting booleanSetting) {
-                        settingHeight = booleanSettingRenderer.getHeight();
-                        booleanSettingRenderer.render(ctx, booleanSetting, x + 10, (int) settingY, PANEL_WIDTH - 20, settingHeight);
-                    } else if (setting instanceof BindBooleanSetting bindBooleanSetting) {
-                        settingHeight = bindbooleanSettingRenderer.getHeight();
-                        bindbooleanSettingRenderer.render(ctx, bindBooleanSetting, x + 10, (int) settingY, PANEL_WIDTH - 20, settingHeight);
-                    } else if (setting instanceof BindSetting bindSetting) {
-                        settingHeight = bindSettingRenderer.getHeight();
-                        bindSettingRenderer.render(ctx, bindSetting, x + 10, (int) settingY - 2, PANEL_WIDTH - 20, settingHeight);
-                    } else if (setting instanceof ModeSetting modeSetting) {
-                        settingHeight = modeSettingRenderer.getHeight(modeSetting, PANEL_WIDTH - 20);
-                        modeSettingRenderer.render(ctx, modeSetting, x + 10, (int) settingY, PANEL_WIDTH - 20, settingHeight);
-                    } else if (setting instanceof MultiSetting multiSetting) {
-                        settingHeight = multiSettingRenderer.getHeight(multiSetting, PANEL_WIDTH - 20);
-                        multiSettingRenderer.render(ctx, multiSetting, x + 10, (int) settingY, PANEL_WIDTH - 20, settingHeight);
-                    } else if (setting instanceof SliderSetting sliderSetting) {
-                        settingHeight = sliderSettingRenderer.getHeight();
-                        sliderSettingRenderer.render(ctx, sliderSetting, x + 10, (int) settingY - 2, PANEL_WIDTH - 20, settingHeight);
-                    } else if (setting instanceof TextSetting textSetting) {
-                        settingHeight = textSettingRenderer.getHeight();
-                        textSettingRenderer.render(ctx, textSetting, x + 10, (int) settingY, PANEL_WIDTH - 20, settingHeight);
-                    }
-
-                    settingY += settingHeight + 1;
-                }
-
-                Scissor.pop();
-                ctx.getMatrices().pop();
-            }
-
-            boolean hasSettings = !f.getSettings().isEmpty();
-            if (hasSettings) {
-                float currentProgress = arrowRotationProgress.getOrDefault(f, f.expanded ? 1f : 0f);
-                currentProgress = MathUtil.lerp(currentProgress, f.expanded ? 1f : 0f, 15f);
-                if (Math.abs((f.expanded ? 1f : 0f) - currentProgress) < 0.001f) currentProgress = f.expanded ? 1f : 0f;
-                arrowRotationProgress.put(f, currentProgress);
-
-                int arrowX = x + PANEL_WIDTH - 35;
-                int arrowY = (int) (currentY + FUNCTION_HEIGHT / 2);
-
-                ctx.getMatrices().push();
-                ctx.getMatrices().translate(arrowX, arrowY, 0);
-                float angleRad = (float) Math.toRadians(90.0f * currentProgress);
-                Quaternionf rotation = new Quaternionf().fromAxisAngleRad(new Vector3f(0, 0, 1), angleRad);
-                ctx.getMatrices().multiply(rotation);
-                FontUtils.sf_medium[18].drawLeftAligned(ctx.getMatrices(), "+", -4, -FontUtils.sf_medium[18].getHeight() / 2, f.state ? accentColor : LupaWareTheme.MUTED);
-                ctx.getMatrices().pop();
-            }
-
-            currentY += totalHeight;
-        }
-
-        clampScrollForCategory(category);
-        Scissor.pop();
-        ctx.getMatrices().pop();
-    }
-
-    private void renderScrollbar(DrawContext ctx, int x, int y, Type category, float offset) {
-        int maxScroll = calculateMaxScroll(category);
-        if (maxScroll <= 0) return;
-
-        int scrollbarWidth = 3;
-        int scrollbarX = x + PANEL_WIDTH - scrollbarWidth - 1;
-
-        int scrollbarHeight = SCROLL_AREA_HEIGHT - 30;
-        int scrollbarY = y + SCROLL_AREA_Y_OFFSET + 15;
-
-        int scrollbarBgColor = LupaWareTheme.withAlpha(LupaWareTheme.INK, 90);
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), scrollbarX, scrollbarY, scrollbarWidth, scrollbarHeight, 1, scrollbarBgColor);
-
-        float scrollProgress = offset / maxScroll;
-        int thumbHeight = Math.max(6, (int) (scrollbarHeight * (SCROLL_AREA_HEIGHT / (float) (SCROLL_AREA_HEIGHT + maxScroll))));
-        int thumbY = scrollbarY + (int) (scrollProgress * (scrollbarHeight - thumbHeight));
-
-        int thumbColor = LupaWareTheme.withAlpha(LupaWareTheme.GOLD, 190);
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), scrollbarX, thumbY, scrollbarWidth, thumbHeight, 1, thumbColor);
-    }
-    @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        int themeWidth = getThemeWidth();
-        int themeX = getThemeX(themeWidth);
-        int themeY = getThemeY();
-
-        if (mouseX >= themeX && mouseX <= themeX + themeWidth && mouseY >= themeY && mouseY <= themeY + THEME_HEIGHT) {
-            themeScrollTarget += (float) (-scrollY * THEME_SCROLL_SPEED);
-            return true;
-        }
-
-        int panelX = (width - (RAIL_WIDTH + PANEL_WIDTH + 18)) / 2 + RAIL_WIDTH + 18;
-        int panelY = (height - PANEL_HEIGHT) / 2;
-        if (mouseX >= panelX && mouseX <= panelX + PANEL_WIDTH && mouseY >= panelY + SCROLL_AREA_Y_OFFSET && mouseY <= panelY + SCROLL_AREA_Y_OFFSET + SCROLL_AREA_HEIGHT) {
-            int maxScroll = calculateMaxScroll(selectedCategory);
-            if (maxScroll > 0) {
-                scrollTargets.compute(selectedCategory, (k, v) -> Math.max(0, Math.min(v - (float) scrollY * SCROLL_SPEED, maxScroll)));
-                return true;
-            }
-            return false;
-        }
-        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
-    }
-
-    private int calculateMaxScroll(Type category) {
-        int totalHeight = 0;
-        for (Function f : Manager.FUNCTION_MANAGER.getFunctions(category)) {
-            if (!isFunctionVisible(f)) continue;
-            int functionHeight = FUNCTION_HEIGHT;
-
-            int fullSettingsHeight = computeSettingsHeight(f);
-            float prog = expandProgress.getOrDefault(f, f.expanded ? 1f : 0f);
-            int animated = (int) Math.round(fullSettingsHeight * prog);
-
-            totalHeight += functionHeight + animated;
-        }
-        int maxScroll = totalHeight - SCROLL_AREA_HEIGHT;
-        return Math.max(0, maxScroll);
-    }
-
-    @Override
-    public boolean charTyped(char c, int keyCode) {
-        if (searchState.focused) {
-            String prevText = searchState.text;
-            if (searchState.text.length() < 30) {
-                String before = searchState.text.substring(0, searchState.cursorPosition);
-                String after = searchState.text.substring(searchState.cursorPosition);
-                searchState.text = before + c + after;
-                searchState.cursorPosition++;
-            }
-            if (!prevText.equals(searchState.text)) {
-                resetScrollForAllCategories();
-            }
-            return true;
-        }
-
-        for (Type category : renderCategories) {
-            for (Function function : Manager.FUNCTION_MANAGER.getFunctions(category)) {
-                if (!function.expanded) continue;
-                for (Setting setting : function.getSettings()) {
-                    if (setting instanceof TextSetting textSetting && textSetting.isFocused()) {
-                        if (textSettingRenderer.charTyped(textSetting, c, keyCode)) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-
-        return super.charTyped(c, keyCode);
-    }
-
-    @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == GLFW.GLFW_KEY_H && !functionBinding && functions == null) {
-            hudLayoutMode = !hudLayoutMode;
-            return true;
-        }
-        if (isClose) {
-            return true;
-        }
-        for (Type category : renderCategories) {
-            for (Function function : Manager.FUNCTION_MANAGER.getFunctions(category)) {
-                if (!isFunctionVisible(function)) continue;
-                if (function.expanded) {
-                    for (Setting setting : function.getSettings()) {
-                        if (!setting.isVisible()) continue;
-                        if (setting instanceof BindBooleanSetting bindBooleanSetting) {
-                            if (bindBooleanSetting.isListeningForBind()) {
-                                if (keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == GLFW.GLFW_KEY_DELETE) {
-                                    bindBooleanSetting.setKey(0);
-                                } else {
-                                    bindBooleanSetting.setKey(keyCode);
-                                }
-                                bindBooleanSetting.setListeningForBind(false);
-                                return true;
-                            }
-                        }
-                        if (setting instanceof BindSetting bindSetting) {
-                            if (bindSetting.isBinding()) {
-                                if (keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == GLFW.GLFW_KEY_DELETE) {
-                                    bindSetting.setKey(-1);
-                                } else {
-                                    bindSetting.setKey(keyCode);
-                                }
-                                bindSetting.setBinding(false);
-                                return true;
-                            }
-                        }
-                        if (setting instanceof TextSetting textSetting) {
-                            if (textSetting.isFocused()) {
-                                if (textSettingRenderer.keyPressed(textSetting, keyCode, scanCode, modifiers)) {
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        if (functionBinding && functions != null) {
-            if (keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == GLFW.GLFW_KEY_DELETE) {
-                functions.setBindCode(0);
-            } else {
-                functions.setBindCode(keyCode);
-            }
-            functionBinding = false;
-            functions = null;
-            return true;
-        }
-
-        if (searchState.focused) {
-            String prevText = searchState.text;
-            switch (keyCode) {
-                case GLFW.GLFW_KEY_BACKSPACE -> {
-                    if (searchState.cursorPosition > 0 && !searchState.text.isEmpty()) {
-                        searchState.text = searchState.text.substring(0, searchState.cursorPosition - 1) + searchState.text.substring(searchState.cursorPosition);
-                        searchState.cursorPosition--;
-                    }
-                    if (!prevText.equals(searchState.text)) {
-                        resetScrollForAllCategories();
-                    }
-                    return true;
-                }
-                case GLFW.GLFW_KEY_DELETE -> {
-                    if (searchState.cursorPosition < searchState.text.length()) {
-                        searchState.text = searchState.text.substring(0, searchState.cursorPosition) + searchState.text.substring(searchState.cursorPosition + 1);
-                    }
-                    if (!prevText.equals(searchState.text)) {
-                        resetScrollForAllCategories();
-                    }
-                    return true;
-                }
-                case GLFW.GLFW_KEY_LEFT -> {
-                    if (searchState.cursorPosition > 0) searchState.cursorPosition--;
-                    return true;
-                }
-                case GLFW.GLFW_KEY_RIGHT -> {
-                    if (searchState.cursorPosition < searchState.text.length()) searchState.cursorPosition++;
-                    return true;
-                }
-                case GLFW.GLFW_KEY_ENTER, GLFW.GLFW_KEY_ESCAPE -> {
-                    searchState.focused = false;
-                    return true;
-                }
-            }
-        }
-
-        return super.keyPressed(keyCode, scanCode, modifiers);
-    }
-
-    private void resetScrollForAllCategories() {
-        for (Type category : renderCategories) {
-            scrollTargets.put(category, 0f);
-            scrollOffsets.put(category, 0f);
-        }
+        closeRequested = false;
+        openProgress = 0f;
+        searchState.focused = false;
+        bindingFunction = null;
     }
 
     @Override
     public void tick() {
         super.tick();
-        long currentTime = System.currentTimeMillis();
-        if (currentTime - searchState.lastCursorBlink >= 500) {
+        if (searchState.focused && System.currentTimeMillis() - searchState.lastCursorBlink > 500) {
             searchState.cursorVisible = !searchState.cursorVisible;
-            searchState.lastCursorBlink = currentTime;
+            searchState.lastCursorBlink = System.currentTimeMillis();
         }
     }
 
     @Override
-    public void close() {
-        if (isClose) {
-            return;
-        }
-        draggingPicker1 = false;
-        draggingPicker2 = false;
-        isClose = true;
-        animationOpen.setDirection(Direction.AxisDirection.NEGATIVE);
-        animationOpen.reset();
-    }
-
-    private int getSearchWidth() {
-        return SEARCH_MAX_WIDTH;
-    }
-
-    private int getSearchX(int searchWidth) {
-        return (width - searchWidth) / 2;
-    }
-
-    private int getSearchY() {
-        return (height + PANEL_HEIGHT) / 2 + SEARCH_MARGIN_BOTTOM;
-    }
-
-    private void renderSearchField(DrawContext ctx) {
-        int searchWidth = getSearchWidth();
-        int searchX = getSearchX(searchWidth);
-        int searchY = getSearchY();
-        ru.levin.modules.render.ClickGUI clickGUI = Manager.FUNCTION_MANAGER.clickGUI;
-        if (clickGUI.blur.get() && clickGUI.blurSetting.get("Поиск")) {
-            drawBlur(ctx.getMatrices(), searchX, searchY, searchWidth, SEARCH_HEIGHT, 6, 12, -1);
-        }
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), searchX, searchY, searchWidth, SEARCH_HEIGHT, 6, GUI_COLOR.getRGB());
-
-        String displayText;
-        int textColor;
-        int textX;
-
-        if (searchState.text.isEmpty() && !searchState.focused) {
-            displayText = "Поиск...";
-            textColor = LupaWareTheme.withAlpha(LupaWareTheme.WHITE, 120);
-            int textWidth = (int) FontUtils.sf_medium[18].getWidth(displayText);
-            textX = searchX + (searchWidth - textWidth) / 2;
-        } else {
-            String text = searchState.text;
-            if (searchState.focused && searchState.cursorVisible) {
-                int pos = Math.min(searchState.cursorPosition, text.length());
-                text = text.substring(0, pos) + "|" + text.substring(pos);
-            }
-            displayText = text;
-            textColor = Color.WHITE.getRGB();
-            textX = searchX + 6;
-        }
-        int textY = (int) (searchY + (SEARCH_HEIGHT - FontUtils.sf_medium[18].getHeight()) / 2);
-        FontUtils.sf_medium[18].drawLeftAligned(ctx.getMatrices(), displayText, textX, textY, textColor);
-    }
-
-    private int getThemeWidth() {
-        return THEME_MAX_WIDTH;
-    }
-
-    private int getThemeX(int searchWidth) {
-        return (width - searchWidth) / 2;
-    }
-
-    private int getThemeY() {
-        // Theme strip is deliberately above the search field; it must never overlap it.
-        return getSearchY() - THEME_HEIGHT - THEME_MARGIN_BOTTOM;
-    }
-    private void renderButtomTheme(DrawContext ctx, double mouseX, double mouseY) {
-        int searchWidth = getSearchWidth();
-        int searchX = getSearchX(searchWidth);
-        int searchY = getSearchY();
-
-        int buttonX = searchX + searchWidth - 22;
-        int buttonY = searchY + 2;
-        int buttonWidth = 16;
-        int buttonHeight = 16;
-        boolean hovered = mouseX >= buttonX && mouseX <= buttonX + buttonWidth && mouseY >= buttonY && mouseY <= buttonY + buttonHeight;
-        int color = hovered ? GUI_COLOR.brighter().getRGB() : GUI_COLOR.getRGB();
-
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), buttonX, buttonY, buttonWidth, buttonHeight, 2, color);
-        RenderUtil.drawTexture(ctx.getMatrices(), "images/gui/colors2.png", buttonX + 3, buttonY + 2.5f, 10, 10, 0, Color.white.getRGB());
-    }
-
-    private void renderTheme(DrawContext ctx, int mouseX, int mouseY) {
-        float targetAlpha = themeMenuTarget > 0.01f ? 1f : 0f;
-        themeAlphaAnim += (targetAlpha - themeAlphaAnim) * 0.15f;
-        if (themeAlphaAnim < 0.01f) return;
-
-        themeMenuAnim += (themeMenuTarget - themeMenuAnim) * THEME_ANIM_SPEED;
-        if (themeMenuAnim < 0.01f) return;
-
-        int themeWidth = getThemeWidth();
-        int themeX = getThemeX(themeWidth);
-        int themeY = getThemeY();
-        float offsetY = (1f - themeMenuAnim) * 10f;
-        themeScrollOffset = MathUtil.lerp(themeScrollOffset, themeScrollTarget, THEME_SCROLL_LERP_FACTOR);
-
-        int panelColor = ColorUtil.applyAlpha(GUI_COLOR.getRGB(), themeAlphaAnim);
-
-        if (Manager.FUNCTION_MANAGER.clickGUI.blur.get() && Manager.FUNCTION_MANAGER.clickGUI.blurSetting.get("Темы")) {
-            drawBlur(ctx.getMatrices(), themeX, themeY + offsetY, themeWidth, THEME_HEIGHT, 3, 12, -1);
-        }
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), themeX, themeY + offsetY, themeWidth, THEME_HEIGHT, 3, panelColor);
-
-        int circleSize = THEME_HEIGHT - 5;
-        int padding = 5;
-        int totalThemes = Manager.STYLE_MANAGER.getStyles().size() + 1;
-
-        float maxScroll = Math.max(0, (totalThemes - VISIBLE_THEMES) * (circleSize + padding));
-        themeScrollTarget = MathHelper.clamp(themeScrollTarget, 0, maxScroll);
-        themeScrollOffset = MathHelper.clamp(themeScrollOffset, 0, maxScroll);
-
-        if (totalThemes > VISIBLE_THEMES) {
-            int arrowColor = ColorUtil.applyAlpha(Color.WHITE.getRGB(), themeAlphaAnim * 0.6f);
-
-            if (themeScrollTarget > 0) {
-                int arrowY = themeY + THEME_HEIGHT / 2;
-                FontUtils.sf_medium[16].drawLeftAligned(ctx.getMatrices(), "←", themeX - 10, arrowY - 5, arrowColor);
-            }
-            if (themeScrollTarget < maxScroll) {
-                int arrowY = themeY + THEME_HEIGHT / 2;
-                int arrowX = themeX + themeWidth + 4;
-                FontUtils.sf_medium[16].drawLeftAligned(ctx.getMatrices(), "→", arrowX, arrowY - 5, arrowColor);
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        openProgress += (1f - openProgress) * 0.22f;
+        if (closeRequested) {
+            openProgress += (0f - openProgress) * 0.25f;
+            if (openProgress < 0.02f) {
+                super.close();
+                return;
             }
         }
 
-        ctx.getMatrices().push();
+        int shellX = (width - SHELL_WIDTH) / 2;
+        int shellY = (height - SHELL_HEIGHT) / 2;
+        float scale = 0.94f + openProgress * 0.06f;
+
+        RenderUtil.drawRoundedRect(context.getMatrices(), 0, 0, width, height, 0,
+                LupaWareTheme.withAlpha(LupaWareTheme.INK, 142));
+
+        context.getMatrices().push();
+        context.getMatrices().translate(width / 2f, height / 2f, 0);
+        context.getMatrices().scale(scale, scale, 1f);
+        context.getMatrices().translate(-width / 2f, -height / 2f, 0);
+
+        renderShell(context, shellX, shellY);
+        renderRail(context, shellX, shellY, mouseX, mouseY);
+        renderContent(context, shellX + RAIL_WIDTH, shellY, mouseX, mouseY);
+        renderSearch(context, shellX + RAIL_WIDTH, shellY);
+        context.getMatrices().pop();
+    }
+
+    private void renderShell(DrawContext context, int x, int y) {
+        RenderUtil.drawRoundedRect(context.getMatrices(), x, y, SHELL_WIDTH, SHELL_HEIGHT, 6,
+                LupaWareTheme.withAlpha(LupaWareTheme.SURFACE, 244));
+        RenderUtil.drawRoundedBorder(context.getMatrices(), x, y, SHELL_WIDTH, SHELL_HEIGHT, 6, 1.4f,
+                LupaWareTheme.withAlpha(LupaWareTheme.BORDER, 230));
+        RenderUtil.drawRoundedRect(context.getMatrices(), x + RAIL_WIDTH, y, SHELL_WIDTH - RAIL_WIDTH, SHELL_HEIGHT, 5,
+                LupaWareTheme.withAlpha(LupaWareTheme.SURFACE_RAISED, 230));
+        RenderUtil.drawRoundedRect(context.getMatrices(), x + RAIL_WIDTH, y + 28, 0.7f, SHELL_HEIGHT - 28,
+                0, LupaWareTheme.withAlpha(LupaWareTheme.BORDER_SOFT, 180));
+    }
+
+    private void renderRail(DrawContext context, int x, int y, int mouseX, int mouseY) {
+        int accent = LupaWareTheme.GOLD;
+        RenderUtil.drawRoundedRect(context.getMatrices(), x + 6, y + 8, 29, 29, 8, accent);
+        FontUtils.sf_bold[13].centeredDraw(context.getMatrices(), "LW", x + 20.5f, y + 16, LupaWareTheme.INK);
+        FontUtils.sf_bold[11].drawLeftAligned(context.getMatrices(), "LUPAWARE", x + 8, y + 47, LupaWareTheme.WHITE);
+        FontUtils.sf_medium[7].drawLeftAligned(context.getMatrices(), "CONTROL DECK", x + 8, y + 61, LupaWareTheme.DIM);
+        RenderUtil.drawRoundedRect(context.getMatrices(), x + 8, y + 76, RAIL_WIDTH - 16, 0.6f, 0,
+                LupaWareTheme.withAlpha(LupaWareTheme.BORDER_SOFT, 160));
+        FontUtils.sf_medium[7].drawLeftAligned(context.getMatrices(), "CATEGORIES", x + 8, y + 87, LupaWareTheme.DIM);
+
+        int rowY = y + 101;
+        for (Type category : CATEGORIES) {
+            boolean active = category == selectedCategory;
+            boolean hovered = isHovered(mouseX, mouseY, x + 5, rowY, RAIL_WIDTH - 10, 20);
+            if (active || hovered) {
+                RenderUtil.drawRoundedRect(context.getMatrices(), x + 5, rowY, RAIL_WIDTH - 10, 20, 5,
+                        active ? LupaWareTheme.withAlpha(LupaWareTheme.GOLD, 48) : LupaWareTheme.withAlpha(LupaWareTheme.SURFACE_SOFT, 130));
+            }
+            if (active) {
+                RenderUtil.drawRoundedRect(context.getMatrices(), x + 5, rowY + 4, 2, 12, 1,
+                        accent);
+            }
+            FontUtils.icomoon[11].drawLeftAligned(context.getMatrices(), category.icon, x + 12, rowY + 5,
+                    active ? accent : LupaWareTheme.MUTED);
+            FontUtils.sf_medium[8].drawLeftAligned(context.getMatrices(), category.name().toUpperCase(), x + 28, rowY + 6,
+                    active ? LupaWareTheme.WHITE : LupaWareTheme.MUTED);
+            rowY += 23;
+        }
+        FontUtils.sf_medium[7].drawLeftAligned(context.getMatrices(), "H  HUD LAYOUT", x + 8, y + SHELL_HEIGHT - 15, LupaWareTheme.DIM);
+    }
+
+    private void renderContent(DrawContext context, int x, int y, int mouseX, int mouseY) {
+        int contentX = x + CONTENT_PADDING;
+        int contentY = y + CONTENT_HEADER_HEIGHT;
+        int contentWidth = SHELL_WIDTH - RAIL_WIDTH - CONTENT_PADDING * 2;
+        int contentHeight = SHELL_HEIGHT - CONTENT_HEADER_HEIGHT - 8;
+
+        String title = selectedCategory.name().toUpperCase();
+        FontUtils.icomoon[12].drawLeftAligned(context.getMatrices(), selectedCategory.icon, contentX, y + 8, LupaWareTheme.GOLD);
+        FontUtils.sf_bold[14].drawLeftAligned(context.getMatrices(), title, contentX + 20, y + 7, LupaWareTheme.WHITE);
+        FontUtils.sf_medium[7].drawLeftAligned(context.getMatrices(), "MODULES / RIGHT CLICK FOR SETTINGS", contentX + 20, y + 21, LupaWareTheme.DIM);
+        FontUtils.sf_medium[7].drawRightAligned(context.getMatrices(), countVisible(selectedCategory) + " MODULES",
+                x + SHELL_WIDTH - 16, y + 10, LupaWareTheme.DIM);
+        RenderUtil.drawRoundedRect(context.getMatrices(), contentX, y + CONTENT_HEADER_HEIGHT - 1, contentWidth, 0.6f, 0,
+                LupaWareTheme.withAlpha(LupaWareTheme.BORDER_SOFT, 140));
+
+        float target = scrollTarget.getOrDefault(selectedCategory, 0f);
+        float current = scroll.getOrDefault(selectedCategory, 0f);
+        current = MathUtil.lerp(current, target, 0.22f);
+        scroll.put(selectedCategory, current);
+
+        visibleLayout.clear();
+        List<Function> functions = visibleFunctions(selectedCategory);
+        float[] columnY = {contentY + 5, contentY + 5};
+        float columnWidth = (contentWidth - COLUMN_GAP) / 2f;
+        float totalBottom = contentY;
+
+        context.getMatrices().push();
         Scissor.push();
-        Scissor.setFromComponentCoordinates(themeX + 1, themeY + offsetY, themeWidth - 2, THEME_HEIGHT);
-
-        float startX = themeX + padding - themeScrollOffset;
-        int centerY = (int) (themeY + (THEME_HEIGHT - circleSize) / 2 + 0.9f + offsetY);
-        String hoveredTheme = null;
-        int x = (int) startX;
-        int y = centerY;
-
-        int pickerSize = circleSize;
-
-        if (selectedColor1 != -1 && selectedColor2 != -1) {
-            final Vector4i vec = new Vector4i(
-                    ColorUtil.gradient(5, 0, selectedColor1, selectedColor2),
-                    ColorUtil.gradient(5, 180, selectedColor1, selectedColor2),
-                    ColorUtil.gradient(5, 90, selectedColor1, selectedColor2),
-                    ColorUtil.gradient(5, 360, selectedColor1, selectedColor2)
-            );
-            RenderUtil.rectRGB(ctx.getMatrices(), x, y + 0.5f, circleSize, circleSize, 5,
-                    ColorUtil.applyAlpha(vec.w, themeAlphaAnim),
-                    ColorUtil.applyAlpha(vec.x, themeAlphaAnim),
-                    ColorUtil.applyAlpha(vec.y, themeAlphaAnim),
-                    ColorUtil.applyAlpha(vec.z, themeAlphaAnim)
-            );
-        } else {
-            RenderUtil.drawTexture(ctx.getMatrices(), "images/gui/pips.png", x, y + 0.5f, pickerSize, pickerSize, 5,
-                    ColorUtil.applyAlpha(Color.WHITE.getRGB(), themeAlphaAnim));
-        }
-
-        if (RenderUtil.isHovered(mouseX, mouseY, x, y, circleSize, circleSize)) {
-            RenderUtil.drawRoundedBorder(ctx.getMatrices(), x - 1, y - 0.5f, circleSize + 2, circleSize + 2, 5, 0.1f,
-                    ColorUtil.applyAlpha(Color.WHITE.getRGB(), themeAlphaAnim));
-            hoveredTheme = "ЛКМ - Создать свою тему";
-        }
-        startX += circleSize + padding;
-
-        for (Style style : Manager.STYLE_MANAGER.getStyles()) {
-            int[] colors = style.colors;
-            int c1 = colors[0];
-            int c2 = colors.length > 1 ? colors[1] : colors[0];
-            final Vector4i vec = new Vector4i(
-                    ColorUtil.gradient(5, 0, c1, c2),
-                    ColorUtil.gradient(5, 180, c1, c2),
-                    ColorUtil.gradient(5, 90, c1, c2),
-                    ColorUtil.gradient(5, 360, c1, c2)
-            );
-            x = (int) startX;
-            y = centerY;
-
-            RenderUtil.rectRGB(ctx.getMatrices(), x, y + 0.5f, circleSize, circleSize, 5,
-                    ColorUtil.applyAlpha(vec.w, themeAlphaAnim),
-                    ColorUtil.applyAlpha(vec.x, themeAlphaAnim),
-                    ColorUtil.applyAlpha(vec.y, themeAlphaAnim),
-                    ColorUtil.applyAlpha(vec.z, themeAlphaAnim)
-            );
-
-            if (RenderUtil.isHovered(mouseX, mouseY, x, y, circleSize, circleSize)) {
-                hoveredTheme = style.name;
+        Scissor.setFromComponentCoordinates(contentX, contentY, contentWidth, contentHeight);
+        for (int index = 0; index < functions.size(); index++) {
+            Function function = functions.get(index);
+            int column = index % 2;
+            float moduleX = contentX + column * (columnWidth + COLUMN_GAP);
+            float moduleY = columnY[column] - current;
+            float moduleHeight = getModuleHeight(function, (int) columnWidth - 10);
+            ModuleLayout layout = new ModuleLayout(function, moduleX, moduleY, columnWidth, moduleHeight);
+            visibleLayout.add(layout);
+            if (moduleY + moduleHeight >= contentY && moduleY <= contentY + contentHeight) {
+                renderModule(context, layout, mouseX, mouseY);
             }
-            startX += circleSize + padding;
+            columnY[column] += moduleHeight + MODULE_GAP;
+            totalBottom = Math.max(totalBottom, columnY[column]);
         }
-
         Scissor.pop();
-        ctx.getMatrices().pop();
+        context.getMatrices().pop();
 
-        float animSpeed = 0.2f;
-        float targetAnim = colorPickerOpen ? 1f : 0f;
-        colorPickerAnim += (targetAnim - colorPickerAnim) * animSpeed;
+        float maxScroll = Math.max(0f, totalBottom - contentY - contentHeight);
+        scrollTarget.put(selectedCategory, Math.max(0f, Math.min(scrollTarget.get(selectedCategory), maxScroll)));
+        if (maxScroll > 0f) {
+            float trackX = contentX + contentWidth - 2;
+            float trackY = contentY + 2;
+            float trackHeight = contentHeight - 4;
+            RenderUtil.drawRoundedRect(context.getMatrices(), trackX, trackY, 2, trackHeight, 1,
+                    LupaWareTheme.withAlpha(LupaWareTheme.INK, 100));
+            float handleHeight = Math.max(12f, trackHeight * trackHeight / (trackHeight + maxScroll));
+            float ratio = scroll.get(selectedCategory) / maxScroll;
+            float handleY = trackY + (trackHeight - handleHeight) * ratio;
+            RenderUtil.drawRoundedRect(context.getMatrices(), trackX, handleY, 2, handleHeight, 1,
+                    LupaWareTheme.withAlpha(LupaWareTheme.GOLD, 210));
+        }
+    }
 
-        if (colorPickerAnim > 0.01f) {
-            int fixedX = themeX + padding;
-            int fixedY = centerY;
-            renderColorPickers(ctx, fixedX, fixedY, mouseX, mouseY);
+    private void renderModule(DrawContext context, ModuleLayout layout, int mouseX, int mouseY) {
+        Function function = layout.function;
+        boolean hovered = isHovered(mouseX, mouseY, layout.x, layout.y, layout.width, MODULE_ROW_HEIGHT);
+        int stateColor = function.state ? LupaWareTheme.withAlpha(LupaWareTheme.GOLD, 44) : LupaWareTheme.withAlpha(LupaWareTheme.SURFACE_SOFT, 170);
+        if (hovered) stateColor = LupaWareTheme.withAlpha(function.state ? LupaWareTheme.GOLD : LupaWareTheme.BORDER_SOFT, 82);
+        RenderUtil.drawRoundedRect(context.getMatrices(), layout.x, layout.y, layout.width, layout.height, 3,
+                stateColor);
+        RenderUtil.drawRoundedBorder(context.getMatrices(), layout.x, layout.y, layout.width, layout.height, 3, 0.7f,
+                function.state ? LupaWareTheme.withAlpha(LupaWareTheme.GOLD, 150) : LupaWareTheme.withAlpha(LupaWareTheme.BORDER_SOFT, 115));
+        RenderUtil.drawRoundedRect(context.getMatrices(), layout.x + 5, layout.y + 6, 3, 5, 1,
+                function.state ? LupaWareTheme.GOLD : LupaWareTheme.DIM);
+
+        int textColor = function.state ? LupaWareTheme.WHITE : LupaWareTheme.MUTED;
+        String moduleName = function.name;
+        FontUtils.sf_medium[8].drawLeftAligned(context.getMatrices(), moduleName, layout.x + 13, layout.y + 5, textColor);
+        if (function.getBindCode() != 0) {
+            String key = ClientManager.getKey(function.getBindCode());
+            if (key == null) key = "";
+            key = key.length() > 5 ? key.substring(0, 5) : key;
+            float keyWidth = Math.max(16, FontUtils.sf_medium[7].getWidth(key) + 8);
+            RenderUtil.drawRoundedRect(context.getMatrices(), layout.x + layout.width - keyWidth - 5, layout.y + 3.5f, keyWidth, 10, 3,
+                    LupaWareTheme.withAlpha(LupaWareTheme.SURFACE_RAISED, 190));
+            FontUtils.sf_medium[7].centeredDraw(context.getMatrices(), key, layout.x + layout.width - keyWidth / 2f - 5, layout.y + 5,
+                    function.state ? LupaWareTheme.GOLD : LupaWareTheme.DIM);
+        }
+        if (!function.getSettings().isEmpty()) {
+            FontUtils.sf_medium[10].drawRightAligned(context.getMatrices(), function.expanded ? "−" : "+",
+                    layout.x + layout.width - 5, layout.y + 4, function.state ? LupaWareTheme.GOLD : LupaWareTheme.MUTED);
         }
 
-        if (hoveredTheme != null) {
-            themeNameAnim += (1f - themeNameAnim) * 0.2f;
-        } else {
-            themeNameAnim += (0f - themeNameAnim) * 0.2f;
+        if (!function.expanded || function.getSettings().isEmpty()) return;
+        RenderUtil.drawRoundedRect(context.getMatrices(), layout.x + 5, layout.y + MODULE_ROW_HEIGHT + 2, layout.width - 10, 0.5f, 0,
+                LupaWareTheme.withAlpha(LupaWareTheme.BORDER_SOFT, 120));
+        int settingY = (int) layout.y + MODULE_ROW_HEIGHT + 5;
+        for (Setting setting : function.getSettings()) {
+            if (!setting.isVisible()) continue;
+            int settingHeight = getSettingHeight(setting, (int) layout.width - 12);
+            renderSetting(context, setting, (int) layout.x + 6, settingY, (int) layout.width - 12, settingHeight);
+            settingY += settingHeight + 1;
         }
+    }
 
-        if (themeNameAnim > 0.01f && hoveredTheme != null) {
-            int screenWidth = ctx.getScaledWindowWidth();
-            int textWidth = (int) FontUtils.sf_medium[18].getWidth(hoveredTheme);
-            int textX = (screenWidth - textWidth) / 2;
+    private void renderSearch(DrawContext context, int x, int y) {
+        int searchX = x + SHELL_WIDTH - RAIL_WIDTH - SEARCH_WIDTH - SEARCH_X_OFFSET;
+        int searchY = y + 6;
+        boolean hovered = isHovered((int) mouseX(), (int) mouseY(), searchX, searchY, SEARCH_WIDTH, SEARCH_HEIGHT);
+        RenderUtil.drawRoundedRect(context.getMatrices(), searchX, searchY, SEARCH_WIDTH, SEARCH_HEIGHT, 3,
+                LupaWareTheme.withAlpha(hovered || searchState.focused ? LupaWareTheme.SURFACE_RAISED : LupaWareTheme.SURFACE_SOFT, 180));
+        RenderUtil.drawRoundedBorder(context.getMatrices(), searchX, searchY, SEARCH_WIDTH, SEARCH_HEIGHT, 3, 0.6f,
+                LupaWareTheme.withAlpha(searchState.focused ? LupaWareTheme.GOLD : LupaWareTheme.BORDER_SOFT, 150));
+        String text = searchState.text.isEmpty() && !searchState.focused ? "Search" : searchState.text;
+        if (searchState.focused && searchState.cursorVisible) {
+            int pos = Math.min(searchState.cursorPosition, text.length());
+            text = text.substring(0, pos) + "|" + text.substring(pos);
+        }
+        FontUtils.sf_medium[8].drawLeftAligned(context.getMatrices(), text, searchX + 5, searchY + 4,
+                searchState.focused ? LupaWareTheme.WHITE : LupaWareTheme.DIM);
+        FontUtils.sf_medium[8].drawRightAligned(context.getMatrices(), "⌕", searchX + SEARCH_WIDTH - 5, searchY + 4, LupaWareTheme.MUTED);
+    }
 
-            int textColor = ColorUtil.applyAlpha(Color.WHITE.getRGB(), themeNameAnim * themeAlphaAnim);
-            FontUtils.sf_medium[18].drawLeftAligned(ctx.getMatrices(), hoveredTheme, textX, centerY + 18, textColor);
+    private double lastMouseX;
+    private double lastMouseY;
 
-            if (hoveredTheme.toLowerCase().contains("custom")) {
-                int tipColor = ColorUtil.applyAlpha(Color.WHITE.getRGB(), themeNameAnim * themeAlphaAnim * 0.7f);
-                String tipText = "ПКМ — удалить";
-                int tipWidth = (int) FontUtils.sf_medium[14].getWidth(tipText);
-                int tipX = (screenWidth - tipWidth) / 2;
-                FontUtils.sf_medium[14].drawLeftAligned(ctx.getMatrices(), tipText, tipX, centerY + 32, tipColor);
+    private double mouseX() { return lastMouseX; }
+    private double mouseY() { return lastMouseY; }
+
+    private List<Function> visibleFunctions(Type category) {
+        String query = searchState.text.trim().toLowerCase();
+        List<Function> result = new ArrayList<>();
+        for (Function function : Manager.FUNCTION_MANAGER.getFunctions(category)) {
+            if (query.isEmpty() || function.name.toLowerCase().contains(query) || function.desc.toLowerCase().contains(query)) {
+                result.add(function);
             }
         }
+        result.sort(Comparator.comparing(f -> f.name.toLowerCase()));
+        return result;
     }
 
-    private void renderColorPickers(DrawContext ctx, int x, int y, int mouseX, int mouseY) {
-        int panelWidth = 260;
-        int panelHeight = 190;
-        float animOffsetX = (1f - colorPickerAnim) * 30f;
-        float animScale = 0.95f + 0.05f * colorPickerAnim;
-        float alphaMult = colorPickerAnim;
+    private int countVisible(Type category) {
+        return visibleFunctions(category).size();
+    }
 
-        int panelX = Math.min(width - panelWidth - 12, (int) (x + 40 + animOffsetX));
-        int panelY = Math.max(12, y - panelHeight - 24);
-
-        ctx.getMatrices().push();
-        ctx.getMatrices().translate(panelX + panelWidth / 2f, panelY + panelHeight / 2f, 0);
-        ctx.getMatrices().scale(animScale, animScale, 1f);
-        ctx.getMatrices().translate(-panelWidth / 2f, -panelHeight / 2f, 0);
-
-        int baseColor = GUI_COLOR.getRGB();
-        if (Manager.FUNCTION_MANAGER.clickGUI.blur.get() && Manager.FUNCTION_MANAGER.clickGUI.blurSetting.get("Создание темы")) {
-            RenderUtil.drawBlur(ctx.getMatrices(), 0, 0, panelWidth, panelHeight, 4,12,-1);
+    private float getModuleHeight(Function function, int width) {
+        if (!function.expanded || function.getSettings().isEmpty()) return MODULE_ROW_HEIGHT;
+        float height = MODULE_ROW_HEIGHT + 5;
+        for (Setting setting : function.getSettings()) {
+            if (setting.isVisible()) height += getSettingHeight(setting, width) + 1;
         }
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), 0, 0, panelWidth, panelHeight, 4, ColorUtil.applyAlpha(baseColor, alphaMult));
-
-        int picker1Size = 104;
-        int picker1X = 14;
-        int picker1Y = 28;
-        RenderUtil.drawTexture(ctx.getMatrices(), "images/gui/pick.png", picker1X, picker1Y, picker1Size, picker1Size, 14, ColorUtil.applyAlpha(Color.WHITE.getRGB(), alphaMult));
-        RenderUtil.drawRoundedBorder(ctx.getMatrices(), picker1X, picker1Y, picker1Size, picker1Size, 14, 0.1f, ColorUtil.applyAlpha(Color.WHITE.getRGB(), alphaMult));
-
-        int dotX1 = (int) (picker1X + picker1CursorX * picker1Size);
-        int dotY1 = (int) (picker1Y + picker1CursorY * picker1Size);
-        RenderUtil.drawCircle(ctx.getMatrices(), dotX1, dotY1, 4f, ColorUtil.applyAlpha(Color.BLACK.getRGB(), alphaMult));
-
-        int picker2Size = 104;
-        int picker2X = 142;
-        int picker2Y = 28;
-        RenderUtil.drawTexture(ctx.getMatrices(), "images/gui/pick.png", picker2X, picker2Y, picker2Size, picker2Size, 14, ColorUtil.applyAlpha(Color.WHITE.getRGB(), alphaMult));
-        RenderUtil.drawRoundedBorder(ctx.getMatrices(), picker2X, picker2Y, picker2Size, picker2Size, 14, 0.1f, ColorUtil.applyAlpha(Color.WHITE.getRGB(), alphaMult));
-
-        int dotX2 = (int) (picker2X + picker2CursorX * picker2Size);
-        int dotY2 = (int) (picker2Y + picker2CursorY * picker2Size);
-        RenderUtil.drawCircle(ctx.getMatrices(), dotX2, dotY2, 4f, ColorUtil.applyAlpha(Color.BLACK.getRGB(), alphaMult));
-
-        int closeButtonSize = 18;
-        int closeButtonX = panelWidth - closeButtonSize;
-        int closeButtonY = 0;
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), closeButtonX, closeButtonY, closeButtonSize, closeButtonSize, new Vector4f(0, 4, 0, 4), ColorUtil.applyAlpha(Color.WHITE.getRGB(), alphaMult));
-        FontUtils.sf_medium[20].drawLeftAligned(ctx.getMatrices(), "×", closeButtonX + 2, closeButtonY - 1.5f, ColorUtil.applyAlpha(Color.RED.getRGB(), alphaMult));
-
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), 75, 164, 110, 18, new Vector4f(5, 5, 5, 5), ColorUtil.applyAlpha(Color.WHITE.getRGB(), alphaMult));
-        FontUtils.durman[13].centeredDraw(ctx.getMatrices(), "Добавить тему", 130, 170, ColorUtil.applyAlpha(Color.BLACK.getRGB(), alphaMult));
-
-        ctx.getMatrices().pop();
+        return height + 3;
     }
 
+    private int getSettingHeight(Setting setting, int width) {
+        if (setting instanceof BooleanSetting) return booleanRenderer.getHeight();
+        if (setting instanceof BindBooleanSetting) return bindBooleanRenderer.getHeight();
+        if (setting instanceof BindSetting) return bindRenderer.getHeight();
+        if (setting instanceof ModeSetting mode) return modeRenderer.getHeight(mode, width);
+        if (setting instanceof MultiSetting multi) return multiRenderer.getHeight(multi, width);
+        if (setting instanceof SliderSetting) return sliderRenderer.getHeight();
+        if (setting instanceof TextSetting) return textRenderer.getHeight();
+        return 18;
+    }
+
+    private void renderSetting(DrawContext context, Setting setting, int x, int y, int width, int height) {
+        if (setting instanceof BooleanSetting value) booleanRenderer.render(context, value, x, y, width, height);
+        else if (setting instanceof BindBooleanSetting value) bindBooleanRenderer.render(context, value, x, y, width, height);
+        else if (setting instanceof BindSetting value) bindRenderer.render(context, value, x, y, width, height);
+        else if (setting instanceof ModeSetting value) modeRenderer.render(context, value, x, y, width, height);
+        else if (setting instanceof MultiSetting value) multiRenderer.render(context, value, x, y, width, height);
+        else if (setting instanceof SliderSetting value) sliderRenderer.render(context, value, x, y, width, height);
+        else if (setting instanceof TextSetting value) textRenderer.render(context, value, x, y, width, height);
+    }
+
+    private boolean clickSetting(Setting setting, double mouseX, double mouseY, int button, int x, int y, int width, int height) {
+        if (setting instanceof BooleanSetting value) return booleanRenderer.mouseClicked(value, mouseX, mouseY, button, x, y, width, height);
+        if (setting instanceof BindBooleanSetting value) return bindBooleanRenderer.mouseClicked(value, mouseX, mouseY, button, x, y, width, height);
+        if (setting instanceof BindSetting value) return bindRenderer.mouseClicked(value, mouseX, mouseY, button, x, y, width, height);
+        if (setting instanceof ModeSetting value) return modeRenderer.mouseClicked(value, mouseX, mouseY, button, x, y, width, height);
+        if (setting instanceof MultiSetting value) return multiRenderer.mouseClicked(value, mouseX, mouseY, button, x, y, width, height);
+        if (setting instanceof SliderSetting value) return sliderRenderer.mouseClicked(value, mouseX, mouseY, button, x, y, width, height);
+        if (setting instanceof TextSetting value) return textRenderer.mouseClicked(value, mouseX, mouseY, button, x, y, width, height);
+        return false;
+    }
+
+    private boolean settingMouseReleased(Setting setting, double mouseX, double mouseY, int button, int x, int y, int width, int height) {
+        if (setting instanceof SliderSetting value) {
+            sliderRenderer.mouseReleased(value);
+            return true;
+        }
+        if (setting instanceof TextSetting value) return textRenderer.mouseReleased(value, mouseX, mouseY, button, x, y, width, height);
+        return false;
+    }
+
+    private boolean settingKeyPressed(Setting setting, int keyCode, int scanCode, int modifiers) {
+        if (setting instanceof BindBooleanSetting value && value.isListeningForBind()) {
+            value.setKey(keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == GLFW.GLFW_KEY_DELETE ? 0 : keyCode);
+            value.setListeningForBind(false);
+            return true;
+        }
+        if (setting instanceof BindSetting value && value.isBinding()) {
+            value.setKey(keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == GLFW.GLFW_KEY_DELETE ? -1 : keyCode);
+            value.setBinding(false);
+            return true;
+        }
+        if (setting instanceof TextSetting value && value.isFocused()) return textRenderer.keyPressed(value, keyCode, scanCode, modifiers);
+        return false;
+    }
+
+    private boolean settingCharTyped(Setting setting, char c, int modifiers) {
+        if (setting instanceof TextSetting value && value.isFocused()) return textRenderer.charTyped(value, c, modifiers);
+        return false;
+    }
+
+    private int settingsYFor(Function function, ModuleLayout layout, double mouseX, double mouseY, int button) {
+        int settingY = (int) layout.y + MODULE_ROW_HEIGHT + 5;
+        int width = (int) layout.width - 12;
+        for (Setting setting : function.getSettings()) {
+            if (!setting.isVisible()) continue;
+            int height = getSettingHeight(setting, width);
+            if (isHovered(mouseX, mouseY, layout.x + 6, settingY, width, height)) {
+                if (clickSetting(setting, mouseX, mouseY, button, (int) layout.x + 6, settingY, width, height)) return settingY;
+            }
+            settingY += height + 1;
+        }
+        return -1;
+    }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        if (button == 0 && colorPickerOpen) {
-            int panelWidth = 260;
-            int panelHeight = 190;
-            int panelX = Math.min(width - panelWidth - 12, getThemeX(getThemeWidth()) + 5 + 40);
-            int panelY = Math.max(12, getThemeY() - panelHeight - 24);
-
-            int picker1Size = 104;
-            int picker1X = panelX + 14;
-            int picker1Y = panelY + 28;
-
-            int picker2Size = 104;
-            int picker2X = panelX + 142;
-            int picker2Y = panelY + 28;
-            if (draggingPicker1) {
-                float nx = (float) (mouseX - picker1X) / picker1Size;
-                float ny = (float) (mouseY - picker1Y) / picker1Size;
-                picker1CursorX = MathHelper.clamp(nx, 0f, 1f);
-                picker1CursorY = MathHelper.clamp(ny, 0f, 1f);
-                selectedColor1 = ColorUtil.getPixelColor(ResourceProvider.color_image, picker1CursorX, picker1CursorY);
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        lastMouseX = mouseX;
+        lastMouseY = mouseY;
+        int shellX = (width - SHELL_WIDTH) / 2;
+        int shellY = (height - SHELL_HEIGHT) / 2;
+        int railRowY = shellY + 101;
+        int row = 0;
+        for (Type category : CATEGORIES) {
+            if (isHovered(mouseX, mouseY, shellX + 5, railRowY + row * 23, RAIL_WIDTH - 10, 20)) {
+                selectedCategory = category;
                 return true;
             }
-
-            if (draggingPicker2) {
-                float nx = (float) (mouseX - picker2X) / picker2Size;
-                float ny = (float) (mouseY - picker2Y) / picker2Size;
-                picker2CursorX = MathHelper.clamp(nx, 0f, 1f);
-                picker2CursorY = MathHelper.clamp(ny, 0f, 1f);
-                selectedColor2 = ColorUtil.getPixelColor(ResourceProvider.color_image, picker2CursorX, picker2CursorY);
-                return true;
-            }
+            row++;
         }
-
-        if (draggingSlider != null && button == 0) {
-            sliderSettingRenderer.mouseDragged(draggingSlider, mouseX, draggingSliderX, draggingSliderWidth);
+        int searchX = shellX + RAIL_WIDTH + SHELL_WIDTH - RAIL_WIDTH - SEARCH_WIDTH - SEARCH_X_OFFSET;
+        int searchY = shellY + 6;
+        if (isHovered(mouseX, mouseY, searchX, searchY, SEARCH_WIDTH, SEARCH_HEIGHT) && button == 0) {
+            searchState.focused = true;
+            searchState.cursorPosition = searchState.text.length();
+            searchState.cursorVisible = true;
             return true;
         }
 
-        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+        for (ModuleLayout layout : visibleLayout) {
+            if (!isHovered(mouseX, mouseY, layout.x, layout.y, layout.width, layout.height)) continue;
+            if (isHovered(mouseX, mouseY, layout.x, layout.y, layout.width, MODULE_ROW_HEIGHT)) {
+                if (button == 0) {
+                    layout.function.toggle();
+                    return true;
+                }
+                if (button == 1) {
+                    if (!layout.function.getSettings().isEmpty()) layout.function.expanded = !layout.function.expanded;
+                    return true;
+                }
+                if (button == 2) {
+                    bindingFunction = layout.function;
+                    return true;
+                }
+            } else if (layout.function.expanded && settingsYFor(layout.function, layout, mouseX, mouseY, button) >= 0) {
+                return true;
+            }
+        }
+        if (button == 0) searchState.focused = false;
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (hudLayoutMode) {
-            Manager.DRAG_MANAGER.draggables.values().forEach(dragging -> dragging.onRelease(button));
-            Manager.DRAG_MANAGER.save();
+        for (ModuleLayout layout : visibleLayout) {
+            if (!layout.function.expanded) continue;
+            int settingY = (int) layout.y + MODULE_ROW_HEIGHT + 5;
+            int settingWidth = (int) layout.width - 12;
+            for (Setting setting : layout.function.getSettings()) {
+                if (!setting.isVisible()) continue;
+                int height = getSettingHeight(setting, settingWidth);
+                settingMouseReleased(setting, mouseX, mouseY, button, (int) layout.x + 6, settingY, settingWidth, height);
+                settingY += height + 1;
+            }
         }
-        draggingPicker1 = false;
-        draggingPicker2 = false;
-        if (draggingSlider != null) {
-            sliderSettingRenderer.mouseReleased(draggingSlider);
-            draggingSlider = null;
-            return true;
-        }
-
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
-
-
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (hudLayoutMode && button == 0) {
-            for (Dragging dragging : Manager.DRAG_MANAGER.draggables.values()) {
-                if (dragging.getModule() != null && dragging.getModule().state && dragging.onClick(mouseX, mouseY, button)) {
-                    return true;
-                }
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        for (ModuleLayout layout : visibleLayout) {
+            if (!layout.function.expanded) continue;
+            int settingY = (int) layout.y + MODULE_ROW_HEIGHT + 5;
+            int settingWidth = (int) layout.width - 12;
+            for (Setting setting : layout.function.getSettings()) {
+                if (!setting.isVisible()) continue;
+                int height = getSettingHeight(setting, settingWidth);
+                if (setting instanceof SliderSetting slider) sliderRenderer.mouseDragged(slider, mouseX, (int) layout.x + 6, settingWidth);
+                settingY += height + 1;
             }
         }
-        int panelX = (width - (RAIL_WIDTH + PANEL_WIDTH + 18)) / 2 + RAIL_WIDTH + 18;
-        int panelY = (height - PANEL_HEIGHT) / 2;
-        int railX = panelX - RAIL_WIDTH - 18;
-        int categoryY = panelY + 160;
-        for (Type category : renderCategories) {
-            if (mouseX >= railX + 10 && mouseX <= railX + RAIL_WIDTH - 10 && mouseY >= categoryY && mouseY <= categoryY + 38) {
-                selectedCategory = category;
-                resetScrollForAllCategories();
-                return true;
-            }
-            categoryY += 43;
-        }
-        int searchWidth = getSearchWidth();
-        int searchX = getSearchX(searchWidth);
-        int searchY = getSearchY();
-        int buttonX = searchX + searchWidth - 22;
-        int buttonY = searchY + 2;
-        int buttonWidth = 16;
-        int buttonHeight = 16;
-
-        if (colorPickerOpen) {
-            int themeWidth = getThemeWidth();
-            int themeX = getThemeX(themeWidth);
-            int themeY = getThemeY();
-            int circleSize = THEME_HEIGHT - 5;
-            int padding = 5;
-
-            float offsetY = (1f - themeMenuAnim) * 10f;
-            int centerY = (int) (themeY + (THEME_HEIGHT - circleSize) / 2 + 0.9f + offsetY);
-
-            int fixedX = themeX + padding;
-            int fixedY = centerY;
-
-            int panelWidth = 260;
-            int panelHeight = 190;
-            int pickerPanelX = Math.min(width - panelWidth - 12, fixedX + 40);
-            int pickerPanelY = Math.max(12, fixedY - panelHeight - 24);
-
-            int picker1Size = 104;
-            int picker1X = pickerPanelX + 14;
-            int picker1Y = pickerPanelY + 28;
-
-            int picker2Size = 104;
-            int picker2X = pickerPanelX + 142;
-            int picker2Y = pickerPanelY + 28;
-
-            int closeButtonSize = 18;
-            int closeButtonX = pickerPanelX + panelWidth - closeButtonSize;
-            int closeButtonY = pickerPanelY;
-            if (mouseX >= closeButtonX && mouseX <= closeButtonX + closeButtonSize && mouseY >= closeButtonY && mouseY <= closeButtonY + closeButtonSize) {
-                colorPickerOpen = false;
-                return true;
-            }
-
-            if (mouseX >= picker1X && mouseX <= picker1X + picker1Size && mouseY >= picker1Y && mouseY <= picker1Y + picker1Size) {
-                float nx = (float) (mouseX - picker1X) / picker1Size;
-                float ny = (float) (mouseY - picker1Y) / picker1Size;
-                draggingPicker1 = true;
-                picker1CursorX = Math.max(0, Math.min(1, nx));
-                picker1CursorY = Math.max(0, Math.min(1, ny));
-                selectedColor1 = ColorUtil.getPixelColor(ResourceProvider.color_image, picker1CursorX, picker1CursorY);
-                return true;
-            }
-            if (mouseX >= picker2X && mouseX <= picker2X + picker2Size && mouseY >= picker2Y && mouseY <= picker2Y + picker2Size) {
-                float nx = (float) (mouseX - picker2X) / picker2Size;
-                float ny = (float) (mouseY - picker2Y) / picker2Size;
-                draggingPicker2 = true;
-                picker2CursorX = Math.max(0, Math.min(1, nx));
-                picker2CursorY = Math.max(0, Math.min(1, ny));
-                selectedColor2 = ColorUtil.getPixelColor(ResourceProvider.color_image, picker2CursorX, picker2CursorY);
-                return true;
-            }
-
-            int addButtonX = pickerPanelX + 75;
-            int addButtonY = pickerPanelY + 164;
-            int addButtonWidth = 110;
-            int addButtonHeight = 18;
-
-            if (mouseX >= addButtonX && mouseX <= addButtonX + addButtonWidth && mouseY >= addButtonY && mouseY <= addButtonY + addButtonHeight) {
-                String baseName = "Custom";
-                String candidate = baseName;
-                int index = 2;
-
-                boolean exists;
-                do {
-                    exists = false;
-                    for (Style s : Manager.STYLE_MANAGER.getStyles()) {
-                        if (s.name.equals(candidate)) {
-                            exists = true;
-                            candidate = baseName + "-" + index++;
-                            break;
-                        }
-                    }
-                } while (exists);
-
-                int[] colors = {selectedColor1, selectedColor2};
-                Style newStyle = new Style(candidate, colors);
-                Manager.STYLE_MANAGER.addCustomTheme(candidate, selectedColor1, selectedColor2);
-                Manager.STYLE_MANAGER.setTheme(newStyle);
-                colorPickerOpen = false;
-                return true;
-            }
-        }
-
-        if (mouseX >= searchX && mouseX <= searchX + searchWidth && mouseY >= searchY && mouseY <= searchY + SEARCH_HEIGHT
-                && !(mouseX >= buttonX && mouseX <= buttonX + buttonWidth && mouseY >= buttonY && mouseY <= buttonY + buttonHeight)) {
-            searchState.focused = true;
-            searchState.cursorPosition = searchState.text.length();
-            return true;
-        } else {
-            searchState.focused = false;
-        }
-        if (mouseX >= buttonX && mouseX <= buttonX + buttonWidth && mouseY >= buttonY && mouseY <= buttonY + buttonHeight) {
-            themeMenu = !themeMenu;
-            themeMenuTarget = themeMenu ? 1f : 0f;
-        }
-
-        if (themeMenu) {
-            int themeWidth = getThemeWidth();
-            int themeX = getThemeX(themeWidth);
-            int themeY = getThemeY();
-            int circleSize = THEME_HEIGHT - 5;
-            int padding = 5;
-            int totalThemes = Manager.STYLE_MANAGER.getStyles().size() + 1;
-            float maxScroll = Math.max(0, (totalThemes - VISIBLE_THEMES) * (circleSize + padding));
-            if (themeScrollTarget > 0 && mouseX >= themeX - 15 && mouseX <= themeX - 5 && mouseY >= themeY && mouseY <= themeY + THEME_HEIGHT) {
-                themeScrollTarget -= (circleSize + padding) * 3;
-                return true;
-            }
-            if (themeScrollTarget < maxScroll && mouseX >= themeX + themeWidth + 5 && mouseX <= themeX + themeWidth + 15 && mouseY >= themeY && mouseY <= themeY + THEME_HEIGHT) {
-                themeScrollTarget += (circleSize + padding) * 3;
-                return true;
-            }
-
-            float currentX = themeX + padding - themeScrollTarget;
-            int centerY = themeY + (THEME_HEIGHT - circleSize) / 2;
-            int visibleAreaEndX = themeX + themeWidth;
-
-
-            if (currentX + circleSize >= themeX && currentX <= visibleAreaEndX) {
-                if (mouseX >= currentX && mouseX <= currentX + circleSize && mouseY >= centerY && mouseY <= centerY + circleSize) {
-                    colorPickerOpen = !colorPickerOpen;
-                    return true;
-                }
-            }
-            currentX += circleSize + padding;
-
-            if (button == 0) {
-                for (Style style : Manager.STYLE_MANAGER.getStyles()) {
-                    if (currentX + circleSize < themeX || currentX > visibleAreaEndX) {
-                        currentX += circleSize + padding;
-                        continue;
-                    }
-                    if (mouseX >= currentX && mouseX <= currentX + circleSize && mouseY >= centerY && mouseY <= centerY + circleSize) {
-                        Manager.STYLE_MANAGER.setTheme(style);
-                        return true;
-                    }
-                    currentX += circleSize + padding;
-                }
-            }
-
-            if (button == 1) {
-                currentX = themeX + padding + circleSize + padding - themeScrollTarget;
-                for (Style style : new ArrayList<>(Manager.STYLE_MANAGER.getStyles())) {
-                    if (currentX + circleSize < themeX || currentX > visibleAreaEndX) {
-                        currentX += circleSize + padding;
-                        continue;
-                    }
-
-                    if (mouseX >= currentX && mouseX <= currentX + circleSize && mouseY >= centerY && mouseY <= centerY + circleSize) {
-                        if (style.name.startsWith("Custom")) {
-                            Manager.STYLE_MANAGER.removeStyle(style);
-                            return true;
-                        } else {
-                            return true;
-                        }
-                    }
-                    currentX += circleSize + padding;
-                }
-            }
-        }
-
-        if (functionBinding && functions != null) {
-            int code = -(button + 2);
-            functions.setBindCode(code);
-            functionBinding = false;
-            functions = null;
-            return true;
-        }
-
-        for (Type category : renderCategories) {
-            for (Function function : Manager.FUNCTION_MANAGER.getFunctions(category)) {
-                if (!function.expanded) continue;
-                for (Setting setting : function.getSettings()) {
-                    if (!setting.isVisible()) continue;
-                    if (setting instanceof BindBooleanSetting bindBooleanSetting) {
-                        if (bindBooleanSetting.isListeningForBind()) {
-                            int code = -(button + 2);
-                            bindBooleanSetting.setKey(code);
-                            bindBooleanSetting.setListeningForBind(false);
-                            return true;
-                        }
-                    }
-                    if (setting instanceof BindSetting bindSetting) {
-                        if (bindSetting.isBinding()) {
-                            int code = -(button + 2);
-                            bindSetting.setKey(code);
-                            bindSetting.setBinding(false);
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-
-        {
-            Type category = selectedCategory;
-            float offset = scrollOffsets.get(category);
-
-            float currentY = panelY + SCROLL_AREA_Y_OFFSET - offset;
-
-            for (Function function : Manager.FUNCTION_MANAGER.getFunctions(category)) {
-                if (!isFunctionVisible(function)) continue;
-
-                int functionHeight = FUNCTION_HEIGHT;
-
-                int fullSettingsHeight = computeSettingsHeight(function);
-                float prog = expandProgress.getOrDefault(function, function.expanded ? 1f : 0f);
-                int animatedSettingsHeight = (int) Math.round(fullSettingsHeight * prog);
-
-                int totalHeight = functionHeight + animatedSettingsHeight;
-
-                if (currentY + totalHeight < panelY + SCROLL_AREA_Y_OFFSET) {
-                    currentY += totalHeight;
-                    continue;
-                }
-                if (currentY > panelY + SCROLL_AREA_Y_OFFSET + SCROLL_AREA_HEIGHT) {
-                    break;
-                }
-
-                if (mouseX >= panelX && mouseX <= panelX + PANEL_WIDTH && mouseY >= currentY && mouseY <= currentY + functionHeight && mouseY >= panelY + SCROLL_AREA_Y_OFFSET && mouseY <= panelY + SCROLL_AREA_Y_OFFSET + SCROLL_AREA_HEIGHT) {
-                    if (button == 0) {
-                        function.toggle();
-                        return true;
-                    } else if (button == 1) {
-                        function.expanded = !function.expanded;
-                        clampScrollForCategory(category);
-                        return true;
-                    } else if (button == 2) {
-                        functionBinding = true;
-                        functions = function;
-                        return true;
-                    }
-                }
-
-                if (animatedSettingsHeight > 0) {
-                    float settingY = currentY + functionHeight;
-                    int remaining = animatedSettingsHeight;
-
-                    for (Setting setting : function.getSettings()) {
-                        if (!setting.isVisible()) continue;
-
-                        int settingHeight = getSettingRendererHeight(setting, PANEL_WIDTH - 20);
-                        if (settingHeight <= 0) continue;
-
-                        int visible = Math.max(0, Math.min(settingHeight, remaining));
-                        if (visible <= 0) break;
-
-                        if (mouseX >= panelX && mouseX <= panelX + PANEL_WIDTH && mouseY >= settingY && mouseY <= settingY + visible && mouseY >= panelY + SCROLL_AREA_Y_OFFSET && mouseY <= panelY + SCROLL_AREA_Y_OFFSET + SCROLL_AREA_HEIGHT) {
-
-                            int settingX = panelX + 10;
-                            int settingWidth = PANEL_WIDTH - 20;
-
-                            if (setting instanceof BooleanSetting booleanSetting) {
-                                if (booleanSettingRenderer.mouseClicked(booleanSetting, mouseX, mouseY, button, settingX, (int) settingY, settingWidth, visible)) {
-                                    return true;
-                                }
-                            } else if (setting instanceof BindBooleanSetting bindBooleanSetting) {
-                                if (bindbooleanSettingRenderer.mouseClicked(bindBooleanSetting, mouseX, mouseY, button, settingX, (int) settingY, settingWidth, visible)) {
-                                    return true;
-                                }
-                            } else if (setting instanceof BindSetting bindSetting) {
-                                if (bindSettingRenderer.mouseClicked(bindSetting, mouseX, mouseY, button, settingX, (int) settingY  - 2, settingWidth, visible)) {
-                                    return true;
-                                }
-                            } else if (setting instanceof ModeSetting modeSetting) {
-                                if (modeSettingRenderer.mouseClicked(modeSetting, mouseX, mouseY, button, settingX, (int) settingY, settingWidth, visible)) {
-                                    return true;
-                                }
-                            } else if (setting instanceof MultiSetting multiSetting) {
-                                if (multiSettingRenderer.mouseClicked(multiSetting, mouseX, mouseY, button, settingX, (int) settingY, settingWidth, visible)) {
-                                    return true;
-                                }
-                            } else if (setting instanceof SliderSetting sliderSetting) {
-                                if (sliderSettingRenderer.mouseClicked(sliderSetting, mouseX, mouseY, button, settingX, (int) settingY - 2, settingWidth, visible)) {
-                                    draggingSlider = sliderSetting;
-                                    draggingSliderX = settingX;
-                                    draggingSliderWidth = settingWidth;
-                                    return true;
-                                }
-                            } else if (setting instanceof TextSetting textSetting) {
-                                if (textSettingRenderer.mouseClicked(textSetting, mouseX, mouseY, button, settingX, (int) settingY, settingWidth, visible)) {
-                                    return true;
-                                }
-                            }
-                        }
-
-                        settingY += settingHeight + 1;
-                        remaining -= (settingHeight + 1);
-                        if (remaining <= 0) break;
-                    }
-                }
-
-                currentY += totalHeight;
-            }
-        }
-
-        for (Function function : Manager.FUNCTION_MANAGER.getFunctions(selectedCategory)) {
-            if (!function.expanded) continue;
-            for (Setting setting : function.getSettings()) {
-                if (setting instanceof TextSetting textSetting) textSetting.setFocused(false);
-            }
-        }
-
-        return super.mouseClicked(mouseX, mouseY, button);
-    }
-    private void renderExpiryText(DrawContext context) {
-        String text = Manager.USER_PROFILE.getExpiry();
-        int margin = 5;
-        int textHeight = (int) FontUtils.durman[18].getHeight();
-        int screenHeight = mc.getWindow().getScaledHeight();
-
-        FontUtils.durman[18].drawLeftAligned(context.getMatrices(), "Окончание - " + text, margin + 4, screenHeight - textHeight - margin, Color.WHITE.getRGB());
-    }
-
-    private boolean isFunctionVisible(Function function) {
-        String searchTextLower = searchState.text.toLowerCase();
-        return searchTextLower.isEmpty() || function.name.toLowerCase().contains(searchTextLower) || function.keywords.toLowerCase().contains(searchTextLower);
+        return true;
     }
 
     @Override
-    public void renderBackground(DrawContext drawContext, int mouseX, int mouseY, float delta) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+        int shellX = (width - SHELL_WIDTH) / 2;
+        int shellY = (height - SHELL_HEIGHT) / 2;
+        int contentX = shellX + RAIL_WIDTH + CONTENT_PADDING;
+        int contentY = shellY + CONTENT_HEADER_HEIGHT;
+        int contentWidth = SHELL_WIDTH - RAIL_WIDTH - CONTENT_PADDING * 2;
+        int contentHeight = SHELL_HEIGHT - CONTENT_HEADER_HEIGHT - 8;
+        if (isHovered(mouseX, mouseY, contentX, contentY, contentWidth, contentHeight)) {
+            scrollTarget.put(selectedCategory, Math.max(0f, scrollTarget.get(selectedCategory) - (float) verticalAmount * SCROLL_STEP));
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
+    }
 
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (bindingFunction != null) {
+            bindingFunction.setBindCode(keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == GLFW.GLFW_KEY_DELETE ? 0 : keyCode);
+            bindingFunction = null;
+            return true;
+        }
+        if (searchState.focused) {
+            if (keyCode == GLFW.GLFW_KEY_ESCAPE || keyCode == GLFW.GLFW_KEY_ENTER) {
+                searchState.focused = false;
+                return true;
+            }
+            if (keyCode == GLFW.GLFW_KEY_BACKSPACE && searchState.cursorPosition > 0) {
+                int pos = searchState.cursorPosition;
+                searchState.text = searchState.text.substring(0, pos - 1) + searchState.text.substring(pos);
+                searchState.cursorPosition--;
+                return true;
+            }
+            if (keyCode == GLFW.GLFW_KEY_LEFT) {
+                searchState.cursorPosition = Math.max(0, searchState.cursorPosition - 1);
+                return true;
+            }
+            if (keyCode == GLFW.GLFW_KEY_RIGHT) {
+                searchState.cursorPosition = Math.min(searchState.text.length(), searchState.cursorPosition + 1);
+                return true;
+            }
+            return true;
+        }
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+            closeRequested = true;
+            return true;
+        }
+        for (ModuleLayout layout : visibleLayout) {
+            if (!layout.function.expanded) continue;
+            for (Setting setting : layout.function.getSettings()) {
+                if (setting.isVisible() && settingKeyPressed(setting, keyCode, scanCode, modifiers)) return true;
+            }
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean charTyped(char chr, int modifiers) {
+        if (searchState.focused) {
+            if (searchState.text.length() < 24) {
+                int pos = Math.max(0, Math.min(searchState.cursorPosition, searchState.text.length()));
+                searchState.text = searchState.text.substring(0, pos) + chr + searchState.text.substring(pos);
+                searchState.cursorPosition = pos + 1;
+            }
+            return true;
+        }
+        for (ModuleLayout layout : visibleLayout) {
+            if (!layout.function.expanded) continue;
+            for (Setting setting : layout.function.getSettings()) {
+                if (setting.isVisible() && settingCharTyped(setting, chr, modifiers)) return true;
+            }
+        }
+        return super.charTyped(chr, modifiers);
+    }
+
+    @Override
+    public void close() {
+        closeRequested = true;
     }
 
     @Override
@@ -1332,54 +551,23 @@ public class ClickGUI extends Screen implements IMinecraft {
         return false;
     }
 
-    private int computeSettingsHeight(Function f) {
-        int settingsHeight = 0;
-        for (Setting setting : f.getSettings()) {
-            if (!setting.isVisible()) continue;
-            if (setting instanceof BooleanSetting) {
-                settingsHeight += booleanSettingRenderer.getHeight() + 1;
-            } else if (setting instanceof BindBooleanSetting) {
-                settingsHeight += bindbooleanSettingRenderer.getHeight() + 1;
-            } else if (setting instanceof BindSetting) {
-                settingsHeight += bindSettingRenderer.getHeight() + 1;
-            } else if (setting instanceof ModeSetting) {
-                settingsHeight += modeSettingRenderer.getHeight((ModeSetting) setting, PANEL_WIDTH - 20) + 2;
-            } else if (setting instanceof MultiSetting) {
-                settingsHeight += multiSettingRenderer.getHeight((MultiSetting) setting, PANEL_WIDTH - 20) + 2;
-            } else if (setting instanceof SliderSetting) {
-                settingsHeight += sliderSettingRenderer.getHeight() + 1;
-            } else if (setting instanceof TextSetting) {
-                settingsHeight += textSettingRenderer.getHeight() + 1;
-            }
-        }
-        return Math.max(0, settingsHeight);
+    private static boolean isHovered(double mouseX, double mouseY, double x, double y, double width, double height) {
+        return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
     }
 
-    private int getSettingRendererHeight(Setting setting, int width) {
-        if (!setting.isVisible()) return 0;
-        if (setting instanceof BooleanSetting) {
-            return booleanSettingRenderer.getHeight();
-        } else if (setting instanceof BindBooleanSetting) {
-            return bindbooleanSettingRenderer.getHeight();
-        } else if (setting instanceof BindSetting) {
-            return bindSettingRenderer.getHeight();
-        } else if (setting instanceof ModeSetting modeSetting) {
-            return modeSettingRenderer.getHeight(modeSetting, width);
-        } else if (setting instanceof MultiSetting multiSetting) {
-            return multiSettingRenderer.getHeight(multiSetting, width);
-        } else if (setting instanceof SliderSetting) {
-            return sliderSettingRenderer.getHeight();
-        } else if (setting instanceof TextSetting) {
-            return textSettingRenderer.getHeight();
-        }
-        return 0;
-    }
+    private static final class ModuleLayout {
+        private final Function function;
+        private final float x;
+        private final float y;
+        private final float width;
+        private final float height;
 
-    private void clampScrollForCategory(Type category) {
-        int maxScroll = calculateMaxScroll(category);
-        float clampedTarget = MathHelper.clamp(scrollTargets.get(category), 0f, (float) maxScroll);
-        float clampedOffset = MathHelper.clamp(scrollOffsets.get(category), 0f, (float) maxScroll);
-        scrollTargets.put(category, clampedTarget);
-        scrollOffsets.put(category, clampedOffset);
+        private ModuleLayout(Function function, float x, float y, float width, float height) {
+            this.function = function;
+            this.x = x;
+            this.y = y;
+            this.width = width;
+            this.height = height;
+        }
     }
 }
