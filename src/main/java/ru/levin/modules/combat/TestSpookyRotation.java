@@ -153,10 +153,8 @@ public final class TestSpookyRotation {
             double distance = delta.length();
 
             if (distance < 0.1) {
-                return current.add(new Vector2D(
-                    NoiseGenerator.jitter(profile.jitterAmplitude * 0.3),
-                    NoiseGenerator.jitter(profile.jitterAmplitude * 0.3)
-                ));
+                // Lock to the target instead of continuing to drift around it.
+                return new Vector2D(normalizeAngle(target.x), clampPitch(target.y));
             }
 
             if (Math.abs(delta.x) > profile.maxAimAngle) {
@@ -166,7 +164,9 @@ public final class TestSpookyRotation {
                 delta.y = Math.signum(delta.y) * profile.maxAimAngle;
             }
 
-            if (NoiseGenerator.shouldMiss(profile.missChance)) {
+            // Miss offsets are useful only while travelling to a target. Applying them
+            // after alignment was the reason the head could move away immediately after aiming.
+            if (distance > 1.5 && NoiseGenerator.shouldMiss(profile.missChance)) {
                 double missX = NoiseGenerator.missOffset(profile.maxMissDegrees);
                 double missY = NoiseGenerator.missOffset(profile.maxMissDegrees);
                 target = target.add(new Vector2D(missX, missY));
@@ -184,9 +184,10 @@ public final class TestSpookyRotation {
 
             Vector2D step = delta.normalize().scale(speed);
 
+            double jitterScale = Math.min(1.0, distance / 3.0);
             step = step.add(new Vector2D(
-                NoiseGenerator.jitter(profile.jitterAmplitude),
-                NoiseGenerator.jitter(profile.jitterAmplitude)
+                NoiseGenerator.jitter(profile.jitterAmplitude) * jitterScale,
+                NoiseGenerator.jitter(profile.jitterAmplitude) * jitterScale
             ));
 
             Vector2D newAngles = current.add(step);
@@ -198,8 +199,10 @@ public final class TestSpookyRotation {
                 ));
             }
 
-            newAngles.x = clampAngle(newAngles.x);
-            newAngles.y = clampAngle(newAngles.y);
+            // Keep yaw continuous while crossing the -180/180 boundary. Normalizing
+            // the absolute output here creates a one-tick 360-degree jump; only the
+            // delta is normalized above.
+            newAngles.y = clampPitch(newAngles.y);
 
             this.currentAngles = newAngles;
             return newAngles;
@@ -211,8 +214,8 @@ public final class TestSpookyRotation {
             return angle;
         }
 
-        private double clampAngle(double angle) {
-            return Math.max(-180, Math.min(180, angle));
+        private double clampPitch(double pitch) {
+            return Math.max(-89.9, Math.min(89.9, pitch));
         }
 
         public void reset() {

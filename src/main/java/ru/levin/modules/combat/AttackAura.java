@@ -191,7 +191,11 @@ public class AttackAura extends Function {
         }
         lastHitMs = 0L;
         shakeStartTime = 0L;
+        testSpookyTarget = null;
+        testSpookyTargetSwitchTime = 0L;
         testSpookyLastAttackTime = 0L;
+        testSpookyNextAttackTime = 0L;
+        testSpookyAim.reset();
         Arrays.fill(deltaPitchHistory, mc.player != null ? mc.player.getPitch() : 0f);
     }
 
@@ -209,6 +213,9 @@ public class AttackAura extends Function {
         }
 
         target = null;
+        testSpookyTarget = null;
+        testSpookyAim.reset();
+        testSpookyNextAttackTime = 0L;
         cpsLimit = System.currentTimeMillis();
         super.onDisable();
     }
@@ -402,19 +409,23 @@ public class AttackAura extends Function {
         if (canAttackNow && passRay && aligned && canAttack() && noPotion) attackTarget(mc.player);
     }
 
+    private static final long TEST_SPOOKY_TARGET_SWITCH_DELAY_MS = 150L;
     private LivingEntity testSpookyTarget;
     private long testSpookyTargetSwitchTime = 0L;
     private long testSpookyLastAttackTime = 0L;
+    private long testSpookyNextAttackTime = 0L;
 
     private void testSpookyRotation(LivingEntity entity, boolean canAttackNow, boolean passRay, boolean noPotion) {
         long now = System.currentTimeMillis();
 
         if (testSpookyTarget != entity) {
-            if (now - testSpookyTargetSwitchTime > 500) {
-                testSpookyTarget = entity;
-                testSpookyTargetSwitchTime = now;
-                testSpookyAim.reset();
+            if (testSpookyTarget != null && now - testSpookyTargetSwitchTime < TEST_SPOOKY_TARGET_SWITCH_DELAY_MS) {
+                return;
             }
+            testSpookyTarget = entity;
+            testSpookyTargetSwitchTime = now;
+            testSpookyAim.reset();
+            testSpookyNextAttackTime = now + 80L;
         }
 
         if (testSpookyTarget == null || testSpookyTarget != entity) return;
@@ -425,13 +436,14 @@ public class AttackAura extends Function {
         double dy = point.y - eye.y;
         double dz = point.z - eye.z;
 
-        float targetYaw = (float) Math.toDegrees(Math.atan2(dz, dx)) - 90.0f;
-        float targetPitch = (float) -Math.toDegrees(Math.atan2(dy, Math.hypot(dx, dz)));
+        float targetYaw = MathHelper.wrapDegrees((float) Math.toDegrees(Math.atan2(dz, dx)) - 90.0f);
+        float targetPitch = MathHelper.clamp((float) -Math.toDegrees(Math.atan2(dy, Math.hypot(dx, dz))), -89.9f, 89.9f);
 
-        // The supplied code reads the real player angles on every update.
-        // Manager.ROTATION is the output controller, not the input source.
+        // Feed the algorithm with the same angles that EventMotion will send.
+        // Reading mc.player here can lag one motion event behind and causes the
+        // controller to make a second turn away from the target.
         TestSpookyRotation.Vector2D currentAngles = new TestSpookyRotation.Vector2D(
-                mc.player.getYaw(), mc.player.getPitch());
+                Manager.ROTATION.getYaw(), Manager.ROTATION.getPitch());
         TestSpookyRotation.Vector2D targetAngles = new TestSpookyRotation.Vector2D(targetYaw, targetPitch);
         TestSpookyRotation.Vector2D newAngles = testSpookyAim.update(currentAngles, targetAngles);
 
@@ -443,13 +455,11 @@ public class AttackAura extends Function {
         TestSpookyRotation.Vector2D remaining = targetAngles.sub(newAngles);
         remaining.x = normalizeTestSpookyAngle(remaining.x);
         remaining.y = normalizeTestSpookyAngle(remaining.y);
-        int attackDelay = TestSpookyRotation.NoiseGenerator.randomDelay(100, 300)
-                + (int) TestSpookyRotation.NoiseGenerator.jitter(30);
-        if (aligned && Math.abs(remaining.x) < 2.0 && Math.abs(remaining.y) < 2.0
-                && noPotion && canAttack()
-                && now - testSpookyLastAttackTime > attackDelay) {
+        if (canAttackNow && aligned && Math.abs(remaining.x) < 3.0 && Math.abs(remaining.y) < 3.0
+                && noPotion && canAttack() && now >= testSpookyNextAttackTime) {
             attackTarget(mc.player);
             testSpookyLastAttackTime = now;
+            testSpookyNextAttackTime = now + TestSpookyRotation.NoiseGenerator.randomDelay(100, 180);
         }
     }
 
