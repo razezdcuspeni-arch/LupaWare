@@ -50,6 +50,8 @@ public class ClickGUI extends Screen implements IMinecraft {
 
     private Type selectedCategory = Type.Combat;
     private Function bindingFunction;
+    private float bindPopupX;
+    private float bindPopupY;
     private boolean closeRequested;
     private float openProgress;
 
@@ -114,6 +116,7 @@ public class ClickGUI extends Screen implements IMinecraft {
         renderRail(context, shellX, shellY, mouseX, mouseY);
         renderContent(context, shellX + RAIL_WIDTH, shellY, mouseX, mouseY);
         renderSearch(context, shellX + RAIL_WIDTH, shellY);
+        renderBindPopup(context);
         context.getMatrices().pop();
     }
 
@@ -130,6 +133,15 @@ public class ClickGUI extends Screen implements IMinecraft {
 
     private void renderRail(DrawContext context, int x, int y, int mouseX, int mouseY) {
         int accent = LupaWareTheme.GOLD;
+        String username = mc.getSession().getUsername();
+        RenderUtil.drawRoundedRect(context.getMatrices(), x + 5, y - 30, 75, 25, 4,
+                LupaWareTheme.withAlpha(LupaWareTheme.SURFACE_SOFT, 220));
+        RenderUtil.drawRoundedBorder(context.getMatrices(), x + 5, y - 30, 75, 25, 4, 0.8f,
+                LupaWareTheme.withAlpha(LupaWareTheme.BORDER_SOFT, 180));
+        RenderUtil.drawRoundedRect(context.getMatrices(), x + 22, y - 15, 5, 5, 2.5f, LupaWareTheme.MINT);
+        FontUtils.sf_medium[8].drawLeftAligned(context.getMatrices(), username.length() > 12 ? username.substring(0, 12) : username,
+                x + 31, y - 21, LupaWareTheme.WHITE);
+        FontUtils.sf_medium[6].drawLeftAligned(context.getMatrices(), "CLIENT ONLINE", x + 31, y - 12, LupaWareTheme.DIM);
         RenderUtil.drawRoundedRect(context.getMatrices(), x + 6, y + 8, 29, 29, 8, accent);
         FontUtils.sf_bold[13].centeredDraw(context.getMatrices(), "LW", x + 20.5f, y + 16, LupaWareTheme.INK);
         FontUtils.sf_bold[11].drawLeftAligned(context.getMatrices(), "LUPAWARE", x + 8, y + 47, LupaWareTheme.WHITE);
@@ -238,18 +250,13 @@ public class ClickGUI extends Screen implements IMinecraft {
         FontUtils.sf_medium[8].drawLeftAligned(context.getMatrices(), moduleName, layout.x + 13, layout.y + 5, textColor);
         if (function.getBindCode() != 0) {
             String key = ClientManager.getKey(function.getBindCode());
-            if (key == null) key = "";
-            key = key.length() > 5 ? key.substring(0, 5) : key;
-            float keyWidth = Math.max(16, FontUtils.sf_medium[7].getWidth(key) + 8);
-            RenderUtil.drawRoundedRect(context.getMatrices(), layout.x + layout.width - keyWidth - 5, layout.y + 3.5f, keyWidth, 10, 3,
-                    LupaWareTheme.withAlpha(LupaWareTheme.SURFACE_RAISED, 190));
-            FontUtils.sf_medium[7].centeredDraw(context.getMatrices(), key, layout.x + layout.width - keyWidth / 2f - 5, layout.y + 5,
-                    function.state ? LupaWareTheme.GOLD : LupaWareTheme.DIM);
+            if (key != null && !key.isEmpty()) {
+                FontUtils.sf_medium[6].drawRightAligned(context.getMatrices(), key.length() > 4 ? key.substring(0, 4) : key,
+                        layout.x + layout.width - 19, layout.y + 5, LupaWareTheme.DIM);
+            }
         }
-        if (!function.getSettings().isEmpty()) {
-            FontUtils.sf_medium[10].drawRightAligned(context.getMatrices(), function.expanded ? "−" : "+",
-                    layout.x + layout.width - 5, layout.y + 4, function.state ? LupaWareTheme.GOLD : LupaWareTheme.MUTED);
-        }
+        FontUtils.sf_medium[10].drawLeftAligned(context.getMatrices(), "f", layout.x + layout.width - 15, layout.y + 3,
+                function.state ? LupaWareTheme.GOLD : LupaWareTheme.MUTED);
 
         if (!function.expanded || function.getSettings().isEmpty()) return;
         RenderUtil.drawRoundedRect(context.getMatrices(), layout.x + 5, layout.y + MODULE_ROW_HEIGHT + 2, layout.width - 10, 0.5f, 0,
@@ -261,6 +268,20 @@ public class ClickGUI extends Screen implements IMinecraft {
             renderSetting(context, setting, (int) layout.x + 6, settingY, (int) layout.width - 12, settingHeight);
             settingY += settingHeight + 1;
         }
+    }
+
+    private void renderBindPopup(DrawContext context) {
+        if (bindingFunction == null) return;
+        float x = Math.max(4, Math.min(bindPopupX, width - 124));
+        float y = Math.max(4, Math.min(bindPopupY, height - 61));
+        RenderUtil.drawRoundedRect(context.getMatrices(), x, y, 120, 57, 4,
+                LupaWareTheme.withAlpha(LupaWareTheme.SURFACE, 248));
+        RenderUtil.drawRoundedBorder(context.getMatrices(), x, y, 120, 57, 4, 1f,
+                LupaWareTheme.withAlpha(LupaWareTheme.BORDER, 220));
+        FontUtils.sf_bold[8].drawLeftAligned(context.getMatrices(), "Binding module", x + 8, y + 8, LupaWareTheme.WHITE);
+        String name = bindingFunction.name.length() > 15 ? bindingFunction.name.substring(0, 15) + ".." : bindingFunction.name;
+        FontUtils.sf_medium[7].drawLeftAligned(context.getMatrices(), name, x + 8, y + 22, LupaWareTheme.MUTED);
+        FontUtils.sf_medium[7].drawLeftAligned(context.getMatrices(), "Press a key / ESC", x + 8, y + 37, LupaWareTheme.DIM);
     }
 
     private void renderSearch(DrawContext context, int x, int y) {
@@ -414,6 +435,12 @@ public class ClickGUI extends Screen implements IMinecraft {
         for (ModuleLayout layout : visibleLayout) {
             if (!isHovered(mouseX, mouseY, layout.x, layout.y, layout.width, layout.height)) continue;
             if (isHovered(mouseX, mouseY, layout.x, layout.y, layout.width, MODULE_ROW_HEIGHT)) {
+                if (button == 0 && isHovered(mouseX, mouseY, layout.x + layout.width - 22, layout.y + 2, 18, 13)) {
+                    bindingFunction = layout.function;
+                    bindPopupX = (float) mouseX + 8;
+                    bindPopupY = (float) mouseY + 8;
+                    return true;
+                }
                 if (button == 0) {
                     layout.function.toggle();
                     return true;

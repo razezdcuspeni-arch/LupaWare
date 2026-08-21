@@ -47,6 +47,7 @@ public class MainMenu extends Screen {
                 client.scheduleStop())
                 .dimensions(left + footerWidth + BUTTON_GAP, footerY, footerWidth, BUTTON_HEIGHT).build());
 
+
     }
 
     @Override

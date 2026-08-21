@@ -301,168 +301,69 @@ public class HUD extends Function {
         return raw.replace("{", "").replace("}", "");
     }
 
-    private float cooldownListHeightDynamic = 0;
+    private float cooldownProgress = 0f;
 
     private void cooldown(EventRender2D eventRender2D) {
-        float posX = itemcooldownDrag.getX();
-        float posY = itemcooldownDrag.getY();
-        int headerHeight = 18;
-        int padding = 5;
-        int lineHeight = 10;
-
-        List<Item> activeItems = new ArrayList<>();
-        float maxWidth = 100;
-
+        float x = itemcooldownDrag.getX();
+        float y = itemcooldownDrag.getY();
         ItemCooldownManager manager = mc.player.getItemCooldownManager();
         ItemCooldownManagerAccessor accessor = (ItemCooldownManagerAccessor) manager;
-
+        int active = 0;
+        float longestRemaining = 0f;
         for (Item item : TRACKED_ITEMS) {
             ItemStack stack = new ItemStack(item);
-            if (manager.isCoolingDown(stack)) {
-                activeItems.add(item);
-
-                String itemName = ITEM_NAMES.getOrDefault(item, stack.getName().getString());
-
-                Identifier id = manager.getGroup(stack);
-                Object rawEntry = accessor.getEntries().get(id);
-
-                float remainingSeconds = 0f;
-                if (rawEntry instanceof ItemCooldownEntryAccessor entry) {
-                    int end = entry.getEndTick();
-                    int current = accessor.getTick();
-                    float remainingTicks = end - (current + mc.getRenderTickCounter().getTickDelta(true));
-                    remainingSeconds = Math.max(0f, remainingTicks / 20.0f);
-                }
-
-                String timeLeft = formatCooldownTime(remainingSeconds);
-
-                float nameWidth = FontUtils.durman[13].getWidth(itemName);
-                float timeWidth = FontUtils.durman[13].getWidth(timeLeft);
-                float totalWidth = padding * 2 + 25 + nameWidth + padding + timeWidth;
-
-                if (totalWidth > maxWidth) maxWidth = totalWidth;
-            }
-        }
-
-        float listHeightTarget = activeItems.size() * lineHeight;
-        cooldownListHeightDynamic = MathUtil.fast(cooldownListHeightDynamic, listHeightTarget, 15);
-        float totalHeight = headerHeight + cooldownListHeightDynamic;
-
-        int alpha = MathHelper.clamp(customAlpha.get().intValue(), 175, 255);
-        if (alpha <= 240) {
-            if (blur.get()) {
-                drawBlur(eventRender2D.getDrawContext().getMatrices(), posX, posY + headerHeight - 1, maxWidth, cooldownListHeightDynamic + 6, new Vector4f(0, 3, 3, 0), 12, Color.white.getRGB());
-            }
-        }
-
-        StyleManager theme = Manager.STYLE_MANAGER;
-        Color upColor = new Color(theme.getFirstColor());
-        Color downColor = new Color(theme.getSecondColor());
-
-        if (hudColor.is("Обычный")) {
-            drawRoundedRect(eventRender2D.getDrawContext().getMatrices(), posX, posY, maxWidth, headerHeight + 1, new Vector4f(7, 0, 0, 7), LupaWareTheme.withAlpha(LupaWareTheme.GOLD, alpha));
-        } else {
-            int left   = ColorUtil.gradient(10,   90, upColor.getRGB(), downColor.getRGB());
-            int right  = ColorUtil.gradient(10,    0, upColor.getRGB(), downColor.getRGB());
-            int top    = ColorUtil.gradient(10,  180, upColor.getRGB(), downColor.getRGB());
-            int bottom = ColorUtil.gradient(10,  270, upColor.getRGB(), downColor.getRGB());
-            boolean leftToRight = gradientType.is("Слева направо");
-            int c1 = leftToRight ? hud_color : left;
-            int c2 = leftToRight ? hud_color : right;
-            int c3 = leftToRight ? right     : hud_color;
-            int c4 = leftToRight ? left      : hud_color;
-            rectRGB(eventRender2D.getDrawContext().getMatrices(), posX, posY, maxWidth, headerHeight + 1, corner, c1, c2, c3, c4);
-        }
-
-        RenderUtil.drawTexture(eventRender2D.getDrawContext().getMatrices(), "images/hud/cooldown.png", posX + maxWidth - 19, posY + 4.5f, 11, 11, 0, Color.white.getRGB());
-
-        FontUtils.durman[15].drawLeftAligned(eventRender2D.getDrawContext().getMatrices(), "COOLDOWNS", posX + 12, posY + 5f, -1);
-
-        drawRoundedRect(eventRender2D.getDrawContext().getMatrices(), posX, posY + headerHeight - 1, maxWidth, cooldownListHeightDynamic + 6, new Vector4f(0, 7, 7, 0), LupaWareTheme.withAlpha(LupaWareTheme.SURFACE, alpha));
-
-        Scissor.push();
-        Scissor.setFromComponentCoordinates(posX, posY, maxWidth, (headerHeight + cooldownListHeightDynamic + padding / 2.0F + 5));
-
-        float yOffset = posY + headerHeight + padding - 1;
-        for (Item item : activeItems) {
-            ItemStack stack = item.getDefaultStack();
-            String itemName = ITEM_NAMES.getOrDefault(item, stack.getName().getString());
-
+            if (!manager.isCoolingDown(stack)) continue;
+            active++;
             Identifier id = manager.getGroup(stack);
             Object rawEntry = accessor.getEntries().get(id);
-
-            float remainingSeconds = 0f;
             if (rawEntry instanceof ItemCooldownEntryAccessor entry) {
-                int end = entry.getEndTick();
-                int current = accessor.getTick();
-                float remainingTicks = end - (current + mc.getRenderTickCounter().getTickDelta(true));
-                remainingSeconds = Math.max(0f, remainingTicks / 20.0f);
+                float remaining = Math.max(0f, (entry.getEndTick() - (accessor.getTick() + mc.getRenderTickCounter().getTickDelta(true))) / 20.0f);
+                longestRemaining = Math.max(longestRemaining, remaining);
             }
-
-            String timeLeft = formatCooldownTime(remainingSeconds);
-
-            RenderAddon.renderItem(eventRender2D.getDrawContext(), stack, posX + padding - 1.5f, yOffset - 1f, 0.6f,false);
-
-            RenderUtil.drawRoundedRect(eventRender2D.getDrawContext().getMatrices(), posX + padding + 10, yOffset - 0.5f, 3, 10, 1, new Color(94, 229, 211, 220).getRGB());
-
-            FontUtils.durman[13].drawLeftAligned(eventRender2D.getDrawContext().getMatrices(), itemName, posX + padding + 14f, yOffset - 0.3f, -1);
-
-            float timeWidth = FontUtils.durman[13].getWidth(timeLeft);
-            RenderUtil.drawRoundedRect(eventRender2D.getDrawContext().getMatrices(), posX + maxWidth - timeWidth - padding - 5, yOffset - 1, 8 + timeWidth, 14, 7, LupaWareTheme.withAlpha(LupaWareTheme.SURFACE_SOFT, alpha));
-
-            FontUtils.durman[13].drawLeftAligned(eventRender2D.getDrawContext().getMatrices(), timeLeft, posX + maxWidth - timeWidth - padding - 2, yOffset - 0.3f, -1);
-
-            yOffset += lineHeight;
         }
-
-        Scissor.unset();
-        Scissor.pop();
-
-        itemcooldownDrag.setWidth(maxWidth);
-        itemcooldownDrag.setHeight(totalHeight + 5);
+        float target = active == 0 ? 1f : MathHelper.clamp(1f - longestRemaining / 10f, 0f, 1f);
+        cooldownProgress = MathUtil.fast(cooldownProgress, target, 10);
+        float width = 92f;
+        float height = 25f;
+        MatrixStack matrices = eventRender2D.getDrawContext().getMatrices();
+        drawRoundedRect(matrices, x, y, width, height, 3, new Color(0, 0, 0, 195).getRGB());
+        drawRoundedRect(matrices, x + 5, y + 14, 82, 7, 0, new Color(23, 23, 23, 196).getRGB());
+        drawRoundedRect(matrices, x + 5, y + 14, 82 * cooldownProgress, 7, 3, LupaWareTheme.GOLD);
+        FontUtils.sf_bold[8].drawLeftAligned(matrices, "Cooldowns", x + 5, y + 4, Color.WHITE.getRGB());
+        RenderUtil.drawTexture(matrices, "images/hud/cooldown.png", x + width - 17, y + 5, 10, 10, 0, Color.WHITE.getRGB());
+        itemcooldownDrag.setWidth(width);
+        itemcooldownDrag.setHeight(height);
     }
 
 
 
     private int activeStaff = 0;
-    private float hDynam = 0;
-    private float widthDynamic = 0;
-    private float nameWidth = 0;
-
     private void staffList(EventRender2D render2D) {
         float x = stafflistDrag.getX(), y = stafflistDrag.getY();
         MatrixStack matrices = render2D.getDrawContext().getMatrices();
-        var titleFont = FontUtils.sf_bold[14];
-        var rowFont = FontUtils.sf_medium[11];
-        float width = 154;
-        for (StaffPlayer staff : staffPlayers) width = Math.max(width, rowFont.getWidth(staff.getName()) + rowFont.getWidth(staff.getStatus().getString()) + 64);
+        final float width = 100f;
+        final float offset = 9f;
+        for (StaffPlayer staff : staffPlayers) staff.updateStatus();
         activeStaff = staffPlayers.size();
-        hDynam = MathUtil.fast(hDynam, activeStaff * 14, 15);
-        widthDynamic = MathUtil.fast(widthDynamic, width, 10);
-        int alpha = MathHelper.clamp(customAlpha.get().intValue(), 175, 255);
-        float height = 28 + hDynam;
-        drawRoundedRect(matrices, x, y, widthDynamic, height, 11, LupaWareTheme.withAlpha(LupaWareTheme.SURFACE, alpha));
-        drawRoundedBorder(matrices, x, y, widthDynamic, height, 11, 0.8f, LupaWareTheme.withAlpha(LupaWareTheme.BORDER, alpha));
-        drawRoundedRect(matrices, x, y, widthDynamic, 3, 1, LupaWareTheme.withAlpha(LupaWareTheme.GOLD, alpha));
-        drawRoundedRect(matrices, x + 12, y + 10, 4, 12, 2, LupaWareTheme.withAlpha(LupaWareTheme.GOLD, alpha));
-        FontUtils.sf_bold[13].drawLeftAligned(matrices, "STAFF LIST", x + 23, y + 8, Color.WHITE.getRGB());
-        FontUtils.sf_medium[9].drawRightAligned(matrices, activeStaff + " ONLINE", x + widthDynamic - 12, y + 9, LupaWareTheme.withAlpha(LupaWareTheme.MUTED, alpha));
-        Map<String, PlayerListEntry> playerInfoMap = new HashMap<>();
-        for (PlayerListEntry info : mc.getNetworkHandler().getPlayerList()) playerInfoMap.put(info.getProfile().getName(), info);
-        float rowY = y + 28;
+        float height = 20.5f + Math.max(0, activeStaff * offset - 4f);
+        if (activeStaff == 0) height -= 1.5f;
+        drawRoundedRect(matrices, x, y, width, height, 3, new Color(0, 0, 0, 195).getRGB());
+        FontUtils.sf_bold[8].centeredDraw(matrices, "Staff Active", x + width / 2f, y + 4, Color.WHITE.getRGB());
+        int index = 0;
         for (StaffPlayer staff : staffPlayers) {
-            PlayerListEntry info = playerInfoMap.get(staff.getName());
-            if (info != null && staff.getStatus() != StaffPlayer.Status.VANISHED && staff.getStatus() != StaffPlayer.Status.SPEC) {
-                RenderAddon.drawStaffHead(matrices, info.getSkinTextures().texture(), x + 10, rowY + 1, 10, 3);
-            } else {
-                RenderUtil.drawTexture(matrices, "images/hud/staffvanish.png", x + 13, rowY + 3, 10, 10, 3, Color.WHITE.getRGB());
+            String name = staff.getName().substring(0, Math.min(staff.getName().length(), 10));
+            float rowY = y + 16.7f + index * offset;
+            FontUtils.sf_bold[7].drawLeftAligned(matrices, name, x + 4, rowY, Color.WHITE.getRGB());
+            switch (staff.getStatus()) {
+                case SPEC -> FontUtils.sf_bold[6].drawLeftAligned(matrices, "Spectator", x + 63.5f, rowY, new Color(231, 52, 52, 255).getRGB());
+                case NONE -> FontUtils.sf_bold[6].drawLeftAligned(matrices, "Online", x + 74, rowY, new Color(116, 236, 114, 255).getRGB());
+                case NEAR -> RenderUtil.drawRoundedRect(matrices, x + 85.3f, rowY + 1, 5, 5, 2.5f, new Color(116, 236, 114, 255).getRGB());
+                case VANISHED -> RenderUtil.drawRoundedRect(matrices, x + 85.3f, rowY + 1, 5, 5, 2.5f, new Color(231, 52, 52, 255).getRGB());
             }
-            rowFont.drawLeftAligned(matrices, staff.getName(), x + 30, rowY + 4, Color.WHITE.getRGB());
-            int statusColor = (staff.getStatus() == StaffPlayer.Status.VANISHED || staff.getStatus() == StaffPlayer.Status.SPEC) ? LupaWareTheme.withAlpha(LupaWareTheme.DIM, alpha) : Color.WHITE.getRGB();
-            rowFont.drawRightAligned(matrices, staff.getStatus().getString(), x + widthDynamic - 9, rowY + 4, statusColor);
-            rowY += 14;
+            index++;
         }
-        stafflistDrag.setWidth(widthDynamic); stafflistDrag.setHeight(height);
+        stafflistDrag.setWidth(width);
+        stafflistDrag.setHeight(height);
     }
     private float lastHealth = 0.0f;
     private float lastAbsorption = 0.0f;
