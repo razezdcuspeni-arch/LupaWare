@@ -191,6 +191,7 @@ public class AttackAura extends Function {
         }
         lastHitMs = 0L;
         shakeStartTime = 0L;
+        testSpookyLastAttackTime = 0L;
         Arrays.fill(deltaPitchHistory, mc.player != null ? mc.player.getPitch() : 0f);
     }
 
@@ -403,6 +404,7 @@ public class AttackAura extends Function {
 
     private LivingEntity testSpookyTarget;
     private long testSpookyTargetSwitchTime = 0L;
+    private long testSpookyLastAttackTime = 0L;
 
     private void testSpookyRotation(LivingEntity entity, boolean canAttackNow, boolean passRay, boolean noPotion) {
         long now = System.currentTimeMillis();
@@ -415,7 +417,7 @@ public class AttackAura extends Function {
             }
         }
 
-        if (testSpookyTarget == null) return;
+        if (testSpookyTarget == null || testSpookyTarget != entity) return;
 
         Vec3d eye = mc.player.getEyePos();
         Vec3d point = testSpookyTarget.getBoundingBox().getCenter();
@@ -426,8 +428,10 @@ public class AttackAura extends Function {
         float targetYaw = (float) Math.toDegrees(Math.atan2(dz, dx)) - 90.0f;
         float targetPitch = (float) -Math.toDegrees(Math.atan2(dy, Math.hypot(dx, dz)));
 
+        // The supplied code reads the real player angles on every update.
+        // Manager.ROTATION is the output controller, not the input source.
         TestSpookyRotation.Vector2D currentAngles = new TestSpookyRotation.Vector2D(
-                Manager.ROTATION.getYaw(), Manager.ROTATION.getPitch());
+                mc.player.getYaw(), mc.player.getPitch());
         TestSpookyRotation.Vector2D targetAngles = new TestSpookyRotation.Vector2D(targetYaw, targetPitch);
         TestSpookyRotation.Vector2D newAngles = testSpookyAim.update(currentAngles, targetAngles);
 
@@ -436,9 +440,23 @@ public class AttackAura extends Function {
         boolean aligned = !raycast.get()
                 || RayTraceUtil.getMouseOver(testSpookyTarget, Manager.ROTATION.getYaw(),
                 Manager.ROTATION.getPitch(), distance.get().floatValue()) == testSpookyTarget;
-        if (canAttackNow && passRay && aligned && canAttack() && noPotion) {
+        TestSpookyRotation.Vector2D remaining = targetAngles.sub(newAngles);
+        remaining.x = normalizeTestSpookyAngle(remaining.x);
+        remaining.y = normalizeTestSpookyAngle(remaining.y);
+        int attackDelay = TestSpookyRotation.NoiseGenerator.randomDelay(100, 300)
+                + (int) TestSpookyRotation.NoiseGenerator.jitter(30);
+        if (aligned && Math.abs(remaining.x) < 2.0 && Math.abs(remaining.y) < 2.0
+                && noPotion && canAttack()
+                && now - testSpookyLastAttackTime > attackDelay) {
             attackTarget(mc.player);
+            testSpookyLastAttackTime = now;
         }
+    }
+
+    private double normalizeTestSpookyAngle(double angle) {
+        while (angle > 180) angle -= 360;
+        while (angle < -180) angle += 360;
+        return angle;
     }
 
     private void slothAcRotation(LivingEntity entity, boolean canAttackNow, boolean noPotion) {
@@ -631,8 +649,8 @@ public class AttackAura extends Function {
             }
         }
 
-        // Let the normal Minecraft attack cooldown decide the next valid hit.
-        cpsLimit = System.currentTimeMillis() + 500L;
+        // The supplied KillAura owns the testspooky inter-hit delay.
+        cpsLimit = System.currentTimeMillis() + (isRotationMode("SpookyTime") ? 0L : 500L);
 
         mc.interactionManager.attackEntity(player, target);
         mc.player.swingHand(MAIN_HAND);
