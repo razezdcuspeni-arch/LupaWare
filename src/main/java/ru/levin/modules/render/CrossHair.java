@@ -13,7 +13,7 @@ import ru.levin.util.render.RenderUtil;
 
 import java.awt.*;
 
-@FunctionAnnotation(name = "CrossHair", type = Type.Render)
+@FunctionAnnotation(name = "CrossHair", desc = "Настраиваемый прицел в центре экрана", type = Type.Render)
 public class CrossHair extends Function {
 
     private final SliderSetting attackSetting = new SliderSetting("Размер при ударе",6,0,20,1);

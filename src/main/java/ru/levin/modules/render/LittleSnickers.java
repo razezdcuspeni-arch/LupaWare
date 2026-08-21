@@ -17,7 +17,7 @@ import ru.levin.modules.FunctionAnnotation;
 import ru.levin.modules.Type;
 import ru.levin.events.Event;
 
-@FunctionAnnotation(name = "LittlePet",desc = "Пёс за вами (скоро подключу AI)", type = Type.Render)
+@FunctionAnnotation(name = "LittlePet", desc = "Маленький питомец сопровождает игрока", type = Type.Render)
 public class LittleSnickers extends Function {
     private LivingEntity fakeEntity = null;
     private boolean active = false;

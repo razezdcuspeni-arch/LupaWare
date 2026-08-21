@@ -4,11 +4,19 @@ import ru.levin.events.Event;
 import ru.levin.modules.Function;
 import ru.levin.modules.FunctionAnnotation;
 import ru.levin.modules.Type;
+import ru.levin.manager.Manager;
 
 /** Enables the vanilla three-dimensional first-person arm renderer. */
 @FunctionAnnotation(name = "Hold My Items", desc = "Объёмные 3D-руки в первом лице", type = Type.Render)
 public class HoldMyItems extends Function {
     public HoldMyItems() {
+    }
+
+    @Override
+    protected void onEnable() {
+        if (Manager.FUNCTION_MANAGER.swingAnimations.isState()) {
+            Manager.FUNCTION_MANAGER.swingAnimations.setState(false);
+        }
     }
 
     @Override

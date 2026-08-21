@@ -19,8 +19,10 @@ public abstract class MixinHeldItemRenderer {
     private void onRenderItemHook(AbstractClientPlayerEntity player, float tickDelta, float pitch, Hand hand, float swingProgress, ItemStack item, float equipProgress, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
         // Hold My Items explicitly keeps the vanilla first-person renderer active.
         // When custom swing animations are disabled, vanilla rendering must also remain active.
-        if (Manager.FUNCTION_MANAGER.holdMyItems.isState()
-                || !Manager.FUNCTION_MANAGER.swingAnimations.isState()) {
+        if (Manager.FUNCTION_MANAGER.holdMyItems.isState()) {
+            return;
+        }
+        if (!Manager.FUNCTION_MANAGER.swingAnimations.isState()) {
             return;
         }
         if (!(item.isEmpty()) && !(item.getItem() instanceof FilledMapItem)) {

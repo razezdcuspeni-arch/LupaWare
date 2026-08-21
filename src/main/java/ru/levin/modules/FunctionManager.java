@@ -60,6 +60,7 @@ public class FunctionManager {
     public final NoRayTrace noRayTrace;
     public final IRC irc;
     public final ClickAction clickAction;
+    public final AutoFish autoFish;
     public final Phase phase;
     public final TargetStrafe targetStrafe;
     public final Globals globals;
@@ -69,6 +70,7 @@ public class FunctionManager {
     public final SelfTrap selfTrap;
     public final AutoTotem autoTotem;
     public final BlockHighLight blockHighLight;
+    public final ntiAFK ntiAFK;
     //public final KTLeave ktLeave;
     //public final MaceExploit maceExploit;
     public FunctionManager() {
@@ -95,6 +97,7 @@ public class FunctionManager {
                 clientSounds = new ClientSounds(),
                 new DeathCoords(),
                 new ServerRPSpoff(),
+                ntiAFK = new ntiAFK(),
                 new Xray(),
                 new ElytraHelper(),
                 new FTHelper(),
@@ -131,6 +134,7 @@ public class FunctionManager {
                 new AutoLeave(),
                 new AutoMessage(),
                 clickAction = new ClickAction(),
+                autoFish = new AutoFish(),
                 itemScroller = new ItemScroller(),
                 new ItemFixSwap(),
                 new PerfectTime(),

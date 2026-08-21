@@ -57,16 +57,13 @@ public class AttackAura extends Function {
             "HollyWorld",
             "FunTime",
             "SpookyTime",
-            "testXB",
+            "AresMIne",
             "testFT",
             "testspooky",
             "SlothAC",
             "SpookyPooky",
             "ManusRotation",
-            "Snap",
-            "KoopinAc",
-            "LonyGrief",
-            "1.8.8"
+            "LonyGrief"
     );
 
     private final MultiSetting targets = new MultiSetting(
@@ -92,11 +89,10 @@ public class AttackAura extends Function {
     private final SliderSetting rotateDistance = new SliderSetting("Радиус обнаружения", 5f, 0.0f, 10f, 0.1f);
 
     private final SliderSetting elytraDistance = new SliderSetting("Радиус на элитрах", 40f, 0f, 80f, 1f);
-    private final SliderSetting snapSpeed = new SliderSetting("Скорость снапов", 150, 50, 300, 50f, () -> mode.is("Snap"));
-
     private final BindBooleanSetting onlySpaceCritical = new BindBooleanSetting("Только с пробелом", false, () -> setting.get("Только критами"));
     private final BooleanSetting noAttackIfEat = new BooleanSetting("Не бить если ешь", false);
     private final BooleanSetting raycast = new BooleanSetting("Проверять наведение", false);
+    private final BooleanSetting noAttackThroughWalls = new BooleanSetting("Не бить через стены", true);
 
     public final BooleanSetting correction = new BooleanSetting("Коррекция", true);
     public final ModeSetting correctionType = new ModeSetting(() -> correction.get(), "Тип коррекции", "Free", "Free", "Focus");
@@ -119,7 +115,7 @@ public class AttackAura extends Function {
         String active = getRotationMode();
         if (value.equals("SpookyTime")) return active.equals("SpookyTime") || active.equals("testspooky");
         if (value.equals("FunTime")) return active.equals("FunTime") || active.equals("testFT");
-        if (value.equals("HollyWorld")) return active.equals("HollyWorld") || active.equals("testXB");
+        if (value.equals("HollyWorld")) return active.equals("HollyWorld") || active.equals("AresMIne");
         return value.equals(active);
     }
 
@@ -132,13 +128,13 @@ public class AttackAura extends Function {
                 distance,
                 rotateDistance,
                 elytraDistance,
-                snapSpeed,
                 correction,
                 correctionType,
                 sprintreset,
                 onlySpaceCritical,
                 noAttackIfEat,
-                raycast
+                raycast,
+                noAttackThroughWalls
         );
     }
 
@@ -203,7 +199,7 @@ public class AttackAura extends Function {
         if (target != null && isValidTarget(target)) {
             String modeName = getRotationMode();
             if (modeName.equals("FunTime") || modeName.equals("testFT")
-                    || modeName.equals("HollyWorld") || modeName.equals("testXB")
+                    || modeName.equals("HollyWorld") || modeName.equals("AresMIne")
                     || modeName.equals("ReallyWorld")) {
                 Manager.ROTATION.smoothReturn(350);
             } else {
@@ -302,12 +298,6 @@ public class AttackAura extends Function {
 
         if (isRotationMode("ManusRotation")) {
             manusRotation(t, canAttackNow, noPotion);
-            return;
-        }
-
-        if (isRotationMode("KoopinAc") || isRotationMode("1.8.8")) {
-            koopinVector(t, true);
-            if (canAttackNow && passRay && noPotion) attackTarget(mc.player);
             return;
         }
 
@@ -476,19 +466,6 @@ public class AttackAura extends Function {
                     || RayTraceUtil.getMouseOver(t, Manager.ROTATION.getYaw(), Manager.ROTATION.getPitch(), distance.get().floatValue()) == t;
             if (attackReady && aligned) {
                 attackTarget(mc.player);
-            }
-            return;
-        }
-
-        if (isRotationMode("Snap")) {
-            if (canAttackNow && canAttack() && passRay && noPotion) {
-                attackTarget(mc.player);
-                lastHitMs = System.currentTimeMillis();
-            }
-            if (System.currentTimeMillis() - lastHitMs < (long) snapSpeed.get().floatValue()) {
-                setRotation(t, true);
-            } else {
-                Manager.ROTATION.set(mc.player.getYaw(), mc.player.getPitch());
             }
             return;
         }
@@ -682,54 +659,6 @@ public class AttackAura extends Function {
         Manager.ROTATION.setSmooth(yaw, pitch, 1.2f, 180f, 15f, applyGcd);
     }
 
-    private void koopinVector(LivingEntity entity, boolean attackContext) {
-        Vec3d head = entity.getEyePos().add(0, entity.getHeight(), 0);
-        Vec3d chest = entity.getEyePos().add(0, entity.getStandingEyeHeight() / 2.0f, 0);
-        Vec3d legs = entity.getEyePos().add(0, 0.05, 0);
-        Vec3d[] points = new Vec3d[]{head, chest, legs};
-
-        float bestPitchDelta = Float.MAX_VALUE;
-        Vec3d best = chest;
-        float currPitch = Manager.ROTATION.getPitch();
-        float currYaw = Manager.ROTATION.getYaw();
-
-        for (Vec3d p : points) {
-            Vec3d eye = mc.player.getEyePos();
-            double dx = p.x - eye.x;
-            double dy = p.y - eye.y;
-            double dz = p.z - eye.z;
-            float yaw = (float) Math.toDegrees(Math.atan2(dz, dx)) - 90.0F;
-            float pitch = (float) -Math.toDegrees(Math.atan2(dy, Math.sqrt(dx * dx + dz * dz)));
-            float pitchDelta = Math.abs(pitch - currPitch);
-            if (pitchDelta < bestPitchDelta) {
-                bestPitchDelta = pitchDelta;
-                best = p;
-            }
-        }
-
-        Vec3d eye = mc.player.getEyePos();
-        double dx = best.x - eye.x;
-        double dy = best.y - eye.y;
-        double dz = best.z - eye.z;
-        double dst = Math.sqrt(dx * dx + dz * dz);
-
-        float yawTo = (float) Math.toDegrees(Math.atan2(dz, dx)) - 90.0F;
-        float pitchTo = (float) (-Math.toDegrees(Math.atan2(dy, dst)));
-
-        float yawDelta = MathHelper.wrapDegrees(yawTo - currYaw);
-        float pitchDelta = pitchTo - currPitch;
-
-        float addYaw = Math.min(Math.max(Math.abs(yawDelta), 1), 80);
-        if (Math.abs(addYaw) <= 3.0f) addYaw = 3.1f;
-
-        float addPitch = Math.max(attackContext ? Math.abs(pitchDelta) : 1.0f, 2.0f);
-
-        float ny = currYaw + (yawDelta > 0 ? addYaw : -addYaw);
-        float np = MathHelper.clamp(currPitch + (pitchDelta > 0 ? addPitch : -addPitch), -90.0f, 90.0f);
-
-        Manager.ROTATION.set(ny, np);
-    }
-
     private boolean swingSideRight = false;
     private float jitterYaw = 0f, jitterYawTarget = 0f, jitterYawSpeed = 0f;
     private float microJitter = 0f;
@@ -894,6 +823,7 @@ public class AttackAura extends Function {
 
     private boolean canAttack() {
         if (noAttackIfEat.get() && mc.player.isUsingItem() && !mc.player.getActiveItem().isOf(Items.SHIELD)) return false;
+        if (target != null && noAttackThroughWalls.get() && !mc.player.canSee(target)) return false;
 
         if (System.currentTimeMillis() < cpsLimit
                 || (!(mc.player.getMainHandStack().isOf(Items.MACE))

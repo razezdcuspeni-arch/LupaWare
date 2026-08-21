@@ -9,7 +9,7 @@ import ru.levin.modules.setting.BindBooleanSetting;
 import ru.levin.util.move.MoveUtil;
 
 @SuppressWarnings("All")
-@FunctionAnnotation(name = "RWHelper", desc = "", type = Type.Misc)
+@FunctionAnnotation(name = "RWHelper", desc = "Вспомогательные функции для сервера ReallyWorld", type = Type.Misc)
 public class RWHelper extends Function {
 
     private final BindBooleanSetting dragonFly = new BindBooleanSetting("DragonFly", "Позволяет летать быстрее на драгоне", true);

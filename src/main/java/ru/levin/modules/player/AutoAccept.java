@@ -12,7 +12,7 @@ import ru.levin.modules.Type;
 import java.util.concurrent.atomic.AtomicReference;
 
 @SuppressWarnings("All")
-@FunctionAnnotation(name = "AutoAccept",keywords = "TpaAccept", type = Type.Player, desc = "")
+@FunctionAnnotation(name = "AutoAccept", desc = "Автоматически принимает игровые приглашения",keywords = "TpaAccept", type = Type.Player)
 public class AutoAccept extends Function {
 
     private final BooleanSetting onlyFriend = new BooleanSetting("Только друзей", true);

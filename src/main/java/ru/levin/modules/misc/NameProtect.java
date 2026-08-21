@@ -8,7 +8,7 @@ import ru.levin.modules.Function;
 import ru.levin.modules.FunctionAnnotation;
 import ru.levin.modules.Type;
 
-@FunctionAnnotation(name = "NameProtect", desc = "", type = Type.Misc)
+@FunctionAnnotation(name = "NameProtect", desc = "Скрывает или заменяет игровые имена", type = Type.Misc)
 public class NameProtect extends Function {
     public final TextSetting text = new TextSetting("Ник","levin1337");
     public final BooleanSetting friend = new BooleanSetting("Скрывать друзей",true);

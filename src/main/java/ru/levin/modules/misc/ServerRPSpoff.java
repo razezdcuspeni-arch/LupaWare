@@ -13,7 +13,7 @@ import ru.levin.modules.Type;
 
 import java.util.UUID;
 
-@FunctionAnnotation(name = "ServerRPSpoff", desc = "", type = Type.Misc)
+@FunctionAnnotation(name = "ServerRPSpoff", desc = "Скрывает лишние сообщения о сервере", type = Type.Misc)
 public class ServerRPSpoff extends Function {
 
 

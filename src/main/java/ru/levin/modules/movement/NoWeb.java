@@ -11,7 +11,7 @@ import ru.levin.modules.Type;
 import ru.levin.util.move.MoveUtil;
 
 @SuppressWarnings("All")
-@FunctionAnnotation(name = "NoWeb", type = Type.Move)
+@FunctionAnnotation(name = "NoWeb", desc = "Убирает замедление в паутине", type = Type.Move)
 public class NoWeb extends Function {
     private final ModeSetting mode = new ModeSetting("Режим", "Custom", "Custom", "ReallyWorld");
     private final SliderSetting speedXZ = new SliderSetting("Скорость по X и Z", 0.1F, 0.1F, 1, 0.1F,() -> mode.is("Custom"));

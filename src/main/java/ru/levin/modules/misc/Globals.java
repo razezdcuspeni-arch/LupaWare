@@ -15,7 +15,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-@FunctionAnnotation(name = "Globals", type = Type.Misc)
+@FunctionAnnotation(name = "Globals", desc = "Общие клиентские параметры и настройки", type = Type.Misc)
 public class Globals extends Function {
 
     private ClientAPI clientAPI;

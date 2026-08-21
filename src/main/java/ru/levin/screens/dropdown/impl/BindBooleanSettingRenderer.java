@@ -99,13 +99,15 @@ public class BindBooleanSettingRenderer implements SettingRenderer<BindBooleanSe
         int bgColor = ColorUtil.interpolateColor(offColor.getRGB(), onColor, progress);
 
         RenderUtil.drawRoundedRect(ctx.getMatrices(), switchX, switchY, SWITCH_WIDTH, SWITCH_HEIGHT, 5, bgColor);
+        RenderUtil.drawRoundedBorder(ctx.getMatrices(), switchX, switchY, SWITCH_WIDTH, SWITCH_HEIGHT, 5, 0.35f,
+                progress > 0.15f ? LupaWareTheme.GOLD : LupaWareTheme.BORDER_SOFT);
         int knobRadius = 8;
         float knobX = switchX + 3 + (SWITCH_WIDTH - knobRadius - 5) * progress;
         float knobY = switchY + (SWITCH_HEIGHT - knobRadius) / 2f;
         RenderUtil.drawCircle(ctx.getMatrices(), knobX + knobRadius / 2f, knobY + knobRadius / 2f, knobRadius, LupaWareTheme.WHITE);
 
         int textX = x;
-        int textY = (int) (y + (HEIGHT - FontUtils.durman[13].getHeight()) / 2) - 2;
+        int textY = (int) (y + Math.max(1, (HEIGHT - FontUtils.durman[13].getHeight()) / 2));
         String text = setting.getName();
         float textWidth = FontUtils.durman[13].getWidth(text);
         float maxTextWidth = switchX - textX - 15;
@@ -117,7 +119,7 @@ public class BindBooleanSettingRenderer implements SettingRenderer<BindBooleanSe
         scrollOffsetMap.put(setting, offset);
 
         Scissor.push();
-        Scissor.setFromComponentCoordinates(textX, textY - 1, maxTextWidth, FontUtils.durman[13].getHeight() + 2);
+        Scissor.setFromComponentCoordinates(textX, y, maxTextWidth, HEIGHT);
         FontUtils.durman[13].drawLeftAligned(ctx.getMatrices(), text, textX - offset, textY, LupaWareTheme.WHITE);
         Scissor.pop();
 

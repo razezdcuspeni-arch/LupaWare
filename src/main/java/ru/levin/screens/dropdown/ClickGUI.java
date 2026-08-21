@@ -316,11 +316,14 @@ public class ClickGUI extends Screen implements IMinecraft {
             }
 
             ru.levin.modules.render.ClickGUI clickGUI = Manager.FUNCTION_MANAGER.clickGUI;
-            int col1 = f.state ? ColorUtil.getColorStyle(30) : new Color(198, 198, 198).getRGB();
+            int moduleAlpha = clickGUI.alphaModules.get().intValue();
+            int activeAlpha = Math.max(80, moduleAlpha * 2);
+            int inactiveAlpha = Math.max(28, moduleAlpha);
+            int col1 = f.state ? ColorUtil.getColorStyle(30) : new Color(215, 215, 220).getRGB();
             int col2 = f.state ? ColorUtil.getColorStyle(120) : col1;
 
-            int colorModule = f.state ? ColorUtil.getColorStyle(30, clickGUI.alphaModules.get().intValue()) : new Color(198, 198, 198, clickGUI.alphaModules.get().intValue()).getRGB();
-            int colorModule2 = f.state ? ColorUtil.getColorStyle(120, clickGUI.alphaModules.get().intValue()) : colorModule;
+            int colorModule = f.state ? ColorUtil.getColorStyle(30, activeAlpha) : new Color(198, 198, 198, inactiveAlpha).getRGB();
+            int colorModule2 = f.state ? ColorUtil.getColorStyle(120, activeAlpha) : colorModule;
 
             if (clickGUI.filling.get()) {
                 RenderUtil.rectRGB(ctx.getMatrices(), x + 4, currentY - 1, PANEL_WIDTH - 8, totalHeight - 1, clickGUI.rounding.get().intValue(), colorModule2, colorModule2, colorModule2, colorModule2);
@@ -337,6 +340,10 @@ public class ClickGUI extends Screen implements IMinecraft {
                 RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 4, currentY - 1, PANEL_WIDTH - 8,
                         functionHeight - 1, clickGUI.rounding.get().intValue(),
                         new Color(255, 255, 255, 14).getRGB());
+            }
+            if (f.state) {
+                RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 5, currentY + 2, 2.2f,
+                        functionHeight - 5, 1.1f, ColorUtil.getColorStyle(30));
             }
 
             String textToRender;

@@ -55,8 +55,9 @@
 		"iface.BossBarHudAccessor",
 		"iface.MinecraftClientAccessor",
 		"iface.ItemCooldownManagerAccessor",
-		"iface.ItemCooldownEntryAccessor",
-		"client.RenderTickCounterDynamicAccessor",
+			"iface.ItemCooldownEntryAccessor",
+			"iface.FishingBobberEntityAccessor",
+			"client.RenderTickCounterDynamicAccessor",
 		"client.MixinTitleScreen",
 		"world.MixinItemEntityRenderer",
 		"world.MixinClientWorld"

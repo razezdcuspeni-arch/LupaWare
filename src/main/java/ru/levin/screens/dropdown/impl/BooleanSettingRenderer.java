@@ -38,13 +38,15 @@ public class BooleanSettingRenderer implements SettingRenderer<BooleanSetting>, 
         int onColor = LupaWareTheme.withAlpha(LupaWareTheme.GOLD, 235);
         int bgColor = ColorUtil.interpolateColor(offColor, onColor, progress);
         RenderUtil.drawRoundedRect(ctx.getMatrices(), boxX, boxY, BOX_SIZE, BOX_SIZE, 1.5f, bgColor);
+        RenderUtil.drawRoundedBorder(ctx.getMatrices(), boxX, boxY, BOX_SIZE, BOX_SIZE, 1.5f, 0.35f,
+                progress > 0.15f ? LupaWareTheme.GOLD : LupaWareTheme.BORDER_SOFT);
         if (progress > 0.15f) {
             FontUtils.icomoon[6].drawLeftAligned(ctx.getMatrices(), "S", boxX + 1.2f, boxY + 1.1f, LupaWareTheme.WHITE);
         }
 
         var font = FontUtils.durman[13];
         String text = setting.getName();
-        int textY = (int) (y + (HEIGHT - font.getHeight()) / 2) - 1;
+        int textY = (int) (y + Math.max(1, (HEIGHT - font.getHeight()) / 2));
         float maxTextWidth = width - 16;
         float textWidth = font.getWidth(text);
 
@@ -65,12 +67,12 @@ public class BooleanSettingRenderer implements SettingRenderer<BooleanSetting>, 
         scrollMap.put(setting, offset);
 
         Scissor.push();
-        Scissor.setFromComponentCoordinates(x, textY - 1, maxTextWidth, font.getHeight() + 2);
+        Scissor.setFromComponentCoordinates(x, y, maxTextWidth, HEIGHT);
         font.drawLeftAligned(ctx.getMatrices(), text, x - offset, textY, LupaWareTheme.WHITE);
         Scissor.pop();
 
 
-        boolean isHovered = mX >= boxX && mX <= boxX + BOX_SIZE && mY >= boxY && mY <= boxY + BOX_SIZE;
+        boolean isHovered = mX >= x && mX <= x + width && mY >= y && mY <= y + HEIGHT;
         if (isHovered && setting.getDesc() != null && !setting.getDesc().isEmpty()) {
             DescriptionRenderQueue.add(setting.getDesc(), (float) mX + 6, (float) mY + 6);
         }

@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-@FunctionAnnotation(name = "GuiWalk",keywords = {"InventoryMove","GuiMove"}, type = Type.Player)
+@FunctionAnnotation(name = "GuiWalk", desc = "Позволяет двигаться во время открытия интерфейсов",keywords = {"InventoryMove","GuiMove"}, type = Type.Player)
 public class GuiWalk extends Function {
     public final ModeSetting bypass = new ModeSetting("Тип","Обычный","Обычный","FunTime");
 

@@ -15,7 +15,7 @@ import ru.levin.util.player.TimerUtil;
 
 import java.util.List;
 
-@FunctionAnnotation(name = "ChestStealer", desc = "", type = Type.Player)
+@FunctionAnnotation(name = "ChestStealer", desc = "Автоматически забирает предметы из сундуков", type = Type.Player)
 public class ChestStealer extends Function {
 
     private final ModeSetting mode = new ModeSetting("Тип", "Обычный", "Обычный", "Умный");

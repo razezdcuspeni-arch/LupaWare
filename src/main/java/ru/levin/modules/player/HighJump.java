@@ -9,7 +9,7 @@ import ru.levin.modules.Type;
 import ru.levin.modules.setting.SliderSetting;
 import ru.levin.util.move.MoveUtil;
 
-@FunctionAnnotation(name = "HighJump", type = Type.Move)
+@FunctionAnnotation(name = "HighJump", desc = "Увеличивает высоту прыжка", type = Type.Move)
 public class HighJump extends Function {
 
     private final SliderSetting sila = new SliderSetting("Сила", 2.0f, 0.0f, 5f, 0.1f);
