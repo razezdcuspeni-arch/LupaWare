@@ -268,11 +268,13 @@ public class ClickGUI extends Screen implements IMinecraft {
             drawBlur(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 12, 8, -1);
         }
         RenderUtil.drawRoundedRect(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 12, GUI_COLOR.getRGB());
+        RenderUtil.drawRoundedBorder(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 12, 0.35f,
+                new Color(255, 255, 255, 32).getRGB());
 
         String title = category.name();
         String icon = category.icon;
         FontUtils.sf_bold[20].drawLeftAligned(ctx.getMatrices(), title, x + (PANEL_WIDTH - (int) FontUtils.sf_bold[20].getWidth(title)) / 2, y + TITLE_MARGIN_TOP + 2, Color.WHITE.getRGB());
-        FontUtils.icomoon[20].drawLeftAligned(ctx.getMatrices(), icon, x + (PANEL_WIDTH - (int) FontUtils.sf_bold[20].getWidth(icon)) / 2 - 50, y + TITLE_MARGIN_TOP + 2, Color.WHITE.getRGB());
+        FontUtils.icomoon[20].drawLeftAligned(ctx.getMatrices(), icon, x + (PANEL_WIDTH - (int) FontUtils.icomoon[20].getWidth(icon)) / 2 - 50, y + TITLE_MARGIN_TOP + 2, Color.WHITE.getRGB());
 
         {
             int maxBefore = calculateMaxScroll(category);
@@ -325,6 +327,16 @@ public class ClickGUI extends Screen implements IMinecraft {
             }
             if (clickGUI.strike.get()) {
                 RenderUtil.drawRoundedBorder(ctx.getMatrices(), x + 4, currentY - 1, PANEL_WIDTH - 8, totalHeight - 1, clickGUI.rounding.get().intValue(), 0f, colorModule2);
+            }
+
+            boolean hovered = mouseX >= x + 4 && mouseX <= x + PANEL_WIDTH - 4
+                    && mouseY >= currentY - 1 && mouseY <= currentY + functionHeight - 1
+                    && mouseY >= y + SCROLL_AREA_Y_OFFSET
+                    && mouseY <= y + SCROLL_AREA_Y_OFFSET + SCROLL_AREA_HEIGHT;
+            if (hovered) {
+                RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 4, currentY - 1, PANEL_WIDTH - 8,
+                        functionHeight - 1, clickGUI.rounding.get().intValue(),
+                        new Color(255, 255, 255, 14).getRGB());
             }
 
             String textToRender;
@@ -409,7 +421,7 @@ public class ClickGUI extends Screen implements IMinecraft {
         int maxScroll = calculateMaxScroll(category);
         if (maxScroll <= 0) return;
 
-        int scrollbarWidth = 3;
+        int scrollbarWidth = 4;
         int scrollbarX = x + PANEL_WIDTH - scrollbarWidth - 1;
 
         int scrollbarHeight = SCROLL_AREA_HEIGHT - 30;
@@ -422,7 +434,7 @@ public class ClickGUI extends Screen implements IMinecraft {
         int thumbHeight = Math.max(6, (int) (scrollbarHeight * (SCROLL_AREA_HEIGHT / (float) (SCROLL_AREA_HEIGHT + maxScroll))));
         int thumbY = scrollbarY + (int) (scrollProgress * (scrollbarHeight - thumbHeight));
 
-        int thumbColor = new Color(255, 255, 255, 150).getRGB();
+        int thumbColor = new Color(255, 255, 255, 200).getRGB();
         RenderUtil.drawRoundedRect(ctx.getMatrices(), scrollbarX, thumbY, scrollbarWidth, thumbHeight, 1, thumbColor);
     }
     @Override
