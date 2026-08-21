@@ -7,6 +7,7 @@ import ru.levin.modules.setting.SliderSetting;
 import ru.levin.screens.dropdown.SettingRenderer;
 import ru.levin.manager.fontManager.FontUtils;
 import ru.levin.util.render.RenderUtil;
+import ru.levin.util.render.LupaWareTheme;
 
 import java.awt.*;
 import java.util.Locale;
@@ -28,7 +29,7 @@ public class SliderSettingRenderer implements SettingRenderer<SliderSetting> {
         int barX = x + PADDING;
         int barY = y + height - BAR_HEIGHT - 4;
 
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), barX, barY, barWidth, BAR_HEIGHT, 1, new Color(50, 50, 50, 180).getRGB());
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), barX, barY, barWidth, BAR_HEIGHT, 1, LupaWareTheme.withAlpha(LupaWareTheme.SURFACE_SOFT, 210));
 
         double increment = setting.getIncrement();
         double rawValue = setting.get().doubleValue();
@@ -39,12 +40,12 @@ public class SliderSettingRenderer implements SettingRenderer<SliderSetting> {
         if (setting.circlePos == -1) setting.circlePos = targetProgressWidth;
         setting.circlePos += (targetProgressWidth - setting.circlePos) * 0.2;
 
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), barX, barY, (int) setting.circlePos, BAR_HEIGHT, 1, new Color(220, 220, 220, 220).getRGB());
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), barX, barY, (int) setting.circlePos, BAR_HEIGHT, 1, LupaWareTheme.withAlpha(LupaWareTheme.GOLD, 235));
 
-        FontUtils.durman[13].drawLeftAligned(ctx.getMatrices(), setting.getName(), x + PADDING, y + 2, Color.WHITE.getRGB());
+        FontUtils.durman[13].drawLeftAligned(ctx.getMatrices(), setting.getName(), x + PADDING, y + 2, LupaWareTheme.WHITE);
         String valueText = formatValue(roundedValue, increment);
         int valueWidth = (int) FontUtils.durman[13].getWidth(valueText);
-        FontUtils.durman[13].drawLeftAligned(ctx.getMatrices(), valueText, x + width - valueWidth - PADDING, y + 2, Color.WHITE.getRGB());
+        FontUtils.durman[13].drawLeftAligned(ctx.getMatrices(), valueText, x + width - valueWidth - PADDING, y + 2, LupaWareTheme.WHITE);
         
         if (setting.dragging) {
             setting.circleScale += SCALE_STEP;
@@ -63,7 +64,7 @@ public class SliderSettingRenderer implements SettingRenderer<SliderSetting> {
         matrices.scale(setting.circleScale, setting.circleScale, 1f);
         matrices.translate(-circleX, -circleY, 0);
 
-        RenderUtil.drawCircle(matrices, circleX, circleY, CIRCLE_RADIUS, Color.WHITE.getRGB());
+        RenderUtil.drawCircle(matrices, circleX, circleY, CIRCLE_RADIUS, LupaWareTheme.WHITE);
         matrices.pop();
     }
 

@@ -6,6 +6,7 @@ import ru.levin.modules.setting.TextSetting;
 import ru.levin.screens.dropdown.SettingRenderer;
 import ru.levin.manager.fontManager.FontUtils;
 import ru.levin.util.render.RenderUtil;
+import ru.levin.util.render.LupaWareTheme;
 import ru.levin.util.render.Scissor;
 
 import java.awt.*;
@@ -28,7 +29,7 @@ public class TextSettingRenderer implements SettingRenderer<TextSetting> {
         int fontSizeField = 13;
 
         int nameHeight = (int) FontUtils.durman[fontSizeName].getHeight();
-        FontUtils.durman[fontSizeName].drawLeftAligned(ctx.getMatrices(), setting.getName(), x + PADDING, y, Color.WHITE.getRGB());
+        FontUtils.durman[fontSizeName].drawLeftAligned(ctx.getMatrices(), setting.getName(), x + PADDING, y, LupaWareTheme.WHITE);
 
         String value = setting.getValue();
         int textWidth = (int) FontUtils.durman[fontSizeField].getWidth(value) + HORIZONTAL_PADDING * 2;
@@ -38,7 +39,7 @@ public class TextSettingRenderer implements SettingRenderer<TextSetting> {
         int fieldX = x + PADDING;
         int fieldY = y + nameHeight + 3;
 
-        int bgColor = setting.isFocused() ? new Color(60, 60, 60, 200).getRGB() : new Color(40, 40, 40, 200).getRGB();
+        int bgColor = setting.isFocused() ? LupaWareTheme.withAlpha(LupaWareTheme.GOLD, 85) : LupaWareTheme.withAlpha(LupaWareTheme.SURFACE_SOFT, 215);
         RenderUtil.drawRoundedRect(ctx.getMatrices(), fieldX, fieldY, fieldWidth, fieldHeight - 1, FIELD_RADIUS, bgColor);
 
         float targetScroll = 0f;
@@ -52,7 +53,7 @@ public class TextSettingRenderer implements SettingRenderer<TextSetting> {
 
         Scissor.push();
         Scissor.setFromComponentCoordinates(fieldX + HORIZONTAL_PADDING, fieldY, fieldWidth - HORIZONTAL_PADDING * 2, fieldHeight);
-        FontUtils.durman[fontSizeField].drawLeftAligned(ctx.getMatrices(), value, fieldX + HORIZONTAL_PADDING + scrollOffset, fieldY + VERTICAL_PADDING - 0.6f, Color.WHITE.getRGB());
+        FontUtils.durman[fontSizeField].drawLeftAligned(ctx.getMatrices(), value, fieldX + HORIZONTAL_PADDING + scrollOffset, fieldY + VERTICAL_PADDING - 0.6f, LupaWareTheme.WHITE);
         Scissor.pop();
 
         if (setting.isFocused()) {
@@ -63,7 +64,7 @@ public class TextSettingRenderer implements SettingRenderer<TextSetting> {
             }
             if (setting.cursorVisible) {
                 float cursorPos = FontUtils.durman[fontSizeField].getWidth(value.substring(0, setting.getCursorPosition()));
-                RenderUtil.drawRoundedRect(ctx.getMatrices(), fieldX + HORIZONTAL_PADDING + cursorPos + scrollOffset, fieldY + VERTICAL_PADDING, 1, FontUtils.durman[fontSizeField].getHeight(), 0, Color.WHITE.getRGB());
+                RenderUtil.drawRoundedRect(ctx.getMatrices(), fieldX + HORIZONTAL_PADDING + cursorPos + scrollOffset, fieldY + VERTICAL_PADDING, 1, FontUtils.durman[fontSizeField].getHeight(), 0, LupaWareTheme.WHITE);
             }
         }
     }

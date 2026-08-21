@@ -27,6 +27,7 @@ import ru.levin.manager.fontManager.FontUtils;
 import ru.levin.util.math.MathUtil;
 import ru.levin.util.render.RenderAddon;
 import ru.levin.util.render.RenderUtil;
+import ru.levin.util.render.LupaWareTheme;
 import ru.levin.util.render.Scissor;
 import ru.levin.util.render.providers.ResourceProvider;
 import java.awt.*;
@@ -44,7 +45,7 @@ public class ClickGUI extends Screen implements IMinecraft {
     private final int RAIL_WIDTH = 164;
     private Type selectedCategory = Type.Combat;
 
-    private final Color GUI_COLOR = new Color(12, 12, 12, 245);
+    private final Color GUI_COLOR = new Color(LupaWareTheme.SURFACE, true);
 
     private final int TITLE_MARGIN_TOP = 9;
     private final int TITLE_HEIGHT = 42;
@@ -172,9 +173,9 @@ public class ClickGUI extends Screen implements IMinecraft {
 
     private void renderNavigationRail(DrawContext ctx, int x, int y, int mouseX, int mouseY) {
         int railHeight = PANEL_HEIGHT;
-        int rail = ColorUtil.rgba(13, 22, 37, 248);
-        int border = ColorUtil.rgba(62, 91, 116, 210);
-        int accent = ColorUtil.rgba(95, 229, 211, 255);
+        int rail = LupaWareTheme.SURFACE;
+        int border = LupaWareTheme.BORDER;
+        int accent = LupaWareTheme.GOLD;
         RenderUtil.drawRoundedRect(ctx.getMatrices(), x, y, RAIL_WIDTH, railHeight, 18, rail);
         RenderUtil.drawRoundedBorder(ctx.getMatrices(), x, y, RAIL_WIDTH, railHeight, 18, 1f, border);
         RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 18, y + 18, 42, 42, 13, accent);
@@ -271,10 +272,10 @@ public class ClickGUI extends Screen implements IMinecraft {
 
     private void renderPanel(DrawContext ctx, int x, int y, Type category, int mouseX, int mouseY) {
         ru.levin.modules.render.ClickGUI clickGUI = Manager.FUNCTION_MANAGER.clickGUI;
-        int panelColor = new Color(14, 25, 42, 246).getRGB();
-        int headerColor = new Color(22, 42, 62, 250).getRGB();
-        int borderColor = new Color(74, 112, 135, 220).getRGB();
-        int accentColor = ColorUtil.rgba(95, 229, 211, 255);
+        int panelColor = LupaWareTheme.SURFACE;
+        int headerColor = LupaWareTheme.SURFACE_RAISED;
+        int borderColor = LupaWareTheme.BORDER;
+        int accentColor = LupaWareTheme.GOLD;
 
         if (clickGUI.blur.get() && clickGUI.blurSetting.get("Панели")) {
             drawBlur(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 18, 12, -1);
@@ -289,8 +290,8 @@ public class ClickGUI extends Screen implements IMinecraft {
         String icon = category.icon;
         FontUtils.icomoon[18].drawLeftAligned(ctx.getMatrices(), icon, x + 40, y + 25, accentColor);
         FontUtils.sf_bold[22].drawLeftAligned(ctx.getMatrices(), title, x + 70, y + 20, Color.WHITE.getRGB());
-        FontUtils.sf_medium[11].drawLeftAligned(ctx.getMatrices(), "MODULE LIBRARY  /  RIGHT CLICK FOR SETTINGS", x + 70, y + 48, ColorUtil.rgba(157, 189, 202, 255));
-        FontUtils.sf_medium[11].drawRightAligned(ctx.getMatrices(), Manager.FUNCTION_MANAGER.getFunctions(category).size() + " MODULES", x + PANEL_WIDTH - 24, y + 28, ColorUtil.rgba(170, 201, 211, 255));
+        FontUtils.sf_medium[11].drawLeftAligned(ctx.getMatrices(), "MODULE LIBRARY  /  RIGHT CLICK FOR SETTINGS", x + 70, y + 48, LupaWareTheme.MUTED);
+        FontUtils.sf_medium[11].drawRightAligned(ctx.getMatrices(), Manager.FUNCTION_MANAGER.getFunctions(category).size() + " MODULES", x + PANEL_WIDTH - 24, y + 28, LupaWareTheme.MUTED);
 
         {
             int maxBefore = calculateMaxScroll(category);
@@ -331,15 +332,15 @@ public class ClickGUI extends Screen implements IMinecraft {
                 continue;
             }
 
-            int col1 = f.state ? Color.WHITE.getRGB() : ColorUtil.rgba(183, 203, 214, 255);
+            int col1 = f.state ? Color.WHITE.getRGB() : LupaWareTheme.MUTED;
             int col2 = col1;
 
-            int colorModule = f.state ? new Color(31, 88, 87, clickGUI.alphaModules.get().intValue()).getRGB() : new Color(20, 38, 57, 225).getRGB();
+            int colorModule = f.state ? LupaWareTheme.withAlpha(LupaWareTheme.SURFACE_SOFT, clickGUI.alphaModules.get().intValue()) : LupaWareTheme.withAlpha(LupaWareTheme.SURFACE_RAISED, 225);
             int colorModule2 = colorModule;
 
             if (clickGUI.filling.get() || f.state) {
                 RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 18, currentY + 3, PANEL_WIDTH - 36, Math.max(29, totalHeight - 7), 11, colorModule2);
-                RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 31, currentY + 14, 5, 9, 2, f.state ? accentColor : ColorUtil.rgba(87, 121, 140, 255));
+                RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 31, currentY + 14, 5, 9, 2, f.state ? accentColor : LupaWareTheme.DIM);
             }
 
             String textToRender;
@@ -408,7 +409,7 @@ public class ClickGUI extends Screen implements IMinecraft {
                 float angleRad = (float) Math.toRadians(90.0f * currentProgress);
                 Quaternionf rotation = new Quaternionf().fromAxisAngleRad(new Vector3f(0, 0, 1), angleRad);
                 ctx.getMatrices().multiply(rotation);
-                FontUtils.sf_medium[18].drawLeftAligned(ctx.getMatrices(), "+", -4, -FontUtils.sf_medium[18].getHeight() / 2, f.state ? accentColor : ColorUtil.rgba(148, 180, 194, 255));
+                FontUtils.sf_medium[18].drawLeftAligned(ctx.getMatrices(), "+", -4, -FontUtils.sf_medium[18].getHeight() / 2, f.state ? accentColor : LupaWareTheme.MUTED);
                 ctx.getMatrices().pop();
             }
 
@@ -430,14 +431,14 @@ public class ClickGUI extends Screen implements IMinecraft {
         int scrollbarHeight = SCROLL_AREA_HEIGHT - 30;
         int scrollbarY = y + SCROLL_AREA_Y_OFFSET + 15;
 
-        int scrollbarBgColor = new Color(0, 0, 0, 50).getRGB();
+        int scrollbarBgColor = LupaWareTheme.withAlpha(LupaWareTheme.INK, 90);
         RenderUtil.drawRoundedRect(ctx.getMatrices(), scrollbarX, scrollbarY, scrollbarWidth, scrollbarHeight, 1, scrollbarBgColor);
 
         float scrollProgress = offset / maxScroll;
         int thumbHeight = Math.max(6, (int) (scrollbarHeight * (SCROLL_AREA_HEIGHT / (float) (SCROLL_AREA_HEIGHT + maxScroll))));
         int thumbY = scrollbarY + (int) (scrollProgress * (scrollbarHeight - thumbHeight));
 
-        int thumbColor = new Color(255, 255, 255, 150).getRGB();
+        int thumbColor = LupaWareTheme.withAlpha(LupaWareTheme.GOLD, 190);
         RenderUtil.drawRoundedRect(ctx.getMatrices(), scrollbarX, thumbY, scrollbarWidth, thumbHeight, 1, thumbColor);
     }
     @Override
@@ -669,7 +670,7 @@ public class ClickGUI extends Screen implements IMinecraft {
 
         if (searchState.text.isEmpty() && !searchState.focused) {
             displayText = "Поиск...";
-            textColor = new Color(255, 255, 255, 120).getRGB();
+            textColor = LupaWareTheme.withAlpha(LupaWareTheme.WHITE, 120);
             int textWidth = (int) FontUtils.sf_medium[18].getWidth(displayText);
             textX = searchX + (searchWidth - textWidth) / 2;
         } else {

@@ -8,6 +8,7 @@ import ru.levin.screens.dropdown.SettingRenderer;
 import ru.levin.util.color.ColorUtil;
 import ru.levin.manager.fontManager.FontUtils;
 import ru.levin.util.render.RenderUtil;
+import ru.levin.util.render.LupaWareTheme;
 import ru.levin.util.render.Scissor;
 
 import java.awt.*;
@@ -57,7 +58,7 @@ public class ModeSettingRenderer implements SettingRenderer<ModeSetting>, IMinec
         double mouseX = mc.mouse.getX() / mc.getWindow().getScaleFactor();
         double mouseY = mc.mouse.getY() / mc.getWindow().getScaleFactor();
 
-        FontUtils.durman[13].drawLeftAligned(ctx.getMatrices(), setting.getName(), x, y, Color.WHITE.getRGB());
+        FontUtils.durman[13].drawLeftAligned(ctx.getMatrices(), setting.getName(), x, y, LupaWareTheme.WHITE);
 
         int startX = x + START_X_OFFSET;
         int spacing = 4;
@@ -86,8 +87,8 @@ public class ModeSettingRenderer implements SettingRenderer<ModeSetting>, IMinec
             }
             hoverProgress.put(mode, hoverProg);
 
-            Color baseColor = new Color(30, 30, 30, 180);
-            int selectedColor = new Color(220, 220, 220, 220).getRGB();
+            Color baseColor = new Color(LupaWareTheme.SURFACE_SOFT, true);
+            int selectedColor = LupaWareTheme.withAlpha(LupaWareTheme.GOLD, 235);
 
             int bgColor;
             if (selected) {
@@ -96,7 +97,7 @@ public class ModeSettingRenderer implements SettingRenderer<ModeSetting>, IMinec
                 bgColor = ColorUtil.interpolateColor(baseColor.getRGB(), baseColor.getRGB(), hoverProg);
             }
 
-            Color baseTextColor = new Color(200, 200, 200);
+            Color baseTextColor = new Color(LupaWareTheme.MUTED, true);
             Color hoverTextColor = Color.WHITE;
             int textColor = ColorUtil.interpolateColor(baseTextColor.getRGB(), hoverTextColor.getRGB(), hoverProg);
 

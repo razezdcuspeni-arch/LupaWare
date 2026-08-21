@@ -7,6 +7,7 @@ import ru.levin.modules.setting.BindSetting;
 import ru.levin.screens.dropdown.SettingRenderer;
 import ru.levin.manager.fontManager.FontUtils;
 import ru.levin.util.render.RenderUtil;
+import ru.levin.util.render.LupaWareTheme;
 import ru.levin.util.render.Scissor;
 
 import java.awt.*;
@@ -68,12 +69,12 @@ public class BindSettingRenderer implements SettingRenderer<BindSetting>, IMinec
 
         Scissor.push();
         Scissor.setFromComponentCoordinates(nameAreaX, y + (HEIGHT - FontUtils.durman[fontSizeName].getHeight()) / 2 - 1, nameAreaWidth, FontUtils.durman[fontSizeName].getHeight() + 2);
-        FontUtils.durman[fontSizeName].drawLeftAligned(ctx.getMatrices(), name, nameAreaX - scrollOffset, y + (HEIGHT - FontUtils.durman[fontSizeName].getHeight()) / 2, Color.WHITE.getRGB());
+        FontUtils.durman[fontSizeName].drawLeftAligned(ctx.getMatrices(), name, nameAreaX - scrollOffset, y + (HEIGHT - FontUtils.durman[fontSizeName].getHeight()) / 2, LupaWareTheme.WHITE);
         Scissor.pop();
 
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), buttonX, buttonY, buttonWidth, buttonHeight, BUTTON_RADIUS, new Color(40, 40, 40, 200).getRGB());
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), buttonX, buttonY, buttonWidth, buttonHeight, BUTTON_RADIUS, LupaWareTheme.withAlpha(LupaWareTheme.SURFACE_SOFT, 215));
 
-        FontUtils.durman[fontSizeButton].centeredDraw(ctx.getMatrices(), displayText, buttonX + buttonWidth / 2f, buttonY + (buttonHeight - FontUtils.durman[fontSizeButton].getHeight()) / 2f, Color.WHITE.getRGB());
+        FontUtils.durman[fontSizeButton].centeredDraw(ctx.getMatrices(), displayText, buttonX + buttonWidth / 2f, buttonY + (buttonHeight - FontUtils.durman[fontSizeButton].getHeight()) / 2f, LupaWareTheme.WHITE);
     }
 
 

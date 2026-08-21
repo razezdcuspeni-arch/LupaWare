@@ -9,6 +9,7 @@ import ru.levin.screens.dropdown.SettingRenderer;
 import ru.levin.manager.fontManager.FontUtils;
 import ru.levin.util.color.ColorUtil;
 import ru.levin.util.render.RenderUtil;
+import ru.levin.util.render.LupaWareTheme;
 import ru.levin.util.render.Scissor;
 
 import java.awt.*;
@@ -34,12 +35,12 @@ public class BooleanSettingRenderer implements SettingRenderer<BooleanSetting>, 
         int switchX = x + width - WIDTH + 4;
         int switchY = y + (HEIGHT - SWITCH_HEIGHT) / 2 - 2;
 
-        Color offColor = new Color(50, 50, 50, 200);
-        int onColor = new Color(230, 230, 230, 220).getRGB();
+        Color offColor = new Color(LupaWareTheme.SURFACE_SOFT, true);
+        int onColor = LupaWareTheme.withAlpha(LupaWareTheme.GOLD, 235);
         int bgColor = ColorUtil.interpolateColor(offColor.getRGB(), onColor, progress);
 
         RenderUtil.drawRoundedRect(ctx.getMatrices(), switchX, switchY, WIDTH, SWITCH_HEIGHT, 5, bgColor);
-        RenderUtil.drawCircle(ctx.getMatrices(), switchX + 3 + (WIDTH - KNOB_RADIUS - 5) * progress + KNOB_RADIUS / 2f, switchY + (SWITCH_HEIGHT - KNOB_RADIUS) / 2f + KNOB_RADIUS / 2f, KNOB_RADIUS, Color.WHITE.getRGB());
+        RenderUtil.drawCircle(ctx.getMatrices(), switchX + 3 + (WIDTH - KNOB_RADIUS - 5) * progress + KNOB_RADIUS / 2f, switchY + (SWITCH_HEIGHT - KNOB_RADIUS) / 2f + KNOB_RADIUS / 2f, KNOB_RADIUS, LupaWareTheme.WHITE);
 
         var font = FontUtils.durman[13];
         String text = setting.getName();
@@ -65,7 +66,7 @@ public class BooleanSettingRenderer implements SettingRenderer<BooleanSetting>, 
 
         Scissor.push();
         Scissor.setFromComponentCoordinates(x, textY - 1, maxTextWidth, font.getHeight() + 2);
-        font.drawLeftAligned(ctx.getMatrices(), text, x - offset, textY, Color.WHITE.getRGB());
+        font.drawLeftAligned(ctx.getMatrices(), text, x - offset, textY, LupaWareTheme.WHITE);
         Scissor.pop();
 
 

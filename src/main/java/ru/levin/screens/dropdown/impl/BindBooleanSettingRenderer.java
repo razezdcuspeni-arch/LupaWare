@@ -10,6 +10,7 @@ import ru.levin.screens.dropdown.SettingRenderer;
 import ru.levin.util.color.ColorUtil;
 import ru.levin.manager.fontManager.FontUtils;
 import ru.levin.util.render.RenderUtil;
+import ru.levin.util.render.LupaWareTheme;
 import ru.levin.util.render.Scissor;
 
 import java.awt.*;
@@ -62,7 +63,7 @@ public class BindBooleanSettingRenderer implements SettingRenderer<BindBooleanSe
             int bindBoxY = y + (HEIGHT - bindBoxHeight) / 2;
 
             int bindBoxX = (int) (bindBoxTargetX - (bindBoxWidth + 10) * (1 - bindBoxProgress));
-            RenderUtil.drawRoundedRect(ctx.getMatrices(), bindBoxX, bindBoxY, bindBoxWidth, bindBoxHeight, 3, new Color(40, 40, 40, 200).getRGB());
+            RenderUtil.drawRoundedRect(ctx.getMatrices(), bindBoxX, bindBoxY, bindBoxWidth, bindBoxHeight, 3, LupaWareTheme.withAlpha(LupaWareTheme.SURFACE_SOFT, 215));
 
             float maxTextWidth = bindBoxWidth - 10;
             boolean isTextHovered = RenderUtil.isInRegion(mouseX, mouseY, bindBoxX, bindBoxY, bindBoxWidth, bindBoxHeight);
@@ -75,13 +76,13 @@ public class BindBooleanSettingRenderer implements SettingRenderer<BindBooleanSe
             }
             scrollOffsetMap.put(setting, offset);
 
-            FontUtils.durman[13].drawLeftAligned(ctx.getMatrices(), displayText, bindBoxX + 5 - offset, bindBoxY + (bindBoxHeight - FontUtils.durman[13].getHeight()) / 2f, Color.WHITE.getRGB());
+            FontUtils.durman[13].drawLeftAligned(ctx.getMatrices(), displayText, bindBoxX + 5 - offset, bindBoxY + (bindBoxHeight - FontUtils.durman[13].getHeight()) / 2f, LupaWareTheme.WHITE);
 
             int closeSize = 12;
             int paddingRightClose = 8;
             int closeX = x + width - closeSize - paddingRightClose + 10;
             int closeY = bindBoxY + (bindBoxHeight - closeSize) / 2 - 1;
-            RenderUtil.drawTexture(ctx.getMatrices(), "images/gui/fl.png", closeX, closeY, closeSize, closeSize, 0, new Color(180, 180, 180).getRGB());
+            RenderUtil.drawTexture(ctx.getMatrices(), "images/gui/fl.png", closeX, closeY, closeSize, closeSize, 0, LupaWareTheme.MUTED);
 
             return;
         } else {
@@ -93,15 +94,15 @@ public class BindBooleanSettingRenderer implements SettingRenderer<BindBooleanSe
 
         int switchX = x + width - SWITCH_WIDTH + 4;
         int switchY = y + (HEIGHT - SWITCH_HEIGHT) / 2 - 2;
-        Color offColor = new Color(50, 50, 50, 200);
-        int onColor = new Color(230, 230, 230, 220).getRGB();
+        Color offColor = new Color(LupaWareTheme.SURFACE_SOFT, true);
+        int onColor = LupaWareTheme.withAlpha(LupaWareTheme.GOLD, 235);
         int bgColor = ColorUtil.interpolateColor(offColor.getRGB(), onColor, progress);
 
         RenderUtil.drawRoundedRect(ctx.getMatrices(), switchX, switchY, SWITCH_WIDTH, SWITCH_HEIGHT, 5, bgColor);
         int knobRadius = 8;
         float knobX = switchX + 3 + (SWITCH_WIDTH - knobRadius - 5) * progress;
         float knobY = switchY + (SWITCH_HEIGHT - knobRadius) / 2f;
-        RenderUtil.drawCircle(ctx.getMatrices(), knobX + knobRadius / 2f, knobY + knobRadius / 2f, knobRadius, Color.WHITE.getRGB());
+        RenderUtil.drawCircle(ctx.getMatrices(), knobX + knobRadius / 2f, knobY + knobRadius / 2f, knobRadius, LupaWareTheme.WHITE);
 
         int textX = x;
         int textY = (int) (y + (HEIGHT - FontUtils.durman[13].getHeight()) / 2) - 2;
@@ -117,10 +118,10 @@ public class BindBooleanSettingRenderer implements SettingRenderer<BindBooleanSe
 
         Scissor.push();
         Scissor.setFromComponentCoordinates(textX, textY - 1, maxTextWidth, FontUtils.durman[13].getHeight() + 2);
-        FontUtils.durman[13].drawLeftAligned(ctx.getMatrices(), text, textX - offset, textY, Color.WHITE.getRGB());
+        FontUtils.durman[13].drawLeftAligned(ctx.getMatrices(), text, textX - offset, textY, LupaWareTheme.WHITE);
         Scissor.pop();
 
-        FontUtils.iconsWex[24].centeredDraw(ctx.getMatrices(), "H", x + width - 25, y + HEIGHT / 2f - 6, Color.WHITE.getRGB());
+        FontUtils.iconsWex[24].centeredDraw(ctx.getMatrices(), "H", x + width - 25, y + HEIGHT / 2f - 6, LupaWareTheme.WHITE);
 
 
         double scale = mc.getWindow().getScaleFactor();
