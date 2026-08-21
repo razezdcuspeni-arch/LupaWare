@@ -6,7 +6,7 @@ import ru.levin.modules.FunctionAnnotation;
 import ru.levin.modules.Type;
 
 /** Enables the vanilla three-dimensional first-person arm renderer. */
-@FunctionAnnotation(name = "Hol My Items", desc = "Объёмные 3D-руки в первом лице", type = Type.Render)
+@FunctionAnnotation(name = "Hold My Items", desc = "Объёмные 3D-руки в первом лице", type = Type.Render)
 public class HoldMyItems extends Function {
     public HoldMyItems() {
     }

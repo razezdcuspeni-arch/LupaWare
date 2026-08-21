@@ -104,9 +104,6 @@ public final class LupaWare implements ModInitializer {
 
 			ColorUtil.loadImage(ResourceProvider.color_image);
 
-			if (Manager.FUNCTION_MANAGER.clientSounds.check.get("Вход в клиент")) {
-				AudioUtil.playSound("join.wav");
-			}
 			initialized = true;
 		} catch (Exception e) {
 			e.printStackTrace();

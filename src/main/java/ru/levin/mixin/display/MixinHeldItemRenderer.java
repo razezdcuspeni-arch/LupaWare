@@ -17,9 +17,10 @@ import ru.levin.manager.Manager;
 public abstract class MixinHeldItemRenderer {
     @Inject(method = "renderFirstPersonItem", at = @At(value = "HEAD"), cancellable = true)
     private void onRenderItemHook(AbstractClientPlayerEntity player, float tickDelta, float pitch, Hand hand, float swingProgress, ItemStack item, float equipProgress, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
-        if (Manager.FUNCTION_MANAGER.holdMyItems.isState()) {
-            // Keep the complete vanilla first-person renderer active. It renders the
-            // arm and held item in 3D; the custom swing path below must not cancel it.
+        // Hold My Items explicitly keeps the vanilla first-person renderer active.
+        // When custom swing animations are disabled, vanilla rendering must also remain active.
+        if (Manager.FUNCTION_MANAGER.holdMyItems.isState()
+                || !Manager.FUNCTION_MANAGER.swingAnimations.isState()) {
             return;
         }
         if (!(item.isEmpty()) && !(item.getItem() instanceof FilledMapItem)) {
