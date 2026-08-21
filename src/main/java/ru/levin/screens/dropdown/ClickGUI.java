@@ -38,19 +38,21 @@ public class ClickGUI extends Screen implements IMinecraft {
     private boolean isClose;
     private boolean hudLayoutMode = false;
 
-    private final int PANEL_WIDTH = 188;
-    private final int PANEL_HEIGHT = 414;
-    private final int PANEL_MARGIN = 9;
+    private final int PANEL_WIDTH = 480;
+    private final int PANEL_HEIGHT = 500;
+    private final int PANEL_MARGIN = 0;
+    private final int RAIL_WIDTH = 164;
+    private Type selectedCategory = Type.Combat;
 
     private final Color GUI_COLOR = new Color(12, 12, 12, 245);
 
     private final int TITLE_MARGIN_TOP = 9;
     private final int TITLE_HEIGHT = 42;
 
-    private final int FUNCTION_HEIGHT = 28;
+    private final int FUNCTION_HEIGHT = 34;
 
-    private final int SCROLL_AREA_Y_OFFSET = TITLE_MARGIN_TOP + TITLE_HEIGHT;
-    private final int SCROLL_AREA_HEIGHT = PANEL_HEIGHT - SCROLL_AREA_Y_OFFSET - 5;
+    private final int SCROLL_AREA_Y_OFFSET = 96;
+    private final int SCROLL_AREA_HEIGHT = PANEL_HEIGHT - SCROLL_AREA_Y_OFFSET - 10;
 
     private final Set<Type> renderCategories = EnumSet.of(Type.Combat, Type.Move, Type.Render, Type.Player, Type.Misc);
     private static final Map<Type, Float> scrollOffsets = new HashMap<>();
@@ -142,44 +144,57 @@ public class ClickGUI extends Screen implements IMinecraft {
             return;
         }
         if (animation <= 0.01) return;
-
         super.render(ctx, mouseX, mouseY, delta);
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), 16, 16, 36, 36, 10, Color.WHITE.getRGB());
-        FontUtils.sf_bold[15].centeredDraw(ctx.getMatrices(), "LW", 34, 26, Color.BLACK.getRGB());
-        FontUtils.sf_bold[18].drawLeftAligned(ctx.getMatrices(), "LupaWare", 62, 17, Color.WHITE.getRGB());
-        FontUtils.sf_medium[10].drawLeftAligned(ctx.getMatrices(), "CONTROL CENTER  /  RIGHT SHIFT", 63, 37, new Color(145, 145, 145).getRGB());
         ctx.getMatrices().push();
+        RenderAddon.sizeAnimation(ctx.getMatrices(), width / 2, height / 2, animation);
+
+        int panelX = (width - (RAIL_WIDTH + PANEL_WIDTH + 18)) / 2 + RAIL_WIDTH + 18;
+        int panelY = (height - PANEL_HEIGHT) / 2;
+        int railX = panelX - RAIL_WIDTH - 18;
+        renderNavigationRail(ctx, railX, panelY, mouseX, mouseY);
 
         for (Type category : renderCategories) {
             float target = scrollTargets.get(category);
             float current = scrollOffsets.get(category);
-            float newOffset = MathUtil.lerp(current, target, SCROLL_LERP_FACTOR);
-            scrollOffsets.put(category, newOffset);
+            scrollOffsets.put(category, MathUtil.lerp(current, target, SCROLL_LERP_FACTOR));
         }
-
-        int totalWidth = renderCategories.size() * (PANEL_WIDTH + PANEL_MARGIN) - PANEL_MARGIN;
-        int startX = (width - totalWidth) / 2;
-        int startY = (height - PANEL_HEIGHT) / 2;
-
-        RenderAddon.sizeAnimation(ctx.getMatrices(), width / 2, height / 2, animation);
-
-        int idx = 0;
-        for (Type category : renderCategories) {
-            renderPanel(ctx, startX + idx++ * (PANEL_WIDTH + PANEL_MARGIN), startY, category, mouseX, mouseY);
-        }
-
-        Function hoveredFunction = getHoveredFunction(mouseX, mouseY, startX, startY);
-        if (hoveredFunction != null && hoveredFunction.desc != null && !hoveredFunction.desc.isEmpty()) {
-            drawDescription(ctx, hoveredFunction.desc, startY);
-        }
+        renderPanel(ctx, panelX, panelY, selectedCategory, mouseX, mouseY);
+        Function hoveredFunction = getHoveredFunction(mouseX, mouseY, panelX, panelY);
+        if (hoveredFunction != null && hoveredFunction.desc != null && !hoveredFunction.desc.isEmpty()) drawDescription(ctx, hoveredFunction.desc, panelY);
         DescriptionRenderQueue.renderAll(ctx);
-
         renderSearchField(ctx);
         renderButtomTheme(ctx, mouseX, mouseY);
-        renderTheme(ctx,mouseX,mouseY);
+        renderTheme(ctx, mouseX, mouseY);
         renderExpiryText(ctx);
         renderHudLayoutOverlay(ctx, mouseX, mouseY);
         ctx.getMatrices().pop();
+    }
+
+    private void renderNavigationRail(DrawContext ctx, int x, int y, int mouseX, int mouseY) {
+        int railHeight = PANEL_HEIGHT;
+        int rail = ColorUtil.rgba(13, 22, 37, 248);
+        int border = ColorUtil.rgba(62, 91, 116, 210);
+        int accent = ColorUtil.rgba(95, 229, 211, 255);
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), x, y, RAIL_WIDTH, railHeight, 18, rail);
+        RenderUtil.drawRoundedBorder(ctx.getMatrices(), x, y, RAIL_WIDTH, railHeight, 18, 1f, border);
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 18, y + 18, 42, 42, 13, accent);
+        FontUtils.sf_bold[17].centeredDraw(ctx.getMatrices(), "LW", x + 39, y + 29, ColorUtil.rgba(8, 22, 29, 255));
+        FontUtils.sf_bold[17].drawLeftAligned(ctx.getMatrices(), "LUPAWARE", x + 18, y + 76, Color.WHITE.getRGB());
+        FontUtils.sf_medium[9].drawLeftAligned(ctx.getMatrices(), "CONTROL DECK", x + 18, y + 96, ColorUtil.rgba(147, 176, 194, 255));
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 18, y + 119, RAIL_WIDTH - 36, 1, 0, ColorUtil.rgba(63, 91, 114, 180));
+        FontUtils.sf_medium[9].drawLeftAligned(ctx.getMatrices(), "CATEGORIES", x + 18, y + 137, ColorUtil.rgba(132, 163, 182, 255));
+        int rowY = y + 160;
+        for (Type category : renderCategories) {
+            boolean active = category == selectedCategory;
+            boolean hovered = mouseX >= x + 10 && mouseX <= x + RAIL_WIDTH - 10 && mouseY >= rowY && mouseY <= rowY + 38;
+            int rowColor = active ? ColorUtil.rgba(38, 77, 82, 235) : (hovered ? ColorUtil.rgba(26, 48, 67, 230) : ColorUtil.rgba(0, 0, 0, 0));
+            if (rowColor != 0) RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 10, rowY, RAIL_WIDTH - 20, 38, 10, rowColor);
+            if (active) RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 10, rowY + 8, 3, 22, 2, accent);
+            FontUtils.icomoon[15].drawLeftAligned(ctx.getMatrices(), category.icon, x + 22, rowY + 11, active ? accent : ColorUtil.rgba(157, 182, 197, 255));
+            FontUtils.sf_medium[12].drawLeftAligned(ctx.getMatrices(), category.name().toUpperCase(), x + 48, rowY + 11, active ? Color.WHITE.getRGB() : ColorUtil.rgba(189, 205, 215, 255));
+            rowY += 43;
+        }
+        FontUtils.sf_medium[9].drawLeftAligned(ctx.getMatrices(), "H  HUD LAYOUT", x + 18, y + railHeight - 36, ColorUtil.rgba(147, 176, 194, 255));
     }
     private void renderHudLayoutOverlay(DrawContext ctx, int mouseX, int mouseY) {
         if (!hudLayoutMode) return;
@@ -194,63 +209,34 @@ public class ClickGUI extends Screen implements IMinecraft {
         RenderUtil.drawRoundedBorder(ctx.getMatrices(), 10, 10, 235, 22, 6, 1f, ColorUtil.applyAlpha(accent, 180));
     }
 
-    private Function getHoveredFunction(int mouseX, int mouseY, int startX, int startY) {
-        int idx = 0;
-        for (Type category : renderCategories) {
-            int panelX = startX + idx++ * (PANEL_WIDTH + PANEL_MARGIN);
-
-            if (mouseX < panelX || mouseX > panelX + PANEL_WIDTH || mouseY < startY || mouseY > startY + PANEL_HEIGHT) {
-                continue;
-            }
-
-            float offset = scrollOffsets.get(category);
-
-            float currentY = startY + SCROLL_AREA_Y_OFFSET - offset;
-
-            for (Function function : Manager.FUNCTION_MANAGER.getFunctions(category)) {
-                if (!isFunctionVisible(function)) continue;
-
-                int functionHeight = FUNCTION_HEIGHT;
-
-                int fullSettingsHeight = computeSettingsHeight(function);
-                float progress = expandProgress.getOrDefault(function, function.expanded ? 1f : 0f);
-                int animatedSettingsHeight = (int) Math.round(fullSettingsHeight * progress);
-
-                int totalHeight = functionHeight + animatedSettingsHeight;
-
-                if (mouseX >= panelX && mouseX <= panelX + PANEL_WIDTH && mouseY >= currentY && mouseY <= currentY + functionHeight && mouseY >= startY + SCROLL_AREA_Y_OFFSET &&
-                        mouseY <= startY + SCROLL_AREA_Y_OFFSET + SCROLL_AREA_HEIGHT) {
-                    return function;
+    private Function getHoveredFunction(int mouseX, int mouseY, int panelX, int panelY) {
+        if (mouseX < panelX || mouseX > panelX + PANEL_WIDTH || mouseY < panelY || mouseY > panelY + PANEL_HEIGHT) return null;
+        float offset = scrollOffsets.get(selectedCategory);
+        float currentY = panelY + SCROLL_AREA_Y_OFFSET - offset;
+        for (Function function : Manager.FUNCTION_MANAGER.getFunctions(selectedCategory)) {
+            if (!isFunctionVisible(function)) continue;
+            int functionHeight = FUNCTION_HEIGHT;
+            int fullSettingsHeight = computeSettingsHeight(function);
+            float progress = expandProgress.getOrDefault(function, function.expanded ? 1f : 0f);
+            int animatedSettingsHeight = (int) Math.round(fullSettingsHeight * progress);
+            int totalHeight = functionHeight + animatedSettingsHeight;
+            if (mouseX >= panelX && mouseX <= panelX + PANEL_WIDTH && mouseY >= currentY && mouseY <= currentY + functionHeight && mouseY >= panelY + SCROLL_AREA_Y_OFFSET && mouseY <= panelY + SCROLL_AREA_Y_OFFSET + SCROLL_AREA_HEIGHT) return function;
+            if (animatedSettingsHeight > 0) {
+                float settingY = currentY + functionHeight;
+                int remaining = animatedSettingsHeight;
+                for (Setting setting : function.getSettings()) {
+                    if (!setting.isVisible()) continue;
+                    int settingHeight = getSettingRendererHeight(setting, PANEL_WIDTH - 28);
+                    if (settingHeight <= 0) continue;
+                    int visible = Math.max(0, Math.min(settingHeight, remaining));
+                    if (visible <= 0) break;
+                    if (mouseX >= panelX && mouseX <= panelX + PANEL_WIDTH && mouseY >= settingY && mouseY <= settingY + visible && mouseY >= panelY + SCROLL_AREA_Y_OFFSET && mouseY <= panelY + SCROLL_AREA_Y_OFFSET + SCROLL_AREA_HEIGHT) return function;
+                    settingY += settingHeight + 1;
+                    remaining -= settingHeight + 1;
+                    if (remaining <= 0) break;
                 }
-
-                if (animatedSettingsHeight > 0) {
-                    float settingY = currentY + functionHeight;
-                    int remaining = animatedSettingsHeight;
-
-                    for (Setting setting : function.getSettings()) {
-                        if (!setting.isVisible()) continue;
-
-                        int settingHeight = getSettingRendererHeight(setting, PANEL_WIDTH - 20);
-                        if (settingHeight <= 0) continue;
-
-                        int visible = Math.max(0, Math.min(settingHeight, remaining));
-                        if (visible <= 0) break;
-
-                        if (mouseX >= panelX && mouseX <= panelX + PANEL_WIDTH &&
-                                mouseY >= settingY && mouseY <= settingY + visible &&
-                                mouseY >= startY + SCROLL_AREA_Y_OFFSET &&
-                                mouseY <= startY + SCROLL_AREA_Y_OFFSET + SCROLL_AREA_HEIGHT) {
-                            return function;
-                        }
-
-                        settingY += settingHeight + 1;
-                        remaining -= (settingHeight + 1);
-                        if (remaining <= 0) break;
-                    }
-                }
-
-                currentY += totalHeight;
             }
+            currentY += totalHeight;
         }
         return null;
     }
@@ -285,25 +271,26 @@ public class ClickGUI extends Screen implements IMinecraft {
 
     private void renderPanel(DrawContext ctx, int x, int y, Type category, int mouseX, int mouseY) {
         ru.levin.modules.render.ClickGUI clickGUI = Manager.FUNCTION_MANAGER.clickGUI;
-        int panelColor = new Color(8, 8, 8, 232).getRGB();
-        int headerColor = new Color(25, 25, 25, 244).getRGB();
-        int borderColor = new Color(92, 92, 92, 150).getRGB();
-        int accentColor = Color.WHITE.getRGB();
+        int panelColor = new Color(14, 25, 42, 246).getRGB();
+        int headerColor = new Color(22, 42, 62, 250).getRGB();
+        int borderColor = new Color(74, 112, 135, 220).getRGB();
+        int accentColor = ColorUtil.rgba(95, 229, 211, 255);
 
         if (clickGUI.blur.get() && clickGUI.blurSetting.get("Панели")) {
-            drawBlur(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 16, 10, -1);
+            drawBlur(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 18, 12, -1);
         }
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 11, panelColor);
-        RenderUtil.drawRoundedBorder(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 11, 0.75f, borderColor);
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 1, y + 1, PANEL_WIDTH - 2, TITLE_HEIGHT + 5, 10, headerColor);
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 12, y + TITLE_HEIGHT + 7, PANEL_WIDTH - 24, 1, 0, new Color(70, 70, 70, 155).getRGB());
-        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 12, y + 12, 3, 27, 1.5f, accentColor);
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 18, panelColor);
+        RenderUtil.drawRoundedBorder(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 18, 1f, borderColor);
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 1, y + 1, PANEL_WIDTH - 2, 82, 17, headerColor);
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 20, y + 20, 5, 42, 2, accentColor);
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 20, y + 82, PANEL_WIDTH - 40, 1, 0, ColorUtil.rgba(74, 112, 135, 180));
 
         String title = category.name().toUpperCase();
         String icon = category.icon;
-        FontUtils.icomoon[16].drawLeftAligned(ctx.getMatrices(), icon, x + 23, y + TITLE_MARGIN_TOP + 7, Color.WHITE.getRGB());
-        FontUtils.sf_bold[14].drawLeftAligned(ctx.getMatrices(), title, x + 45, y + TITLE_MARGIN_TOP + 7, Color.WHITE.getRGB());
-        FontUtils.sf_medium[9].drawRightAligned(ctx.getMatrices(), "MODULES", x + PANEL_WIDTH - 11, y + TITLE_MARGIN_TOP + 9, new Color(150, 150, 150).getRGB());
+        FontUtils.icomoon[18].drawLeftAligned(ctx.getMatrices(), icon, x + 40, y + 25, accentColor);
+        FontUtils.sf_bold[22].drawLeftAligned(ctx.getMatrices(), title, x + 70, y + 20, Color.WHITE.getRGB());
+        FontUtils.sf_medium[11].drawLeftAligned(ctx.getMatrices(), "MODULE LIBRARY  /  RIGHT CLICK FOR SETTINGS", x + 70, y + 48, ColorUtil.rgba(157, 189, 202, 255));
+        FontUtils.sf_medium[11].drawRightAligned(ctx.getMatrices(), Manager.FUNCTION_MANAGER.getFunctions(category).size() + " MODULES", x + PANEL_WIDTH - 24, y + 28, ColorUtil.rgba(170, 201, 211, 255));
 
         {
             int maxBefore = calculateMaxScroll(category);
@@ -325,9 +312,9 @@ public class ClickGUI extends Screen implements IMinecraft {
         renderScrollbar(ctx, x, y, category, offset);
         ctx.getMatrices().push();
         Scissor.push();
-        Scissor.setFromComponentCoordinates(x, y + SCROLL_AREA_Y_OFFSET, PANEL_WIDTH, SCROLL_AREA_HEIGHT);
+        Scissor.setFromComponentCoordinates(x + 1, y + 90, PANEL_WIDTH - 2, PANEL_HEIGHT - 100);
 
-        float currentY = y + SCROLL_AREA_Y_OFFSET - offset;
+        float currentY = y + 96 - offset;
 
         for (Function f : Manager.FUNCTION_MANAGER.getFunctions(category)) {
             if (!isFunctionVisible(f)) continue;
@@ -344,14 +331,15 @@ public class ClickGUI extends Screen implements IMinecraft {
                 continue;
             }
 
-            int col1 = f.state ? Color.WHITE.getRGB() : new Color(184, 184, 184).getRGB();
+            int col1 = f.state ? Color.WHITE.getRGB() : ColorUtil.rgba(183, 203, 214, 255);
             int col2 = col1;
 
-            int colorModule = f.state ? new Color(64, 64, 64, clickGUI.alphaModules.get().intValue()).getRGB() : new Color(24, 24, 24, 220).getRGB();
+            int colorModule = f.state ? new Color(31, 88, 87, clickGUI.alphaModules.get().intValue()).getRGB() : new Color(20, 38, 57, 225).getRGB();
             int colorModule2 = colorModule;
 
             if (clickGUI.filling.get() || f.state) {
-                RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 8, currentY + 2, PANEL_WIDTH - 16, Math.max(22, totalHeight - 5), 6, colorModule2);
+                RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 18, currentY + 3, PANEL_WIDTH - 36, Math.max(29, totalHeight - 7), 11, colorModule2);
+                RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 31, currentY + 14, 5, 9, 2, f.state ? accentColor : ColorUtil.rgba(87, 121, 140, 255));
             }
 
             String textToRender;
@@ -363,7 +351,7 @@ public class ClickGUI extends Screen implements IMinecraft {
                 textToRender = f.name;
             }
 
-            FontUtils.sf_medium[12].drawClipped(ctx.getMatrices(), textToRender, PANEL_WIDTH - 37, x + 14, currentY + 8, f.state ? Color.WHITE.getRGB() : col1);
+            FontUtils.sf_medium[14].drawClipped(ctx.getMatrices(), textToRender, PANEL_WIDTH - 74, x + 50, currentY + 10, f.state ? Color.WHITE.getRGB() : col1);
 
             if (animatedSettingsHeight > 0) {
                 float settingY = currentY + functionHeight;
@@ -412,7 +400,7 @@ public class ClickGUI extends Screen implements IMinecraft {
                 if (Math.abs((f.expanded ? 1f : 0f) - currentProgress) < 0.001f) currentProgress = f.expanded ? 1f : 0f;
                 arrowRotationProgress.put(f, currentProgress);
 
-                int arrowX = x + PANEL_WIDTH - 13;
+                int arrowX = x + PANEL_WIDTH - 35;
                 int arrowY = (int) (currentY + FUNCTION_HEIGHT / 2);
 
                 ctx.getMatrices().push();
@@ -420,7 +408,7 @@ public class ClickGUI extends Screen implements IMinecraft {
                 float angleRad = (float) Math.toRadians(90.0f * currentProgress);
                 Quaternionf rotation = new Quaternionf().fromAxisAngleRad(new Vector3f(0, 0, 1), angleRad);
                 ctx.getMatrices().multiply(rotation);
-                FontUtils.sf_medium[16].drawLeftAligned(ctx.getMatrices(), "→", -4, -FontUtils.sf_medium[16].getHeight() / 2, col1);
+                FontUtils.sf_medium[18].drawLeftAligned(ctx.getMatrices(), "+", -4, -FontUtils.sf_medium[18].getHeight() / 2, f.state ? accentColor : ColorUtil.rgba(148, 180, 194, 255));
                 ctx.getMatrices().pop();
             }
 
@@ -463,21 +451,15 @@ public class ClickGUI extends Screen implements IMinecraft {
             return true;
         }
 
-        int totalWidth = renderCategories.size() * (PANEL_WIDTH + PANEL_MARGIN) - PANEL_MARGIN;
-        int startX = (width - totalWidth) / 2;
-        int startY = (height - PANEL_HEIGHT) / 2;
-
-        int i = 0;
-        for (Type category : renderCategories) {
-            int px = startX + i++ * (PANEL_WIDTH + PANEL_MARGIN);
-            if (mouseX >= px && mouseX <= px + PANEL_WIDTH && mouseY >= startY + SCROLL_AREA_Y_OFFSET && mouseY <= startY + SCROLL_AREA_Y_OFFSET + SCROLL_AREA_HEIGHT) {
-                int maxScroll = calculateMaxScroll(category);
-                if (maxScroll > 0) {
-                    scrollTargets.compute(category, (k, v) -> Math.max(0, Math.min(v - (float) scrollY * SCROLL_SPEED, maxScroll)));
-                    return true;
-                }
-                return false;
+        int panelX = (width - (RAIL_WIDTH + PANEL_WIDTH + 18)) / 2 + RAIL_WIDTH + 18;
+        int panelY = (height - PANEL_HEIGHT) / 2;
+        if (mouseX >= panelX && mouseX <= panelX + PANEL_WIDTH && mouseY >= panelY + SCROLL_AREA_Y_OFFSET && mouseY <= panelY + SCROLL_AREA_Y_OFFSET + SCROLL_AREA_HEIGHT) {
+            int maxScroll = calculateMaxScroll(selectedCategory);
+            if (maxScroll > 0) {
+                scrollTargets.compute(selectedCategory, (k, v) -> Math.max(0, Math.min(v - (float) scrollY * SCROLL_SPEED, maxScroll)));
+                return true;
             }
+            return false;
         }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
@@ -999,9 +981,18 @@ public class ClickGUI extends Screen implements IMinecraft {
                 }
             }
         }
-        int totalWidth = renderCategories.size() * (PANEL_WIDTH + PANEL_MARGIN) - PANEL_MARGIN;
-        int startX = (width - totalWidth) / 2;
-        int startY = (height - PANEL_HEIGHT) / 2;
+        int panelX = (width - (RAIL_WIDTH + PANEL_WIDTH + 18)) / 2 + RAIL_WIDTH + 18;
+        int panelY = (height - PANEL_HEIGHT) / 2;
+        int railX = panelX - RAIL_WIDTH - 18;
+        int categoryY = panelY + 160;
+        for (Type category : renderCategories) {
+            if (mouseX >= railX + 10 && mouseX <= railX + RAIL_WIDTH - 10 && mouseY >= categoryY && mouseY <= categoryY + 38) {
+                selectedCategory = category;
+                resetScrollForAllCategories();
+                return true;
+            }
+            categoryY += 43;
+        }
         int searchWidth = getSearchWidth();
         int searchX = getSearchX(searchWidth);
         int searchY = getSearchY();
@@ -1025,20 +1016,20 @@ public class ClickGUI extends Screen implements IMinecraft {
 
             int panelWidth = 260;
             int panelHeight = 190;
-            int panelX = Math.min(width - panelWidth - 12, fixedX + 40);
-            int panelY = Math.max(12, fixedY - panelHeight - 24);
+            int pickerPanelX = Math.min(width - panelWidth - 12, fixedX + 40);
+            int pickerPanelY = Math.max(12, fixedY - panelHeight - 24);
 
             int picker1Size = 104;
-            int picker1X = panelX + 14;
-            int picker1Y = panelY + 28;
+            int picker1X = pickerPanelX + 14;
+            int picker1Y = pickerPanelY + 28;
 
             int picker2Size = 104;
-            int picker2X = panelX + 142;
-            int picker2Y = panelY + 28;
+            int picker2X = pickerPanelX + 142;
+            int picker2Y = pickerPanelY + 28;
 
             int closeButtonSize = 18;
-            int closeButtonX = panelX + panelWidth - closeButtonSize;
-            int closeButtonY = panelY;
+            int closeButtonX = pickerPanelX + panelWidth - closeButtonSize;
+            int closeButtonY = pickerPanelY;
             if (mouseX >= closeButtonX && mouseX <= closeButtonX + closeButtonSize && mouseY >= closeButtonY && mouseY <= closeButtonY + closeButtonSize) {
                 colorPickerOpen = false;
                 return true;
@@ -1063,8 +1054,8 @@ public class ClickGUI extends Screen implements IMinecraft {
                 return true;
             }
 
-            int addButtonX = panelX + 75;
-            int addButtonY = panelY + 164;
+            int addButtonX = pickerPanelX + 75;
+            int addButtonY = pickerPanelY + 164;
             int addButtonWidth = 110;
             int addButtonHeight = 18;
 
@@ -1205,12 +1196,11 @@ public class ClickGUI extends Screen implements IMinecraft {
             }
         }
 
-        int idx = 0;
-        for (Type category : renderCategories) {
-            int panelX = startX + idx++ * (PANEL_WIDTH + PANEL_MARGIN);
+        {
+            Type category = selectedCategory;
             float offset = scrollOffsets.get(category);
 
-            float currentY = startY + SCROLL_AREA_Y_OFFSET - offset;
+            float currentY = panelY + SCROLL_AREA_Y_OFFSET - offset;
 
             for (Function function : Manager.FUNCTION_MANAGER.getFunctions(category)) {
                 if (!isFunctionVisible(function)) continue;
@@ -1223,15 +1213,15 @@ public class ClickGUI extends Screen implements IMinecraft {
 
                 int totalHeight = functionHeight + animatedSettingsHeight;
 
-                if (currentY + totalHeight < startY + SCROLL_AREA_Y_OFFSET) {
+                if (currentY + totalHeight < panelY + SCROLL_AREA_Y_OFFSET) {
                     currentY += totalHeight;
                     continue;
                 }
-                if (currentY > startY + SCROLL_AREA_Y_OFFSET + SCROLL_AREA_HEIGHT) {
+                if (currentY > panelY + SCROLL_AREA_Y_OFFSET + SCROLL_AREA_HEIGHT) {
                     break;
                 }
 
-                if (mouseX >= panelX && mouseX <= panelX + PANEL_WIDTH && mouseY >= currentY && mouseY <= currentY + functionHeight && mouseY >= startY + SCROLL_AREA_Y_OFFSET && mouseY <= startY + SCROLL_AREA_Y_OFFSET + SCROLL_AREA_HEIGHT) {
+                if (mouseX >= panelX && mouseX <= panelX + PANEL_WIDTH && mouseY >= currentY && mouseY <= currentY + functionHeight && mouseY >= panelY + SCROLL_AREA_Y_OFFSET && mouseY <= panelY + SCROLL_AREA_Y_OFFSET + SCROLL_AREA_HEIGHT) {
                     if (button == 0) {
                         function.toggle();
                         return true;
@@ -1259,7 +1249,7 @@ public class ClickGUI extends Screen implements IMinecraft {
                         int visible = Math.max(0, Math.min(settingHeight, remaining));
                         if (visible <= 0) break;
 
-                        if (mouseX >= panelX && mouseX <= panelX + PANEL_WIDTH && mouseY >= settingY && mouseY <= settingY + visible && mouseY >= startY + SCROLL_AREA_Y_OFFSET && mouseY <= startY + SCROLL_AREA_Y_OFFSET + SCROLL_AREA_HEIGHT) {
+                        if (mouseX >= panelX && mouseX <= panelX + PANEL_WIDTH && mouseY >= settingY && mouseY <= settingY + visible && mouseY >= panelY + SCROLL_AREA_Y_OFFSET && mouseY <= panelY + SCROLL_AREA_Y_OFFSET + SCROLL_AREA_HEIGHT) {
 
                             int settingX = panelX + 10;
                             int settingWidth = PANEL_WIDTH - 20;
@@ -1308,14 +1298,10 @@ public class ClickGUI extends Screen implements IMinecraft {
             }
         }
 
-        for (Type category : renderCategories) {
-            for (Function function : Manager.FUNCTION_MANAGER.getFunctions(category)) {
-                if (!function.expanded) continue;
-                for (Setting setting : function.getSettings()) {
-                    if (setting instanceof TextSetting textSetting) {
-                        textSetting.setFocused(false);
-                    }
-                }
+        for (Function function : Manager.FUNCTION_MANAGER.getFunctions(selectedCategory)) {
+            if (!function.expanded) continue;
+            for (Setting setting : function.getSettings()) {
+                if (setting instanceof TextSetting textSetting) textSetting.setFocused(false);
             }
         }
 

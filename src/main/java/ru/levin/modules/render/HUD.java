@@ -115,13 +115,13 @@ public class HUD extends Function {
         addSettings(setting,hudColor,gradientType, customAlpha, visibleCrosshair, blur,roundingSilaSanya);
     }
 
-    public final Dragging watermarkDrag = LupaWare.getInstance().createDrag(this, "WaterMark", 10, 10);
-    public final Dragging targethudDrag = LupaWare.getInstance().createDrag(this, "TargetHUD", 10, 45);
-    public final Dragging keybindsDrag = LupaWare.getInstance().createDrag(this, "KeyBindsHUD", 10, 95);
-    public final Dragging stafflistDrag = LupaWare.getInstance().createDrag(this, "StaffListHUD", 10, 128);
-    public final Dragging itemcooldownDrag = LupaWare.getInstance().createDrag(this, "CoolDownHUD", 10, 165);
-    public final Dragging potionhudDrag = LupaWare.getInstance().createDrag(this, "PotionHUD", 10, 198);
-    public final Dragging coordinateshudDrag = LupaWare.getInstance().createDrag(this, "CoordinatesHUD", 10, 198);
+    public final Dragging watermarkDrag = LupaWare.getInstance().createDrag(this, "WaterMark", 286, 10);
+    public final Dragging targethudDrag = LupaWare.getInstance().createDrag(this, "TargetHUD", 338, 256);
+    public final Dragging keybindsDrag = LupaWare.getInstance().createDrag(this, "KeyBindsHUD", 390, 178);
+    public final Dragging stafflistDrag = LupaWare.getInstance().createDrag(this, "StaffListHUD", 686, 124);
+    public final Dragging itemcooldownDrag = LupaWare.getInstance().createDrag(this, "CoolDownHUD", 18, 302);
+    public final Dragging potionhudDrag = LupaWare.getInstance().createDrag(this, "PotionHUD", 610, 255);
+    public final Dragging coordinateshudDrag = LupaWare.getInstance().createDrag(this, "CoordinatesHUD", 18, 150);
     public final Dragging armorDrag = LupaWare.getInstance().createDrag(this, "ArmorHUD", 478, 468);
 
     Animation tHudAnimation = new EaseBackIn(300, 1, 1.5f);
@@ -260,10 +260,11 @@ public class HUD extends Function {
         potionListHeightDynamic = MathUtil.fast(potionListHeightDynamic, effects.size() * 17, 15);
         int alpha = MathHelper.clamp(customAlpha.get().intValue(), 150, 255);
         float height = 28 + potionListHeightDynamic;
-        drawRoundedRect(matrices, x, y, width, height, 6, new Color(12, 12, 12, alpha).getRGB());
-        drawRoundedRect(matrices, x, y, width, 2, 1, Color.WHITE.getRGB());
-        FontUtils.sf_bold[13].drawLeftAligned(matrices, "EFFECTS", x + 10, y + 6, Color.WHITE.getRGB());
-        FontUtils.sf_medium[9].drawRightAligned(matrices, effects.size() + " ACTIVE", x + width - 10, y + 7, new Color(160, 160, 160, alpha).getRGB());
+        drawRoundedRect(matrices, x, y, width, height, 11, new Color(18, 31, 48, alpha).getRGB());
+        drawRoundedBorder(matrices, x, y, width, height, 11, 0.8f, new Color(75, 120, 136, alpha).getRGB());
+        drawRoundedRect(matrices, x, y, width, 3, 1, new Color(150, 126, 255, alpha).getRGB());
+        FontUtils.sf_bold[13].drawLeftAligned(matrices, "EFFECTS", x + 13, y + 8, Color.WHITE.getRGB());
+        FontUtils.sf_medium[9].drawRightAligned(matrices, effects.size() + " ACTIVE", x + width - 13, y + 9, new Color(164, 191, 205, alpha).getRGB());
         StatusEffectSpriteManager sprites = mc.getStatusEffectSpriteManager();
         float rowY = y + 28;
         for (StatusEffectInstance effect : effects) {
@@ -335,7 +336,7 @@ public class HUD extends Function {
         cooldownListHeightDynamic = MathUtil.fast(cooldownListHeightDynamic, listHeightTarget, 15);
         float totalHeight = headerHeight + cooldownListHeightDynamic;
 
-        int alpha = customAlpha.get().intValue();
+        int alpha = MathHelper.clamp(customAlpha.get().intValue(), 150, 255);
         if (alpha <= 240) {
             if (blur.get()) {
                 drawBlur(eventRender2D.getDrawContext().getMatrices(), posX, posY + headerHeight - 1, maxWidth, cooldownListHeightDynamic + 6, new Vector4f(0, 3, 3, 0), 12, Color.white.getRGB());
@@ -347,7 +348,7 @@ public class HUD extends Function {
         Color downColor = new Color(theme.getSecondColor());
 
         if (hudColor.is("Обычный")) {
-            drawRoundedRect(eventRender2D.getDrawContext().getMatrices(), posX, posY, maxWidth, headerHeight + 1, new Vector4f(3, 0, 0, 3), hud_color);
+            drawRoundedRect(eventRender2D.getDrawContext().getMatrices(), posX, posY, maxWidth, headerHeight + 1, new Vector4f(7, 0, 0, 7), new Color(150, 126, 255, alpha).getRGB());
         } else {
             int left   = ColorUtil.gradient(10,   90, upColor.getRGB(), downColor.getRGB());
             int right  = ColorUtil.gradient(10,    0, upColor.getRGB(), downColor.getRGB());
@@ -361,9 +362,9 @@ public class HUD extends Function {
             rectRGB(eventRender2D.getDrawContext().getMatrices(), posX, posY, maxWidth, headerHeight + 1, corner, c1, c2, c3, c4);
         }
 
-        RenderUtil.drawTexture(eventRender2D.getDrawContext().getMatrices(), "images/hud/cooldown.png", posX + maxWidth - 17, posY + 4.5f, 11, 11, 0, Color.white.getRGB());
+        RenderUtil.drawTexture(eventRender2D.getDrawContext().getMatrices(), "images/hud/cooldown.png", posX + maxWidth - 19, posY + 4.5f, 11, 11, 0, Color.white.getRGB());
 
-        FontUtils.durman[15].drawLeftAligned(eventRender2D.getDrawContext().getMatrices(), "Cooldowns", posX + 10, posY + 5f, -1);
+        FontUtils.durman[15].drawLeftAligned(eventRender2D.getDrawContext().getMatrices(), "COOLDOWNS", posX + 12, posY + 5f, -1);
 
         drawRoundedRect(eventRender2D.getDrawContext().getMatrices(), posX, posY + headerHeight - 1, maxWidth, cooldownListHeightDynamic + 6, new Vector4f(0, 3, 3, 0), new Color(18, 18, 18, alpha).getRGB());
 
@@ -428,11 +429,12 @@ public class HUD extends Function {
         widthDynamic = MathUtil.fast(widthDynamic, width, 10);
         int alpha = MathHelper.clamp(customAlpha.get().intValue(), 150, 255);
         float height = 28 + hDynam;
-        drawRoundedRect(matrices, x, y, widthDynamic, height, 6, new Color(12, 12, 12, alpha).getRGB());
-        drawRoundedRect(matrices, x, y, widthDynamic, 2, 1, Color.WHITE.getRGB());
-        drawRoundedRect(matrices, x + 9, y + 8, 3, 11, 1, Color.WHITE.getRGB());
-        FontUtils.sf_bold[13].drawLeftAligned(matrices, "STAFFLIST", x + 19, y + 6, Color.WHITE.getRGB());
-        FontUtils.sf_medium[9].drawRightAligned(matrices, activeStaff + " ONLINE", x + widthDynamic - 9, y + 7, new Color(160, 160, 160, alpha).getRGB());
+        drawRoundedRect(matrices, x, y, widthDynamic, height, 11, new Color(18, 31, 48, alpha).getRGB());
+        drawRoundedBorder(matrices, x, y, widthDynamic, height, 11, 0.8f, new Color(75, 120, 136, alpha).getRGB());
+        drawRoundedRect(matrices, x, y, widthDynamic, 3, 1, new Color(150, 126, 255, alpha).getRGB());
+        drawRoundedRect(matrices, x + 12, y + 10, 4, 12, 2, new Color(150, 126, 255, alpha).getRGB());
+        FontUtils.sf_bold[13].drawLeftAligned(matrices, "STAFF LIST", x + 23, y + 8, Color.WHITE.getRGB());
+        FontUtils.sf_medium[9].drawRightAligned(matrices, activeStaff + " ONLINE", x + widthDynamic - 12, y + 9, new Color(164, 191, 205, alpha).getRGB());
         Map<String, PlayerListEntry> playerInfoMap = new HashMap<>();
         for (PlayerListEntry info : mc.getNetworkHandler().getPlayerList()) playerInfoMap.put(info.getProfile().getName(), info);
         float rowY = y + 28;
@@ -464,34 +466,34 @@ public class HUD extends Function {
         if (name.length() > 15) name = name.substring(0, 15) + "…";
         MatrixStack matrices = render2D.getDrawContext().getMatrices();
         matrices.push();
-        RenderAddon.sizeAnimation(matrices, x + 75, y + 21, scale);
-        drawRoundedRect(matrices, x, y, 156, 44, 6, new Color(12, 12, 12, 238).getRGB());
-        drawRoundedRect(matrices, x, y, 156, 2, 1, Color.WHITE.getRGB());
-        RenderAddon.drawHead(matrices, target, x + 8, y + 9, 26, roundingSilaSanya.get().floatValue());
-        FontUtils.sf_bold[13].drawLeftAligned(matrices, name, x + 42, y + 8, Color.WHITE.getRGB());
-        FontUtils.sf_medium[9].drawLeftAligned(matrices, "TARGET", x + 42, y + 22, new Color(150, 150, 150).getRGB());
-        drawRoundedRect(matrices, x + 42, y + 33, 101, 4, 2, new Color(48, 48, 48).getRGB());
-        drawRoundedRect(matrices, x + 42, y + 33, 101 * lastHealth, 4, 2, Color.WHITE.getRGB());
-        FontUtils.sf_bold[9].drawRightAligned(matrices, String.format(Locale.ENGLISH, "%.0f HP", lastHealth * 20.0F), x + 147, y + 21, Color.WHITE.getRGB());
+        RenderAddon.sizeAnimation(matrices, x + 104, y + 29, scale);
+        int alpha = MathHelper.clamp(customAlpha.get().intValue(), 150, 255);
+        drawRoundedRect(matrices, x, y, 208, 58, 13, new Color(18, 31, 48, alpha).getRGB());
+        drawRoundedBorder(matrices, x, y, 208, 58, 13, 0.9f, new Color(75, 120, 136, alpha).getRGB());
+        drawRoundedRect(matrices, x, y, 208, 3, 1, new Color(94, 229, 211, alpha).getRGB());
+        RenderAddon.drawHead(matrices, target, x + 12, y + 15, 30, roundingSilaSanya.get().floatValue());
+        FontUtils.sf_bold[14].drawLeftAligned(matrices, name, x + 53, y + 11, Color.WHITE.getRGB());
+        FontUtils.sf_medium[9].drawLeftAligned(matrices, "TARGET / HEALTH", x + 53, y + 27, new Color(165, 194, 205, alpha).getRGB());
+        drawRoundedRect(matrices, x + 53, y + 43, 129, 5, 3, new Color(40, 68, 80, alpha).getRGB());
+        drawRoundedRect(matrices, x + 53, y + 43, 129 * lastHealth, 5, 3, new Color(94, 229, 211, alpha).getRGB());
+        FontUtils.sf_bold[10].drawRightAligned(matrices, String.format(Locale.ENGLISH, "%.0f HP", lastHealth * 20.0F), x + 192, y + 25, Color.WHITE.getRGB());
         matrices.pop();
-        targethudDrag.setWidth(156); targethudDrag.setHeight(44);
+        targethudDrag.setWidth(208); targethudDrag.setHeight(58);
     }
     private void waterMark(EventRender2D render2D) {
-        float x = (mc.getWindow().getScaledWidth() - 214f) / 2f;
-        float y = 8f;
+        float x = watermarkDrag.getX(), y = watermarkDrag.getY();
         MatrixStack matrices = render2D.getDrawContext().getMatrices();
         int alpha = MathHelper.clamp(customAlpha.get().intValue(), 150, 255);
-        int dark = new Color(18, 18, 18, alpha).getRGB();
-        int muted = new Color(155, 155, 155, alpha).getRGB();
-        drawRoundedRect(matrices, x, y, 214, 34, 7, dark);
-        drawRoundedRect(matrices, x, y, 38, 34, 7, Color.WHITE.getRGB());
-        FontUtils.sf_bold[15].centeredDraw(matrices, "LW", x + 19f, y + 9, Color.BLACK.getRGB());
-        FontUtils.sf_bold[14].drawLeftAligned(matrices, "LupaWare", x + 50, y + 6, Color.WHITE.getRGB());
-        FontUtils.sf_medium[9].drawLeftAligned(matrices, "1.21.4", x + 50, y + 19, muted);
-        FontUtils.sf_medium[9].drawRightAligned(matrices, ClientManager.getFps() + " FPS", x + 164, y + 19, muted);
-        FontUtils.sf_medium[9].drawRightAligned(matrices, ClientManager.getPing() + " MS", x + 205, y + 19, Color.WHITE.getRGB());
-        watermarkDrag.setX(x); watermarkDrag.setY(y);
-        watermarkDrag.setWidth(214); watermarkDrag.setHeight(34);
+        int muted = new Color(164, 191, 205, alpha).getRGB();
+        drawRoundedRect(matrices, x, y, 260, 48, 14, new Color(18, 31, 48, alpha).getRGB());
+        drawRoundedBorder(matrices, x, y, 260, 48, 14, 0.9f, new Color(75, 120, 136, alpha).getRGB());
+        drawRoundedRect(matrices, x, y, 48, 48, 14, new Color(94, 229, 211, 255).getRGB());
+        FontUtils.sf_bold[18].centeredDraw(matrices, "LW", x + 24, y + 14, new Color(8, 23, 29).getRGB());
+        FontUtils.sf_bold[16].drawLeftAligned(matrices, "LupaWare", x + 63, y + 8, Color.WHITE.getRGB());
+        FontUtils.sf_medium[9].drawLeftAligned(matrices, "CLIENT ONLINE  /  1.21.4", x + 63, y + 27, muted);
+        FontUtils.sf_medium[10].drawRightAligned(matrices, ClientManager.getFps() + " FPS", x + 205, y + 9, muted);
+        FontUtils.sf_medium[10].drawRightAligned(matrices, ClientManager.getPing() + " MS", x + 242, y + 27, new Color(94, 229, 211, alpha).getRGB());
+        watermarkDrag.setWidth(260); watermarkDrag.setHeight(48);
     }
     private int applyHudAlpha(int color, int alpha) {
         Color c = new Color(color, true);
@@ -503,13 +505,14 @@ public class HUD extends Function {
         float x = coordinateshudDrag.getX(), y = coordinateshudDrag.getY();
         String coords = String.format(Locale.ENGLISH, "%d, %d, %d", (int) mc.player.getX(), (int) mc.player.getY(), (int) mc.player.getZ());
         int alpha = MathHelper.clamp(customAlpha.get().intValue(), 150, 255);
-        int muted = new Color(155, 155, 155, alpha).getRGB();
-        drawRoundedRect(matrices, x, y, 160, 24, 5, new Color(10, 10, 10, alpha).getRGB());
-        drawRoundedRect(matrices, x + 9, y + 7, 3, 10, 1, Color.WHITE.getRGB());
-        FontUtils.sf_medium[9].drawLeftAligned(matrices, "POS", x + 19, y + 4, muted);
-        FontUtils.sf_bold[11].drawLeftAligned(matrices, coords, x + 19, y + 13, Color.WHITE.getRGB());
-        FontUtils.sf_medium[9].drawRightAligned(matrices, "TPS " + ClientManager.getTPS(), x + 153, y + 13, Color.WHITE.getRGB());
-        coordinateshudDrag.setWidth(160); coordinateshudDrag.setHeight(24);
+        int muted = new Color(164, 191, 205, alpha).getRGB();
+        drawRoundedRect(matrices, x, y, 206, 34, 11, new Color(18, 31, 48, alpha).getRGB());
+        drawRoundedBorder(matrices, x, y, 206, 34, 11, 0.8f, new Color(75, 120, 136, alpha).getRGB());
+        drawRoundedRect(matrices, x, y, 4, 34, 2, new Color(94, 229, 211, alpha).getRGB());
+        FontUtils.sf_medium[9].drawLeftAligned(matrices, "POSITION", x + 15, y + 5, muted);
+        FontUtils.sf_bold[11].drawLeftAligned(matrices, coords, x + 15, y + 17, Color.WHITE.getRGB());
+        FontUtils.sf_medium[9].drawRightAligned(matrices, "TPS " + ClientManager.getTPS(), x + 195, y + 17, new Color(94, 229, 211, alpha).getRGB());
+        coordinateshudDrag.setWidth(206); coordinateshudDrag.setHeight(34);
     }
     private float keybindsHeightDynamic = 0;
 
@@ -526,12 +529,13 @@ public class HUD extends Function {
         }
         activeModules = count;
         keybindsHeightDynamic = MathUtil.fast(keybindsHeightDynamic, count * 16, 15);
-        float height = 26 + keybindsHeightDynamic;
-        drawRoundedRect(matrices, x, y, width, height, 5, new Color(10, 10, 10, alpha).getRGB());
-        drawRoundedRect(matrices, x, y, width, 2, 1, Color.WHITE.getRGB());
-        FontUtils.sf_bold[13].drawLeftAligned(matrices, "KEYBINDS", x + 11, y + 6, Color.WHITE.getRGB());
-        FontUtils.sf_medium[9].drawRightAligned(matrices, count + " ACTIVE", x + width - 11, y + 7, muted);
-        float rowY = y + 26;
+        float height = 31 + keybindsHeightDynamic;
+        drawRoundedRect(matrices, x, y, width, height, 11, new Color(18, 31, 48, alpha).getRGB());
+        drawRoundedBorder(matrices, x, y, width, height, 11, 0.8f, new Color(75, 120, 136, alpha).getRGB());
+        drawRoundedRect(matrices, x, y, width, 3, 1, new Color(150, 126, 255, alpha).getRGB());
+        FontUtils.sf_bold[13].drawLeftAligned(matrices, "BINDS", x + 14, y + 8, Color.WHITE.getRGB());
+        FontUtils.sf_medium[9].drawRightAligned(matrices, count + " ACTIVE", x + width - 14, y + 9, new Color(164, 191, 205, alpha).getRGB());
+        float rowY = y + 31;
         for (Function f : Manager.FUNCTION_MANAGER.getFunctions()) {
             if (f.bind != 0 && f.state) rowY = drawBindRow(matrices, font, f.name, getShortKey(ClientManager.getKey(f.bind)), x, rowY, width, Color.WHITE.getRGB(), 10);
             for (Setting setting : f.getSettings()) if (setting instanceof BindBooleanSetting b && b.isVisible() && b.getBindKey() != 0 && b.get()) rowY = drawBindRow(matrices, font, b.getName(), getShortKey(ClientManager.getKey(b.getBindKey())), x, rowY, width, Color.WHITE.getRGB(), 10);
@@ -539,11 +543,11 @@ public class HUD extends Function {
         keybindsDrag.setWidth(width); keybindsDrag.setHeight(height);
     }
     private float drawBindRow(MatrixStack matrices, ru.levin.manager.fontManager.RenderFonts font, String name, String key, float x, float y, float width, int accent, int padding) {
-        float keyWidth = font.getWidth(key);
-        font.drawLeftAligned(matrices, name, x + 18, y + 3, new Color(218, 218, 218).getRGB());
-        font.drawRightAligned(matrices, key, x + width - padding, y + 3, new Color(150, 150, 150).getRGB());
-        drawRoundedRect(matrices, x + 12, y + 1, width - 24, 1, 0, new Color(60, 60, 60, 180).getRGB());
-        return y + 16;
+        font.drawLeftAligned(matrices, name, x + 18, y + 4, new Color(222, 232, 237).getRGB());
+        float keyWidth = Math.max(34, font.getWidth(key) + 14);
+        drawRoundedRect(matrices, x + width - keyWidth - 12, y + 1, keyWidth, 15, 7, new Color(39, 67, 81, 230).getRGB());
+        font.centeredDraw(matrices, key, x + width - keyWidth / 2f - 12, y + 4, new Color(150, 242, 225).getRGB());
+        return y + 17;
     }
 
     private String getShortKey(String key) {
