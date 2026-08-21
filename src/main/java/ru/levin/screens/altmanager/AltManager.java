@@ -4,6 +4,7 @@ import org.lwjgl.glfw.GLFW;
 import java.awt.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import net.minecraft.client.gui.DrawContext;
@@ -23,7 +24,7 @@ public class AltManager extends Screen implements IMinecraft {
     private final Screen parent;
     private boolean isTyping = false;
     private final StringBuilder inputText = new StringBuilder();
-    private final List<String> accounts = Manager.ACCOUNT_MANAGER.getAccounts();
+    private List<String> accounts = new ArrayList<>();
     private float scrollOffset = 0;
     private float targetScrollOffset = 0;
     private float hoverAnimationInput = 0;
@@ -53,6 +54,20 @@ public class AltManager extends Screen implements IMinecraft {
     @Override
     protected void init() {
         super.init();
+
+        // TLauncher can create the screen while client managers are still being restored.
+        // Do not access ACCOUNT_MANAGER from a field initializer in that case.
+        if (Manager.ACCOUNT_MANAGER != null) {
+            accounts = Manager.ACCOUNT_MANAGER.getAccounts();
+        } else {
+            accounts = new ArrayList<>();
+        }
+
+        // Keep the screen usable if font loading was skipped or failed during startup.
+        if (Manager.FONT_MANAGER == null) {
+            Manager.FONT_MANAGER = new ru.levin.manager.fontManager.FontUtils();
+            Manager.FONT_MANAGER.init();
+        }
     }
 
     @Override
@@ -67,13 +82,12 @@ public class AltManager extends Screen implements IMinecraft {
         }
 
 
-        int titleWidth = (int) FontUtils.sf_bold[48].getWidth(title);
-        float titleX = (this.width - titleWidth) / 2f;
         float titleBaseY = 3f;
         float titleY = titleBaseY + shakeOffsetY;
 
-        float time = (System.currentTimeMillis() % 4000L) / 1500f;
-        drawContext.drawCenteredTextWithShadow(this.textRenderer, Text.literal(title), this.width / 2, (int) titleY + 4, Color.WHITE.getRGB());
+        if (this.textRenderer != null) {
+            drawContext.drawCenteredTextWithShadow(this.textRenderer, Text.literal(title), this.width / 2, (int) titleY + 4, Color.WHITE.getRGB());
+        }
 
         int centerX = width / 2;
         int centerY = height / 2;
@@ -106,55 +120,57 @@ public class AltManager extends Screen implements IMinecraft {
         RenderUtil.drawRoundedRect(drawContext.getMatrices(), listX, listY, listWidth, listHeight, 2, VANILLA_PANEL);
 
         Scissor.push();
-        Scissor.setFromComponentCoordinates(listX, listY, listWidth, listHeight);
+        try {
+            Scissor.setFromComponentCoordinates(listX, listY, listWidth, listHeight);
 
-        if (hoverAnimations1 == null || hoverAnimations1.length != accounts.size()) hoverAnimations1 = new float[accounts.size()];
-        if (hoverAnimations2 == null || hoverAnimations2.length != accounts.size()) hoverAnimations2 = new float[accounts.size()];
+            if (hoverAnimations1 == null || hoverAnimations1.length != accounts.size()) hoverAnimations1 = new float[accounts.size()];
+            if (hoverAnimations2 == null || hoverAnimations2.length != accounts.size()) hoverAnimations2 = new float[accounts.size()];
 
-        float startY = listY + 5;
-        float itemHeight = 35 * SCALE;
+            float startY = listY + 5;
+            float itemHeight = 35 * SCALE;
 
-        for (int i = 0; i < accounts.size(); i++) {
-            float y = startY - scrollOffset + i * itemHeight;
+            for (int i = 0; i < accounts.size(); i++) {
+                float y = startY - scrollOffset + i * itemHeight;
 
-            int entryX = centerX - (int)(105 * SCALE);
-            int entryWidth = (int)(140 * SCALE);
-            int entryHeight = (int)(30 * SCALE);
+                int entryX = centerX - (int)(105 * SCALE);
+                int entryWidth = (int)(140 * SCALE);
+                int entryHeight = (int)(30 * SCALE);
 
-            RenderUtil.drawRoundedRect(drawContext.getMatrices(), entryX, y, entryWidth + 10, entryHeight, 2, VANILLA_SURFACE);
+                RenderUtil.drawRoundedRect(drawContext.getMatrices(), entryX, y, entryWidth + 10, entryHeight, 2, VANILLA_SURFACE);
 
-            int bgColor = (i == selectedAccountIndex) ? ColorUtil.rgba(80, 105, 140, 255) : VANILLA_BORDER;
-            RenderUtil.drawRoundedBorder(drawContext.getMatrices(), entryX, y, entryWidth + 10, entryHeight, 4, 0.3f, bgColor);
+                int bgColor = (i == selectedAccountIndex) ? ColorUtil.rgba(80, 105, 140, 255) : VANILLA_BORDER;
+                RenderUtil.drawRoundedBorder(drawContext.getMatrices(), entryX, y, entryWidth + 10, entryHeight, 4, 0.3f, bgColor);
 
-            FontUtils.durman[21].drawLeftAligned(drawContext.getMatrices(), accounts.get(i), entryX + 10, y + 5, ColorUtil.rgba(200, 200, 200, 255));
-            FontUtils.durman[16].drawLeftAligned(drawContext.getMatrices(), "Date " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), entryX + 10, y + 25, ColorUtil.rgba(205, 205, 205, 255));
+                FontUtils.durman[21].drawLeftAligned(drawContext.getMatrices(), accounts.get(i), entryX + 10, y + 5, ColorUtil.rgba(200, 200, 200, 255));
+                FontUtils.durman[16].drawLeftAligned(drawContext.getMatrices(), "Date " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), entryX + 10, y + 25, ColorUtil.rgba(205, 205, 205, 255));
 
-            int btnWidth = (int)(60 * SCALE);
-            int btnHeight = (int)(13 * SCALE);
+                int btnWidth = (int)(60 * SCALE);
+                int btnHeight = (int)(13 * SCALE);
 
-            int selectBtnX = entryX + entryWidth + (int)(10 * SCALE);
-            int selectBtnY = (int)(y);
-            boolean accountHovered1 = RenderUtil.isInRegion(mouseX, mouseY, selectBtnX, selectBtnY, btnWidth, btnHeight);
-            hoverAnimations1[i] = MathUtil.lerp(hoverAnimations1[i], accountHovered1 ? 1 : 0, 12);
+                int selectBtnX = entryX + entryWidth + (int)(10 * SCALE);
+                int selectBtnY = (int)(y);
+                boolean accountHovered1 = RenderUtil.isInRegion(mouseX, mouseY, selectBtnX, selectBtnY, btnWidth, btnHeight);
+                hoverAnimations1[i] = MathUtil.lerp(hoverAnimations1[i], accountHovered1 ? 1 : 0, 12);
 
-            int selectBgColor = ColorUtil.blendColorsInt(VANILLA_BUTTON, VANILLA_BUTTON_HOVER, hoverAnimations1[i]);
-            int outlineColor = new Color(60, 60, 60, 180).getRGB();
-            RenderUtil.drawRoundedRect(drawContext.getMatrices(), selectBtnX, selectBtnY, btnWidth, btnHeight + 2, 4, selectBgColor);
-            RenderUtil.drawRoundedBorder(drawContext.getMatrices(), selectBtnX, selectBtnY, btnWidth, btnHeight + 2, 4, 1f, outlineColor);
-            FontUtils.sf_medium[20].centeredDraw(drawContext.getMatrices(), "Select", selectBtnX + btnWidth / 2f, selectBtnY + btnHeight / 2f - 6, Color.WHITE.getRGB());
+                int selectBgColor = ColorUtil.blendColorsInt(VANILLA_BUTTON, VANILLA_BUTTON_HOVER, hoverAnimations1[i]);
+                int outlineColor = new Color(60, 60, 60, 180).getRGB();
+                RenderUtil.drawRoundedRect(drawContext.getMatrices(), selectBtnX, selectBtnY, btnWidth, btnHeight + 2, 4, selectBgColor);
+                RenderUtil.drawRoundedBorder(drawContext.getMatrices(), selectBtnX, selectBtnY, btnWidth, btnHeight + 2, 4, 1f, outlineColor);
+                FontUtils.sf_medium[20].centeredDraw(drawContext.getMatrices(), "Select", selectBtnX + btnWidth / 2f, selectBtnY + btnHeight / 2f - 6, Color.WHITE.getRGB());
 
-            int deleteBtnX = selectBtnX;
-            int deleteBtnY = selectBtnY + btnHeight + (int)(3 * SCALE);
-            boolean accountHovered2 = RenderUtil.isInRegion(mouseX, mouseY, deleteBtnX, deleteBtnY, btnWidth, btnHeight);
-            hoverAnimations2[i] = MathUtil.lerp(hoverAnimations2[i], accountHovered2 ? 1 : 0, 12);
-            int deleteBgColor = ColorUtil.blendColorsInt(VANILLA_BUTTON, VANILLA_BUTTON_HOVER, hoverAnimations2[i]);
-            RenderUtil.drawRoundedRect(drawContext.getMatrices(), deleteBtnX, deleteBtnY, btnWidth, btnHeight + 2, 4, deleteBgColor);
-            RenderUtil.drawRoundedBorder(drawContext.getMatrices(), deleteBtnX, deleteBtnY, btnWidth, btnHeight + 2, 4, 1f, outlineColor);
-            FontUtils.sf_medium[20].centeredDraw(drawContext.getMatrices(), "Delete", deleteBtnX + btnWidth / 2f, deleteBtnY + btnHeight / 2f - 6, Color.WHITE.getRGB());
+                int deleteBtnX = selectBtnX;
+                int deleteBtnY = selectBtnY + btnHeight + (int)(3 * SCALE);
+                boolean accountHovered2 = RenderUtil.isInRegion(mouseX, mouseY, deleteBtnX, deleteBtnY, btnWidth, btnHeight);
+                hoverAnimations2[i] = MathUtil.lerp(hoverAnimations2[i], accountHovered2 ? 1 : 0, 12);
+                int deleteBgColor = ColorUtil.blendColorsInt(VANILLA_BUTTON, VANILLA_BUTTON_HOVER, hoverAnimations2[i]);
+                RenderUtil.drawRoundedRect(drawContext.getMatrices(), deleteBtnX, deleteBtnY, btnWidth, btnHeight + 2, 4, deleteBgColor);
+                RenderUtil.drawRoundedBorder(drawContext.getMatrices(), deleteBtnX, deleteBtnY, btnWidth, btnHeight + 2, 4, 1f, outlineColor);
+                FontUtils.sf_medium[20].centeredDraw(drawContext.getMatrices(), "Delete", deleteBtnX + btnWidth / 2f, deleteBtnY + btnHeight / 2f - 6, Color.WHITE.getRGB());
+            }
+        } finally {
+            Scissor.unset();
+            Scissor.pop();
         }
-
-        Scissor.unset();
-        Scissor.pop();
 
         int buttonsY = listY + listHeight + (int)(10 * SCALE);
         int buttonWidth = (int)(70 * SCALE);
@@ -258,7 +274,7 @@ public class AltManager extends Screen implements IMinecraft {
         }
 
 
-        int titleWidth = (int) FontUtils.sf_bold[48].getWidth(title);
+        int titleWidth = getTitleWidth();
         float titleX = (this.width - titleWidth) / 2f;
         float titleY = this.height / 7f;
         if (mouseX >= titleX && mouseX <= titleX + titleWidth && mouseY >= titleY && mouseY <= titleY + 25) {
@@ -389,6 +405,13 @@ public class AltManager extends Screen implements IMinecraft {
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY,scrollX, scrollY);
+    }
+
+    private int getTitleWidth() {
+        if (FontUtils.sf_bold != null && FontUtils.sf_bold.length > 48 && FontUtils.sf_bold[48] != null) {
+            return (int) FontUtils.sf_bold[48].getWidth(title);
+        }
+        return this.textRenderer != null ? this.textRenderer.getWidth(Text.literal(title)) : title.length() * 6;
     }
 
     private String generateRandomNick() {
