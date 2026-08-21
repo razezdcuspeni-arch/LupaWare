@@ -4,6 +4,8 @@ import com.google.common.collect.Lists;
 import lombok.Getter;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ChatScreen;
+import net.minecraft.client.gui.hud.BossBarHud;
+import net.minecraft.client.gui.hud.ClientBossBar;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.resource.language.I18n;
@@ -33,6 +35,7 @@ import org.joml.Vector4f;
 import org.joml.Vector4i;
 import ru.levin.LupaWare;
 import ru.levin.manager.themeManager.StyleManager;
+import ru.levin.mixin.iface.BossBarHudAccessor;
 import ru.levin.mixin.iface.ItemCooldownEntryAccessor;
 import ru.levin.mixin.iface.ItemCooldownManagerAccessor;
 import ru.levin.modules.setting.*;
@@ -671,9 +674,11 @@ public class HUD extends Function {
     private void waterMark(EventRender2D render2D) {
         float x = watermarkDrag.getX();
         float y = watermarkDrag.getY();
+        float bossbarOffset = getBossbarWatermarkOffset();
+        float renderY = y + bossbarOffset;
 
         String textLogo = "LupaWare 1.21.4";
-        String textInfo = Manager.USER_PROFILE.getName() + " | " + ClientManager.getFps() + " FPS | " + ClientManager.getPing() + " MS | " + ClientManager.getBps(mc.player) + " BPS";
+        String textInfo = ClientManager.getFps() + " FPS | " + ClientManager.getPing() + " MS";
 
         var matrices = render2D.getDrawContext().getMatrices();
         var fontBig = FontUtils.durman[16];
@@ -690,22 +695,30 @@ public class HUD extends Function {
 
         if (alpha <= 240) {
             if (blur.get()) {
-                drawBlur(matrices, infoX, y, 10 + infoWidth, 18, new Vector4f(0, 0, 3, 3), 12, Color.white.getRGB());
+                drawBlur(matrices, infoX, renderY, 10 + infoWidth, 18, new Vector4f(0, 0, 3, 3), 12, Color.white.getRGB());
             }
         }
 
-        drawRoundedRect(matrices, x, y, 17 + logoWidth, 18, new Vector4f(5, 5, 0, 0), hud_color);
-        drawRoundedRect(matrices, infoX, y, 10 + infoWidth, 18, new Vector4f(0, 0, 3, 3), infoBoxColor);
-        RenderUtil.drawRoundedBorder(matrices, x, y, 17 + logoWidth, 18, new Vector4f(5, 5, 0, 0), 0.35f,
+        drawRoundedRect(matrices, x, renderY, 17 + logoWidth, 18, new Vector4f(5, 5, 0, 0), hud_color);
+        drawRoundedRect(matrices, infoX, renderY, 10 + infoWidth, 18, new Vector4f(0, 0, 3, 3), infoBoxColor);
+        RenderUtil.drawRoundedBorder(matrices, x, renderY, 17 + logoWidth, 18, new Vector4f(5, 5, 0, 0), 0.35f,
                 ColorUtil.rgba(255, 255, 255, 40));
-        RenderUtil.drawRoundedBorder(matrices, infoX, y, 10 + infoWidth, 18, new Vector4f(0, 0, 3, 3), 0.35f,
+        RenderUtil.drawRoundedBorder(matrices, infoX, renderY, 10 + infoWidth, 18, new Vector4f(0, 0, 3, 3), 0.35f,
                 ColorUtil.rgba(255, 255, 255, 28));
 
-        fontBig.renderGradientText(matrices, textLogo, x + 8, y + 4, ColorUtil.getColorStyle(180), ColorUtil.getColorStyle(30));
-        fontSmall.drawLeftAligned(matrices, textInfo, infoX + 4.5f, y + 4.5f, -1);
+        fontBig.renderGradientText(matrices, textLogo, x + 8, renderY + 4, ColorUtil.getColorStyle(180), ColorUtil.getColorStyle(30));
+        fontSmall.drawLeftAligned(matrices, textInfo, infoX + 4.5f, renderY + 4.5f, -1);
 
         watermarkDrag.setHeight(18);
         watermarkDrag.setWidth(30 + logoWidth + infoWidth);
+    }
+
+    private float getBossbarWatermarkOffset() {
+        if (mc.inGameHud == null) return 0f;
+        BossBarHud hud = mc.inGameHud.getBossBarHud();
+        Map<UUID, ClientBossBar> bars = ((BossBarHudAccessor) hud).getBossBars();
+        int visible = Math.min(4, bars.size());
+        return visible == 0 ? 0f : 20f + visible * 16f;
     }
 
 

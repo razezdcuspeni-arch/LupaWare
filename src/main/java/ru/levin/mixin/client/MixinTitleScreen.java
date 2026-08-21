@@ -12,7 +12,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import ru.levin.manager.IMinecraft;
 import ru.levin.mixin.iface.ScreenAccessor;
 import ru.levin.screens.altmanager.AltManager;
-import ru.levin.screens.mainmenu.UpdatesScreen;
 
 @Mixin(TitleScreen.class)
 public class MixinTitleScreen implements IMinecraft {
@@ -20,20 +19,15 @@ public class MixinTitleScreen implements IMinecraft {
     private void addLupaWareTabs(CallbackInfo ci) {
         int centerX = mc.getWindow().getScaledWidth() / 2;
         int y = mc.getWindow().getScaledHeight() / 4 + 144;
-        int buttonWidth = 98;
-        int gap = 4;
-        int left = centerX - buttonWidth - gap / 2;
+        int buttonWidth = 200;
+        int left = centerX - buttonWidth / 2;
         TitleScreen parent = (TitleScreen) (Object) this;
         ScreenAccessor screen = (ScreenAccessor) (Object) this;
 
         ButtonWidget altManager = ButtonWidget.builder(Text.literal("AltManager"), button ->
                         mc.setScreen(new AltManager(parent)))
                 .dimensions(left, y, buttonWidth, 20).build();
-        ButtonWidget updates = ButtonWidget.builder(Text.literal("Updates"), button ->
-                        mc.setScreen(new UpdatesScreen(parent)))
-                .dimensions(centerX + gap / 2, y, buttonWidth, 20).build();
         addWidget(screen, altManager);
-        addWidget(screen, updates);
     }
 
     private static void addWidget(ScreenAccessor screen, ButtonWidget button) {

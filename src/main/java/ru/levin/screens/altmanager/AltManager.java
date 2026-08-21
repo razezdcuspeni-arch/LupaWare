@@ -30,16 +30,12 @@ public class AltManager extends Screen implements IMinecraft {
     private float[] hoverAnimations1;
     private float[] hoverAnimations2;
     private int selectedAccountIndex = -1;
-    private static final float SCALE = 1.5f;
-
-    private static final String[] RANDOM_NICK_ADJECTIVES = {
-            "Silent", "Lucky", "Swift", "Brave", "Clever", "Calm", "Frosty", "Misty",
-            "Cosmic", "Golden", "Shadow", "Sunny", "Wild", "Silver", "Gentle", "Rapid"
-    };
-    private static final String[] RANDOM_NICK_NOUNS = {
-            "Fox", "Wolf", "Hawk", "River", "Cloud", "Panda", "Tiger", "Raven",
-            "Breeze", "Comet", "Forest", "Knight", "Spark", "Voyager", "Stone", "Moon"
-    };
+    private static final float SCALE = 1.25f;
+    private static final int VANILLA_PANEL = new Color(18, 18, 18, 235).getRGB();
+    private static final int VANILLA_SURFACE = new Color(58, 58, 58, 245).getRGB();
+    private static final int VANILLA_BUTTON = new Color(92, 92, 92, 255).getRGB();
+    private static final int VANILLA_BUTTON_HOVER = new Color(118, 118, 118, 255).getRGB();
+    private static final int VANILLA_BORDER = new Color(210, 210, 210, 190).getRGB();
 
     private float createHoverAnim = 0f, clearHoverAnim = 0f, randomHoverAnim = 0f;
     private float createScale = 1f, clearScale = 1f, randomScale = 1f;
@@ -62,7 +58,7 @@ public class AltManager extends Screen implements IMinecraft {
     @Override
     public void render(DrawContext drawContext, int mouseX, int mouseY, float delta) {
         scrollOffset = MathUtil.lerp(scrollOffset, targetScrollOffset, 8);
-        RenderUtil.drawRoundedRect(drawContext.getMatrices(), -1, -1, this.width + 2, this.height + 2, 4, new Color(27, 27, 27, 255).getRGB());
+        RenderUtil.drawRoundedRect(drawContext.getMatrices(), -1, -1, this.width + 2, this.height + 2, 0, new Color(8, 8, 8, 255).getRGB());
         if (shakeTime > 0) {
             shakeTime--;
             shakeOffsetY = (float)(Math.sin(shakeTime * 0.5) * 3);
@@ -73,11 +69,11 @@ public class AltManager extends Screen implements IMinecraft {
 
         int titleWidth = (int) FontUtils.sf_bold[48].getWidth(title);
         float titleX = (this.width - titleWidth) / 2f;
-        float titleBaseY = this.height / 7f;
+        float titleBaseY = 3f;
         float titleY = titleBaseY + shakeOffsetY;
 
         float time = (System.currentTimeMillis() % 4000L) / 1500f;
-        FontUtils.sf_bold[48].renderAnimatedGradientText(drawContext.getMatrices(), title, titleX, titleY, ColorUtil.getColorStyle(30), ColorUtil.getColorStyle(260), time);
+        drawContext.drawCenteredTextWithShadow(this.textRenderer, Text.literal(title), this.width / 2, (int) titleY + 4, Color.WHITE.getRGB());
 
         int centerX = width / 2;
         int centerY = height / 2;
@@ -91,7 +87,7 @@ public class AltManager extends Screen implements IMinecraft {
         hoverAnimationInput = MathUtil.lerp(hoverAnimationInput, isHoveredInput ? 1 : 0, 10);
         int nameColor = ColorUtil.interpolateColor(ColorUtil.rgba(180, 180, 180, 255), ColorUtil.rgba(230, 230, 230, 255), hoverAnimationInput);
 
-        RenderUtil.drawRoundedRect(drawContext.getMatrices(), inputX, inputY, inputWidth, inputHeight, 4, ColorUtil.rgba(35, 35, 35,255));
+        RenderUtil.drawRoundedRect(drawContext.getMatrices(), inputX, inputY, inputWidth, inputHeight, 2, VANILLA_SURFACE);
         if (!isTyping) {
             StringBuilder placeholder = new StringBuilder("Enter your name");
             for (int i = 0; i < (System.currentTimeMillis() / 500 % 4); i++) placeholder.append(".");
@@ -107,7 +103,7 @@ public class AltManager extends Screen implements IMinecraft {
         int listWidth = (int)(220 * SCALE);
         int listHeight = (int)(140 * SCALE);
 
-        RenderUtil.drawRoundedRect(drawContext.getMatrices(), listX, listY, listWidth, listHeight, 4,new Color(35, 35, 35,255).getRGB());
+        RenderUtil.drawRoundedRect(drawContext.getMatrices(), listX, listY, listWidth, listHeight, 2, VANILLA_PANEL);
 
         Scissor.push();
         Scissor.setFromComponentCoordinates(listX, listY, listWidth, listHeight);
@@ -125,13 +121,13 @@ public class AltManager extends Screen implements IMinecraft {
             int entryWidth = (int)(140 * SCALE);
             int entryHeight = (int)(30 * SCALE);
 
-            RenderUtil.drawRoundedRect(drawContext.getMatrices(), entryX, y, entryWidth + 10, entryHeight, 4, ColorUtil.rgba(23, 23, 23, 255));
+            RenderUtil.drawRoundedRect(drawContext.getMatrices(), entryX, y, entryWidth + 10, entryHeight, 2, VANILLA_SURFACE);
 
-            int bgColor = (i == selectedAccountIndex) ? ColorUtil.rgba(50, 50, 80, 255) : ColorUtil.rgba(23, 23, 23, 255);
+            int bgColor = (i == selectedAccountIndex) ? ColorUtil.rgba(80, 105, 140, 255) : VANILLA_BORDER;
             RenderUtil.drawRoundedBorder(drawContext.getMatrices(), entryX, y, entryWidth + 10, entryHeight, 4, 0.3f, bgColor);
 
             FontUtils.durman[21].drawLeftAligned(drawContext.getMatrices(), accounts.get(i), entryX + 10, y + 5, ColorUtil.rgba(200, 200, 200, 255));
-            FontUtils.durman[16].drawLeftAligned(drawContext.getMatrices(), "Date " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), entryX + 10, y + 30, ColorUtil.rgba(140, 140, 140, 255));
+            FontUtils.durman[16].drawLeftAligned(drawContext.getMatrices(), "Date " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), entryX + 10, y + 25, ColorUtil.rgba(205, 205, 205, 255));
 
             int btnWidth = (int)(60 * SCALE);
             int btnHeight = (int)(13 * SCALE);
@@ -141,7 +137,7 @@ public class AltManager extends Screen implements IMinecraft {
             boolean accountHovered1 = RenderUtil.isInRegion(mouseX, mouseY, selectBtnX, selectBtnY, btnWidth, btnHeight);
             hoverAnimations1[i] = MathUtil.lerp(hoverAnimations1[i], accountHovered1 ? 1 : 0, 12);
 
-            int selectBgColor = ColorUtil.blendColorsInt(new Color(35, 35, 35).getRGB(), new Color(55, 55, 55).getRGB(), hoverAnimations1[i]);
+            int selectBgColor = ColorUtil.blendColorsInt(VANILLA_BUTTON, VANILLA_BUTTON_HOVER, hoverAnimations1[i]);
             int outlineColor = new Color(60, 60, 60, 180).getRGB();
             RenderUtil.drawRoundedRect(drawContext.getMatrices(), selectBtnX, selectBtnY, btnWidth, btnHeight + 2, 4, selectBgColor);
             RenderUtil.drawRoundedBorder(drawContext.getMatrices(), selectBtnX, selectBtnY, btnWidth, btnHeight + 2, 4, 1f, outlineColor);
@@ -151,7 +147,7 @@ public class AltManager extends Screen implements IMinecraft {
             int deleteBtnY = selectBtnY + btnHeight + (int)(3 * SCALE);
             boolean accountHovered2 = RenderUtil.isInRegion(mouseX, mouseY, deleteBtnX, deleteBtnY, btnWidth, btnHeight);
             hoverAnimations2[i] = MathUtil.lerp(hoverAnimations2[i], accountHovered2 ? 1 : 0, 12);
-            int deleteBgColor = ColorUtil.blendColorsInt(new Color(35, 35, 35).getRGB(), new Color(55, 55, 55).getRGB(), hoverAnimations2[i]);
+            int deleteBgColor = ColorUtil.blendColorsInt(VANILLA_BUTTON, VANILLA_BUTTON_HOVER, hoverAnimations2[i]);
             RenderUtil.drawRoundedRect(drawContext.getMatrices(), deleteBtnX, deleteBtnY, btnWidth, btnHeight + 2, 4, deleteBgColor);
             RenderUtil.drawRoundedBorder(drawContext.getMatrices(), deleteBtnX, deleteBtnY, btnWidth, btnHeight + 2, 4, 1f, outlineColor);
             FontUtils.sf_medium[20].centeredDraw(drawContext.getMatrices(), "Delete", deleteBtnX + btnWidth / 2f, deleteBtnY + btnHeight / 2f - 6, Color.WHITE.getRGB());
@@ -178,7 +174,7 @@ public class AltManager extends Screen implements IMinecraft {
             createHoverAnim = Math.max(0f, createHoverAnim - animSpeed);
             createScale = Math.max(1f, createScale - animSpeed * 0.5f);
         }
-        int createBgColor = ColorUtil.blendColorsInt(new Color(35, 35, 35).getRGB(), new Color(55, 55, 55).getRGB(), createHoverAnim);
+        int createBgColor = ColorUtil.blendColorsInt(VANILLA_BUTTON, VANILLA_BUTTON_HOVER, createHoverAnim);
         drawContext.getMatrices().push();
         drawContext.getMatrices().translate(createX + buttonWidth / 2f, buttonsY + buttonHeight / 2f, 0);
         drawContext.getMatrices().scale(createScale, createScale, 1);
@@ -196,7 +192,7 @@ public class AltManager extends Screen implements IMinecraft {
             clearHoverAnim = Math.max(0f, clearHoverAnim - animSpeed);
             clearScale = Math.max(1f, clearScale - animSpeed * 0.5f);
         }
-        int clearBgColor = ColorUtil.blendColorsInt(new Color(35, 35, 35).getRGB(), new Color(55, 55, 55).getRGB(), clearHoverAnim);
+        int clearBgColor = ColorUtil.blendColorsInt(VANILLA_BUTTON, VANILLA_BUTTON_HOVER, clearHoverAnim);
         drawContext.getMatrices().push();
         drawContext.getMatrices().translate(clearX + buttonWidth / 2f, buttonsY + buttonHeight / 2f, 0);
         drawContext.getMatrices().scale(clearScale, clearScale, 1);
@@ -214,7 +210,7 @@ public class AltManager extends Screen implements IMinecraft {
             randomHoverAnim = Math.max(0f, randomHoverAnim - animSpeed);
             randomScale = Math.max(1f, randomScale - animSpeed * 0.5f);
         }
-        int randomBgColor = ColorUtil.blendColorsInt(new Color(35, 35, 35).getRGB(), new Color(55, 55, 55).getRGB(), randomHoverAnim);
+        int randomBgColor = ColorUtil.blendColorsInt(VANILLA_BUTTON, VANILLA_BUTTON_HOVER, randomHoverAnim);
         drawContext.getMatrices().push();
         drawContext.getMatrices().translate(randomX + buttonWidth / 2f, buttonsY + buttonHeight / 2f, 0);
         drawContext.getMatrices().scale(randomScale, randomScale, 1);
@@ -396,13 +392,16 @@ public class AltManager extends Screen implements IMinecraft {
     }
 
     private String generateRandomNick() {
+        // Popular adjective+noun names are frequently already taken. A short
+        // random base36 suffix keeps the name valid for Minecraft and makes
+        // collisions with existing server accounts statistically negligible.
         String randomName;
         boolean alreadyExists;
         do {
-            String adjective = RANDOM_NICK_ADJECTIVES[ThreadLocalRandom.current().nextInt(RANDOM_NICK_ADJECTIVES.length)];
-            String noun = RANDOM_NICK_NOUNS[ThreadLocalRandom.current().nextInt(RANDOM_NICK_NOUNS.length)];
-            randomName = adjective + noun;
-
+            long value = ThreadLocalRandom.current().nextLong();
+            String suffix = Long.toUnsignedString(value, 36);
+            if (suffix.length() > 13) suffix = suffix.substring(0, 13);
+            randomName = "q" + suffix;
             alreadyExists = false;
             for (String account : accounts) {
                 if (account.equalsIgnoreCase(randomName)) {

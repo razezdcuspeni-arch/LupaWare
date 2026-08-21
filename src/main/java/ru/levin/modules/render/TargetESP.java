@@ -54,6 +54,9 @@ public class TargetESP extends Function {
     @Override
     public void onEvent(Event event) {
         if (!(event instanceof EventRender3D renderEvent)) return;
+        // Pulse is emitted once from the world-space dispatch. The camera-space
+        // dispatch is reserved for projection-oriented renderers.
+        if (!renderEvent.isWorldSpace()) return;
         Entity currentTarget = Manager.FUNCTION_MANAGER.attackAura.target;
 
         if (currentTarget != null && (lastTarget == null || !lastTarget.equals(currentTarget))) {
@@ -93,7 +96,6 @@ public class TargetESP extends Function {
         Camera camera = mc.gameRenderer.getCamera();
         if (camera == null) return;
         float tickDelta = event.getDeltatick().getTickDelta(false);
-        Vec3d cameraPos = camera.getPos();
         double targetX = interpolate(target.prevX, target.getX(), tickDelta);
         double targetY = interpolate(target.prevY, target.getY(), tickDelta);
         double targetZ = interpolate(target.prevZ, target.getZ(), tickDelta);
@@ -107,39 +109,29 @@ public class TargetESP extends Function {
         RenderSystem.depthMask(false);
 
         BufferBuilder buffer = IMinecraft.tessellator().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
-        for (int i = 0; i < pulseTrails.length; i++) {
-            double phase = time * 0.005 + i * (Math.PI * 2.0 / pulseTrails.length);
-            double radius = target.getWidth() + 0.15;
-            double tx = Math.sin(phase) * radius;
-            double tz = Math.cos(phase) * radius;
-            double ty = Math.sin(phase * 0.8) * (target.getHeight() * 0.55) * (i % 2 == 0 ? 1.0 : -1.0)
-                    + target.getHeight() * 0.5;
+        Matrix4f worldMatrix = event.getMatrixStack().peek().getPositionMatrix();
+        int orbitCount = 4;
+        for (int i = 0; i < orbitCount; i++) {
+            double phase = time * 0.0032 + i * (Math.PI * 2.0 / orbitCount);
+            double radius = target.getWidth() * 0.72 + 0.18 + Math.sin(time * 0.004 + i) * 0.06;
+            double x = targetX + Math.cos(phase) * radius;
+            double z = targetZ + Math.sin(phase) * radius;
+            double y = targetY + target.getHeight() * (0.25 + 0.18 * i)
+                    + Math.sin(phase * 1.35) * target.getHeight() * 0.22;
+            float size = (0.18f + 0.04f * (float) Math.sin(time * 0.006 + i)) * progress;
+            int color = ColorUtil.applyAlpha(ColorUtil.getColorStyle((i * 90 + 30) % 360),
+                    MathHelper.clamp(0.78f * progress, 0f, 1f));
 
-            pulseTrails[i].addFirst(new Vec3d(tx, ty, tz));
-            while (pulseTrails[i].size() > 35) pulseTrails[i].removeLast();
-
-            int segment = 0;
-            for (Vec3d relative : pulseTrails[i]) {
-                float fade = 1f - segment / (float) pulseTrails[i].size();
-                float pointScale = (segment == 0 ? 0.34f : 0.21f) * fade * progress;
-                int alpha = (int) (255f * Math.pow(fade, 1.8f) * progress);
-                int color = ColorUtil.applyAlpha(ColorUtil.getColorStyle((int) (360f * (i / 5f))), alpha / 255f);
-
-                MatrixStack billboard = new MatrixStack();
-                billboard.translate(
-                        targetX + relative.x - cameraPos.x,
-                        targetY + relative.y - cameraPos.y,
-                        targetZ + relative.z - cameraPos.z
-                );
-                billboard.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-camera.getYaw()));
-                billboard.multiply(RotationAxis.POSITIVE_X.rotationDegrees(camera.getPitch()));
-                Matrix4f matrix = billboard.peek().getPositionMatrix();
-                drawPulseQuad(buffer, matrix, pointScale, color);
-                segment++;
-            }
+            MatrixStack billboard = new MatrixStack();
+            billboard.multiplyPositionMatrix(worldMatrix);
+            billboard.translate(x, y, z);
+            billboard.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-camera.getYaw()));
+            billboard.multiply(RotationAxis.POSITIVE_X.rotationDegrees(camera.getPitch()));
+            drawPulseQuad(buffer, billboard.peek().getPositionMatrix(), size, color);
         }
 
         RenderUtil.render3D.endBuilding(buffer);
+        clearPulseTrails();
         RenderSystem.depthMask(true);
         RenderSystem.enableDepthTest();
         RenderSystem.enableCull();

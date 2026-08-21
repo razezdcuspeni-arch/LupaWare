@@ -34,11 +34,7 @@ public class MainMenu extends Screen {
         addDrawableChild(ButtonWidget.builder(Text.literal("AltManager"), button ->
                 client.setScreen(new AltManager(this)))
                 .dimensions(left, top + 2 * (BUTTON_HEIGHT + BUTTON_GAP), BUTTON_WIDTH, BUTTON_HEIGHT).build());
-        addDrawableChild(ButtonWidget.builder(Text.literal("Updates"), button ->
-                client.setScreen(new UpdatesScreen(this)))
-                .dimensions(left, top + 3 * (BUTTON_HEIGHT + BUTTON_GAP), BUTTON_WIDTH, BUTTON_HEIGHT).build());
-
-        int footerY = top + 4 * (BUTTON_HEIGHT + BUTTON_GAP);
+        int footerY = top + 3 * (BUTTON_HEIGHT + BUTTON_GAP);
         int footerWidth = (BUTTON_WIDTH - BUTTON_GAP) / 2;
         addDrawableChild(ButtonWidget.builder(Text.translatable("menu.options"), button ->
                 client.setScreen(new OptionsScreen(this, client.options)))

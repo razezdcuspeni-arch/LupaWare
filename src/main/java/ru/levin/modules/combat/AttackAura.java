@@ -36,6 +36,7 @@ import ru.levin.modules.setting.BooleanSetting;
 import ru.levin.modules.setting.ModeSetting;
 import ru.levin.modules.setting.MultiSetting;
 import ru.levin.modules.setting.SliderSetting;
+import ru.levin.util.math.MathUtil;
 import ru.levin.util.math.RayTraceUtil;
 import ru.levin.util.move.MoveUtil;
 import ru.levin.util.player.AuraUtil;
@@ -63,7 +64,10 @@ public class AttackAura extends Function {
             "SlothAC",
             "SpookyPooky",
             "ManusRotation",
-            "LonyGrief"
+            "LonyGrief",
+            "ФанТайм",
+            "ФанТайм ФОВ",
+            "Легит"
     );
 
     private final MultiSetting targets = new MultiSetting(
@@ -192,6 +196,7 @@ public class AttackAura extends Function {
         }
         lastHitMs = 0L;
         shakeStartTime = 0L;
+        Arrays.fill(deltaPitchHistory, mc.player != null ? mc.player.getPitch() : 0f);
     }
 
     @Override
@@ -273,6 +278,8 @@ public class AttackAura extends Function {
 
     private long shakeStartTime = 0L;
     private final SpookyPookyState spookyPookyState = new SpookyPookyState();
+    private final float[] deltaPitchHistory = new float[30];
+
     private void handleAttackAndRotation(LivingEntity t) {
         float currYaw = Manager.ROTATION.getYaw();
         float currPitch = Manager.ROTATION.getPitch();
@@ -298,6 +305,11 @@ public class AttackAura extends Function {
 
         if (isRotationMode("ManusRotation")) {
             manusRotation(t, canAttackNow, noPotion);
+            return;
+        }
+
+        if (isRotationMode("ФанТайм") || isRotationMode("ФанТайм ФОВ") || isRotationMode("Легит")) {
+            deltaRotation(t, canAttackNow, passRay, noPotion);
             return;
         }
 
@@ -475,6 +487,54 @@ public class AttackAura extends Function {
         }
         setRotation(t, true);
     }
+    private void deltaRotation(LivingEntity entity, boolean canAttackNow, boolean passRay, boolean noPotion) {
+        Vec3d eye = mc.player.getEyePos();
+        Vec3d center = entity.getBoundingBox().getCenter();
+        double dx = center.x - eye.x;
+        double dy = center.y - eye.y;
+        double dz = center.z - eye.z;
+        float yawToTarget = (float) MathHelper.wrapDegrees(Math.toDegrees(Math.atan2(dz, dx)) - 90.0d);
+        float pitchToTarget = MathHelper.clamp((float) -Math.toDegrees(Math.atan2(dy, Math.hypot(dx, dz))), -90f, 90f);
+
+        System.arraycopy(deltaPitchHistory, 0, deltaPitchHistory, 1, deltaPitchHistory.length - 1);
+        deltaPitchHistory[0] = pitchToTarget;
+
+        float time = mc.player.age + mc.getRenderTickCounter().getTickDelta(false);
+        boolean legit = isRotationMode("Легит");
+        float smoothYaw;
+        float smoothPitch;
+        float finalYaw;
+        float finalPitch;
+
+        if (legit) {
+            float wave = (float) (((Math.sin(time * 0.31f) * 0.5d)
+                    + (Math.sin(time * 1.7f + 2.6f) * 0.2d)) * 2.0d);
+            smoothYaw = wave;
+            smoothPitch = wave;
+            finalYaw = MathUtil.interpolateFloat(mc.player.getYaw(), yawToTarget, 0.3f);
+            finalPitch = MathUtil.interpolateFloat(mc.player.getPitch(), pitchToTarget, 0.2f);
+            if (isRotationMode("ФанТайм ФОВ")) finalPitch = mc.player.getPitch();
+        } else {
+            smoothYaw = (float) (Math.sin(time * 0.4f) * 3.0d + Math.sin(time * 0.95f + 1.4d) * 2.0d);
+            smoothPitch = (float) (Math.cos(time * 0.5f + 0.7d) * 0.5d
+                    + Math.cos(time * 0.78f + 3.1d) * 1.5d);
+            finalPitch = MathUtil.interpolateFloat(mc.player.getPitch(),
+                    deltaPitchHistory[MathHelper.clamp(canAttackNow ? 0 : 10, 0, 29)] + smoothPitch * 1.5f,
+                    0.35f);
+            finalYaw = MathUtil.interpolateFloat(mc.player.getYaw(), yawToTarget + smoothYaw, 0.25f);
+            if (isRotationMode("ФанТайм ФОВ")) finalPitch = mc.player.getPitch();
+        }
+
+        if (!canAttackNow && ((int) time % 2 == 0)) finalYaw = mc.player.getYaw();
+        float outputPitch = MathHelper.clamp(finalPitch + smoothPitch, -90f, 90f);
+        Manager.ROTATION.setSmooth(finalYaw + smoothYaw, outputPitch,
+                legit ? 0.35f : 0.55f, legit ? 180f : 220f, legit ? 1 : 1, true);
+
+        boolean aligned = !raycast.get()
+                || RayTraceUtil.getMouseOver(entity, Manager.ROTATION.getYaw(), Manager.ROTATION.getPitch(), distance.get().floatValue()) == entity;
+        if (canAttackNow && passRay && aligned && canAttack() && noPotion) attackTarget(mc.player);
+    }
+
     private void spookyPookyRotation(LivingEntity entity, boolean canAttackNow, boolean noPotion) {
         float currentYaw = Manager.ROTATION.getYaw();
         float currentPitch = Manager.ROTATION.getPitch();
