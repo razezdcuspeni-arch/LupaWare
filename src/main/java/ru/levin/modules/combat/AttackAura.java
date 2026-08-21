@@ -17,7 +17,6 @@ import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import ru.levin.events.Event;
 import ru.levin.events.impl.EventUpdate;
@@ -41,7 +40,6 @@ import ru.levin.util.math.RayTraceUtil;
 import ru.levin.util.move.MoveUtil;
 import ru.levin.util.player.AuraUtil;
 import ru.levin.util.player.InventoryUtil;
-import ru.levin.util.player.GCDUtil;
 import ru.levin.util.vector.VectorUtil;
 
 import java.util.*;
@@ -59,11 +57,8 @@ public class AttackAura extends Function {
             "FunTime",
             "SpookyTime",
             "AresMIne",
-            "testFT",
             "testspooky",
             "SlothAC",
-            "SpookyPooky",
-            "ManusRotation",
             "LonyGrief",
             "ФанТайм",
             "ФанТайм ФОВ",
@@ -118,7 +113,7 @@ public class AttackAura extends Function {
     protected boolean isRotationMode(String value) {
         String active = getRotationMode();
         if (value.equals("SpookyTime")) return active.equals("SpookyTime") || active.equals("testspooky");
-        if (value.equals("FunTime")) return active.equals("FunTime") || active.equals("testFT");
+        if (value.equals("FunTime")) return active.equals("FunTime");
         if (value.equals("HollyWorld")) return active.equals("HollyWorld") || active.equals("AresMIne");
         return value.equals(active);
     }
@@ -203,7 +198,7 @@ public class AttackAura extends Function {
     protected void onDisable() {
         if (target != null && isValidTarget(target)) {
             String modeName = getRotationMode();
-            if (modeName.equals("FunTime") || modeName.equals("testFT")
+            if (modeName.equals("FunTime")
                     || modeName.equals("HollyWorld") || modeName.equals("AresMIne")
                     || modeName.equals("ReallyWorld")) {
                 Manager.ROTATION.smoothReturn(350);
@@ -264,21 +259,13 @@ public class AttackAura extends Function {
         return list.get(0);
     }
 
-    private float randomYawOffset = 0;
-    private float randomPitchOffset = 0;
-    private int randomUpdateTicks = 0;
-    private float bodyYaw, bodyPitch, prevBodyYaw, prevBodyPitch;
-    private float headYaw, headPitch, prevHeadYaw, prevHeadPitch;
-
-    private final int updateInterval = 2;
-    private final float maxYawShake = 0.3f;
-    private final float maxPitchShake = 0.25f;
     private final Random random = new Random();
 
 
     private long shakeStartTime = 0L;
-    private final SpookyPookyState spookyPookyState = new SpookyPookyState();
     private final float[] deltaPitchHistory = new float[30];
+    private final TestSpookyRotation.SmoothAim testSpookyAim =
+            new TestSpookyRotation.SmoothAim(TestSpookyRotation.AimProfile.human());
 
     private void handleAttackAndRotation(LivingEntity t) {
         float currYaw = Manager.ROTATION.getYaw();
@@ -298,134 +285,13 @@ public class AttackAura extends Function {
             return;
         }
 
-        if (isRotationMode("SpookyPooky")) {
-            spookyPookyRotation(t, canAttackNow, noPotion);
-            return;
-        }
-
-        if (isRotationMode("ManusRotation")) {
-            manusRotation(t, canAttackNow, noPotion);
-            return;
-        }
-
         if (isRotationMode("ФанТайм") || isRotationMode("ФанТайм ФОВ") || isRotationMode("Легит")) {
             deltaRotation(t, canAttackNow, passRay, noPotion);
             return;
         }
 
         if (isRotationMode("SpookyTime")) {
-            if (mc.player == null) return;
-
-            if (target == null) {
-                randomYawOffset = 0;
-                randomPitchOffset = 0;
-                float centerYaw = mc.player.getYaw();
-                float centerPitch = mc.player.getPitch();
-
-                {
-                    prevBodyYaw = bodyYaw;
-                    prevBodyPitch = bodyPitch;
-
-                    float yawDiff = MathHelper.wrapDegrees(centerYaw - bodyYaw);
-                    float pitchDiff = centerPitch - bodyPitch;
-
-                    float yawStep = MathHelper.clamp(yawDiff, -45, 45);
-                    float pitchStep = MathHelper.clamp(pitchDiff, -45, 45);
-
-                    bodyYaw += yawStep;
-                    bodyPitch = MathHelper.clamp(bodyPitch + pitchStep, -90f, 90f);
-                }
-
-                {
-                    prevHeadYaw = headYaw;
-                    prevHeadPitch = headPitch;
-
-                    float yawDiff = MathHelper.wrapDegrees(centerYaw - headYaw);
-                    float pitchDiff = centerPitch - headPitch;
-
-                    float yawStep = MathHelper.clamp(yawDiff, -50, 50);
-                    float pitchStep = MathHelper.clamp(pitchDiff, -50, 50);
-
-                    headYaw += yawStep;
-                    headPitch = MathHelper.clamp(headPitch + pitchStep, -90f, 90f);
-                }
-                return;
-            }
-
-            randomUpdateTicks++;
-            if (randomUpdateTicks >= updateInterval) {
-                randomUpdateTicks = 0;
-                randomYawOffset = (random.nextFloat() * 2 - 1) * maxYawShake;
-                randomPitchOffset = (random.nextFloat() * 2 - 1) * maxPitchShake;
-            }
-
-            Vec3d targetPos;
-            {
-                double x = target.getBoundingBox().getCenter().x;
-                double y = target.getY();
-                double z = target.getBoundingBox().getCenter().z;
-
-                int randPoint = random.nextInt(4);
-                switch (randPoint) {
-                    case 0 -> y += target.getHeight() * 0.9;
-                    case 1 -> y += target.getHeight() * 0.75;
-                    case 2 -> y += target.getHeight() * 0.5;
-                    case 3 -> y += target.getHeight() * 0.25;
-                }
-
-                x += (random.nextDouble() * 0.4 - 0.2);
-                z += (random.nextDouble() * 0.4 - 0.2);
-
-                targetPos = new Vec3d(x, y, z);
-            }
-
-            Vec2f rot;
-            {
-                Vec3d eyePos = mc.player.getEyePos();
-                double deltaX = targetPos.x - eyePos.x;
-                double deltaY = targetPos.y - eyePos.y;
-                double deltaZ = targetPos.z - eyePos.z;
-                double hDistance = Math.sqrt(deltaX * deltaX + deltaZ * deltaZ);
-
-                double yaw = (Math.atan2(deltaZ, deltaX) * 180 / Math.PI) - 90.0f;
-                double pitch = -(Math.atan2(deltaY, hDistance) * 180 / Math.PI);
-
-                rot = new Vec2f((float) pitch, (float) yaw);
-            }
-            {
-                prevBodyYaw = bodyYaw;
-                prevBodyPitch = bodyPitch;
-
-                float yawDiff = MathHelper.wrapDegrees(rot.y - bodyYaw);
-                float pitchDiff = rot.x - bodyPitch;
-
-                bodyYaw += MathHelper.clamp(yawDiff, -45, 45);
-                bodyPitch = MathHelper.clamp(bodyPitch + pitchDiff, -45, 45);
-            }
-
-            Vec2f headRotation;
-            {
-                prevHeadYaw = headYaw;
-                prevHeadPitch = headPitch;
-
-                float yawDiff = MathHelper.wrapDegrees(rot.y - headYaw);
-                float pitchDiff = rot.x - headPitch;
-
-                headYaw += MathHelper.clamp(yawDiff, -50, 50);
-                headPitch = MathHelper.clamp(pitchDiff, -50, 50);
-
-                headRotation = new Vec2f(
-                        rot.x + randomPitchOffset,
-                        rot.y + randomYawOffset
-                );
-            }
-            Manager.ROTATION.setSmooth(headRotation.y, headRotation.x, 0.8f, 60, 90, true);
-            boolean aligned = !raycast.get()
-                    || RayTraceUtil.getMouseOver(t, Manager.ROTATION.getYaw(), Manager.ROTATION.getPitch(), distance.get().floatValue()) == t;
-            if (canAttackNow && aligned && noPotion) {
-                attackTarget(mc.player);
-            }
-
+            testSpookyRotation(t, canAttackNow, passRay, noPotion);
             return;
         }
 
@@ -535,129 +401,42 @@ public class AttackAura extends Function {
         if (canAttackNow && passRay && aligned && canAttack() && noPotion) attackTarget(mc.player);
     }
 
-    private void spookyPookyRotation(LivingEntity entity, boolean canAttackNow, boolean noPotion) {
-        float currentYaw = Manager.ROTATION.getYaw();
-        float currentPitch = Manager.ROTATION.getPitch();
-        Vec3d point = entity.getBoundingBox().getCenter();
-        float[] next = spookyPookyState.calculate(
-                System.currentTimeMillis(), currentYaw, currentPitch,
-                mc.player.getEyePos(), point, GCDUtil.getGCDValue(), currentYaw, currentPitch
-        );
-        float newYaw = next[0];
-        float newPitch = next[1];
-        Manager.ROTATION.set(newYaw, newPitch);
-        boolean aligned = !raycast.get()
-                || RayTraceUtil.getMouseOver(entity, newYaw, newPitch, distance.get().floatValue()) == entity;
-        if (canAttackNow && canAttack() && aligned && noPotion) {
-            attackTarget(mc.player);
+    private LivingEntity testSpookyTarget;
+    private long testSpookyTargetSwitchTime = 0L;
+
+    private void testSpookyRotation(LivingEntity entity, boolean canAttackNow, boolean passRay, boolean noPotion) {
+        long now = System.currentTimeMillis();
+
+        if (testSpookyTarget != entity) {
+            if (now - testSpookyTargetSwitchTime > 500) {
+                testSpookyTarget = entity;
+                testSpookyTargetSwitchTime = now;
+                testSpookyAim.reset();
+            }
         }
-    }
 
-    private static final class SpookyPookyState {
-        private final Random random = new Random();
+        if (testSpookyTarget == null) return;
 
-        private float[] calculate(long now, float currentYaw, float currentPitch, Vec3d eyes, Vec3d point,
-                                  float mouseStep, float lastServerYaw, float lastServerPitch) {
-            double dx = point.x - eyes.x;
-            double dy = point.y - eyes.y;
-            double dz = point.z - eyes.z;
-            float distance = (float) eyes.distanceTo(point);
-            float r1 = random.nextFloat();
-            float r2 = random.nextFloat();
-            float r3 = random.nextFloat();
-            float r4 = random.nextFloat();
-
-            float distanceFactor = distance < 2.0f ? 0.8f + r1 * 0.4f
-                    : distance < 4.0f ? 1.2f + r2 * 0.6f : 0.9f + r3 * 0.5f;
-            float baseSpeed = MathHelper.clamp(distance * 0.25f, 0.8f, 3.0f) * distanceFactor;
-
-            float targetYaw = (float) Math.toDegrees(Math.atan2(dz, dx)) - 90.0f;
-            float targetPitch = MathHelper.clamp(
-                    (float) -Math.toDegrees(Math.atan2(dy, Math.hypot(dx, dz))),
-                    -90.0f, 90.0f);
-            float yawDiff = MathHelper.wrapDegrees(targetYaw - currentYaw);
-            float pitchDiff = targetPitch - currentPitch;
-            if (Math.abs(yawDiff) > 280.0f) yawDiff = MathHelper.clamp(yawDiff, -280.0f, 280.0f);
-
-            float smooth = distance < 3.0f && Math.abs(yawDiff) < 10.0f
-                    ? 0.08f + r2 * 0.06f
-                    : distance > 5.0f || Math.abs(yawDiff) > 30.0f
-                    ? 0.18f + r3 * 0.12f : 0.12f + r1 * 0.08f;
-            float yawMove = yawDiff * smooth * (baseSpeed * 0.7f);
-            float pitchMove = pitchDiff * smooth * (baseSpeed * 0.5f);
-            if (r4 < 0.02f) {
-                yawMove += (random.nextFloat() - 0.5f) * 1.2f;
-                pitchMove += (random.nextFloat() - 0.5f) * 0.8f;
-            }
-            yawMove += (float) Math.sin(now / 300.0) * 0.03f;
-            pitchMove += (float) Math.cos(now / 500.0) * 0.02f;
-            if (random.nextFloat() < 0.05f && Math.abs(yawDiff) > 5.0f) {
-                yawMove *= 1.1f + random.nextFloat() * 0.3f;
-            }
-
-            float newYaw = currentYaw + yawMove;
-            float newPitch = MathHelper.clamp(currentPitch + pitchMove, -90.0f, 90.0f);
-            if (mouseStep > 0.0f) {
-                newYaw = lastServerYaw + Math.round(MathHelper.wrapDegrees(newYaw - lastServerYaw) / mouseStep) * mouseStep;
-                newPitch = lastServerPitch + Math.round((newPitch - lastServerPitch) / mouseStep) * mouseStep;
-            }
-            if (Math.abs(newYaw - currentYaw) < 0.01f && Math.abs(newPitch - currentPitch) < 0.01f) {
-                newYaw = currentYaw;
-                newPitch = currentPitch;
-            }
-            return new float[]{newYaw, MathHelper.clamp(newPitch, -90.0f, 90.0f)};
-        }
-    }
-
-
-    private void manusRotation(LivingEntity entity, boolean canAttackNow, boolean noPotion) {
         Vec3d eye = mc.player.getEyePos();
-        Vec3d center = entity.getBoundingBox().getCenter();
-        double[] heights = {0.18D, 0.38D, 0.52D, 0.68D, 0.86D};
-        Vec3d bestPoint = center;
-        double bestScore = Double.MAX_VALUE;
-        float currentYaw = Manager.ROTATION.getYaw();
-        float currentPitch = Manager.ROTATION.getPitch();
+        Vec3d point = testSpookyTarget.getBoundingBox().getCenter();
+        double dx = point.x - eye.x;
+        double dy = point.y - eye.y;
+        double dz = point.z - eye.z;
 
-        for (double height : heights) {
-            Vec3d point = new Vec3d(center.x, entity.getY() + entity.getHeight() * height, center.z);
-            double dx = point.x - eye.x;
-            double dy = point.y - eye.y;
-            double dz = point.z - eye.z;
-            double horizontal = Math.hypot(dx, dz);
-            float pointYaw = (float) Math.toDegrees(Math.atan2(dz, dx)) - 90.0F;
-            float pointPitch = (float) -Math.toDegrees(Math.atan2(dy, horizontal));
-            double angularScore = Math.abs(MathHelper.wrapDegrees(pointYaw - currentYaw))
-                    + Math.abs(pointPitch - currentPitch) * 0.55D;
-            double distanceScore = eye.distanceTo(point) * 0.04D;
-            if (angularScore + distanceScore < bestScore) {
-                bestScore = angularScore + distanceScore;
-                bestPoint = point;
-            }
-        }
+        float targetYaw = (float) Math.toDegrees(Math.atan2(dz, dx)) - 90.0f;
+        float targetPitch = (float) -Math.toDegrees(Math.atan2(dy, Math.hypot(dx, dz)));
 
-        double dx = bestPoint.x - eye.x;
-        double dy = bestPoint.y - eye.y;
-        double dz = bestPoint.z - eye.z;
-        float targetYaw = (float) Math.toDegrees(Math.atan2(dz, dx)) - 90.0F;
-        float targetPitch = MathHelper.clamp(
-                (float) -Math.toDegrees(Math.atan2(dy, Math.hypot(dx, dz))), -90.0F, 90.0F);
-        float yawDelta = MathHelper.wrapDegrees(targetYaw - currentYaw);
-        float pitchDelta = targetPitch - currentPitch;
-        // Constant steps remove the distance-based acceleration seen in the duel.
-        // The point selection remains multipoint, but the movement itself is uniform.
-        float yawStep = 10.0F;
-        float pitchStep = 7.0F;
-        float nextYaw = currentYaw + MathHelper.clamp(yawDelta, -yawStep, yawStep);
-        float nextPitch = MathHelper.clamp(currentPitch + MathHelper.clamp(pitchDelta, -pitchStep, pitchStep), -90.0F, 90.0F);
+        TestSpookyRotation.Vector2D currentAngles = new TestSpookyRotation.Vector2D(
+                Manager.ROTATION.getYaw(), Manager.ROTATION.getPitch());
+        TestSpookyRotation.Vector2D targetAngles = new TestSpookyRotation.Vector2D(targetYaw, targetPitch);
+        TestSpookyRotation.Vector2D newAngles = testSpookyAim.update(currentAngles, targetAngles);
 
-        Manager.ROTATION.set(nextYaw, nextPitch);
-        float remainingYaw = Math.abs(MathHelper.wrapDegrees(targetYaw - nextYaw));
-        float remainingPitch = Math.abs(targetPitch - nextPitch);
-        boolean aimReady = remainingYaw <= 14.0F && remainingPitch <= 10.0F;
-        boolean rayReady = !raycast.get()
-                || RayTraceUtil.getMouseOver(entity, nextYaw, nextPitch, distance.get().floatValue()) == entity;
-        if (canAttackNow && canAttack() && aimReady && rayReady && noPotion) {
+        Manager.ROTATION.set((float) newAngles.x, (float) newAngles.y);
+
+        boolean aligned = !raycast.get()
+                || RayTraceUtil.getMouseOver(testSpookyTarget, Manager.ROTATION.getYaw(),
+                Manager.ROTATION.getPitch(), distance.get().floatValue()) == testSpookyTarget;
+        if (canAttackNow && passRay && aligned && canAttack() && noPotion) {
             attackTarget(mc.player);
         }
     }
@@ -853,8 +632,7 @@ public class AttackAura extends Function {
         }
 
         // Let the normal Minecraft attack cooldown decide the next valid hit.
-        // ManusRotation uses a short gate so a ready attack is not lost to an extra timer.
-        cpsLimit = System.currentTimeMillis() + (isRotationMode("ManusRotation") ? 50L : 500L);
+        cpsLimit = System.currentTimeMillis() + 500L;
 
         mc.interactionManager.attackEntity(player, target);
         mc.player.swingHand(MAIN_HAND);
