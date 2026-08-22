@@ -65,17 +65,22 @@ public abstract class MixinHandledScreen<T extends ScreenHandler> extends Screen
         if (button != GLFW.GLFW_MOUSE_BUTTON_LEFT || mc.player == null) return;
         int buttonY = getActionButtonY();
         boolean container = !(this.getScreenHandler() instanceof PlayerScreenHandler);
-        int leftButtonX = container ? getActionButtonX(false) : this.x + (this.backgroundWidth - 104) / 2;
-        int rightButtonX = getActionButtonX(true);
-        if (!container && isInside(mouseX, mouseY, leftButtonX, buttonY, 104, 18)) {
+        int buttonWidth = container ? 80 : 104;
+        int leftButtonX = container ? getActionButtonX(0) : this.x + (this.backgroundWidth - buttonWidth) / 2;
+        int middleButtonX = getActionButtonX(1);
+        int rightButtonX = getActionButtonX(2);
+        if (!container && isInside(mouseX, mouseY, leftButtonX, buttonY, buttonWidth, 18)) {
             dropAllFromPlayerInventory();
             cir.setReturnValue(true);
         } else if (container) {
-            if (isInside(mouseX, mouseY, leftButtonX, buttonY, 104, 18)) {
+            if (isInside(mouseX, mouseY, leftButtonX, buttonY, buttonWidth, 18)) {
                 dropAllFromContainer();
                 cir.setReturnValue(true);
-            } else if (isInside(mouseX, mouseY, rightButtonX, buttonY, 104, 18)) {
+            } else if (isInside(mouseX, mouseY, middleButtonX, buttonY, buttonWidth, 18)) {
                 moveAllIntoContainer();
+                cir.setReturnValue(true);
+            } else if (isInside(mouseX, mouseY, rightButtonX, buttonY, buttonWidth, 18)) {
+                takeAllFromContainer();
                 cir.setReturnValue(true);
             }
         }
@@ -83,13 +88,16 @@ public abstract class MixinHandledScreen<T extends ScreenHandler> extends Screen
 
     @Unique
     private int getActionButtonY() {
-        return this.y + this.backgroundHeight + 6;
+        return Math.max(4, this.y - 24);
     }
 
     @Unique
-    private int getActionButtonX(boolean right) {
-        int centerX = this.x + this.backgroundWidth / 2;
-        return right ? centerX + 8 : centerX - 112;
+    private int getActionButtonX(int index) {
+        int buttonWidth = 80;
+        int gap = 4;
+        int totalWidth = 3 * buttonWidth + 2 * gap;
+        int startX = this.x + (this.backgroundWidth - totalWidth) / 2;
+        return startX + index * (buttonWidth + gap);
     }
 
     @Unique
@@ -102,22 +110,25 @@ public abstract class MixinHandledScreen<T extends ScreenHandler> extends Screen
         if (mc.player == null) return;
         boolean container = !(this.getScreenHandler() instanceof PlayerScreenHandler);
         int y = getActionButtonY();
-        int leftButtonX = container ? getActionButtonX(false) : this.x + (this.backgroundWidth - 104) / 2;
-        int rightButtonX = getActionButtonX(true);
+        int buttonWidth = container ? 80 : 104;
+        int leftButtonX = container ? getActionButtonX(0) : this.x + (this.backgroundWidth - buttonWidth) / 2;
+        int middleButtonX = getActionButtonX(1);
+        int rightButtonX = getActionButtonX(2);
         if (container) {
-            drawActionButton(context, leftButtonX, y, "Выбросить всё", isInside(mouseX, mouseY, leftButtonX, y, 104, 18));
-            drawActionButton(context, rightButtonX, y, "Сложить всё", isInside(mouseX, mouseY, rightButtonX, y, 104, 18));
+            drawActionButton(context, leftButtonX, y, buttonWidth, "Выбросить всё", isInside(mouseX, mouseY, leftButtonX, y, buttonWidth, 18));
+            drawActionButton(context, middleButtonX, y, buttonWidth, "Сложить всё", isInside(mouseX, mouseY, middleButtonX, y, buttonWidth, 18));
+            drawActionButton(context, rightButtonX, y, buttonWidth, "Забрать всё", isInside(mouseX, mouseY, rightButtonX, y, buttonWidth, 18));
         } else {
-            drawActionButton(context, leftButtonX, y, "Выбросить всё", isInside(mouseX, mouseY, leftButtonX, y, 104, 18));
+            drawActionButton(context, leftButtonX, y, buttonWidth, "Выбросить всё", isInside(mouseX, mouseY, leftButtonX, y, buttonWidth, 18));
         }
     }
 
     @Unique
-    private void drawActionButton(DrawContext context, int x, int y, String label, boolean hovered) {
+    private void drawActionButton(DrawContext context, int x, int y, int width, String label, boolean hovered) {
         int background = hovered ? 0xFFBEBEBE : 0xFF777777;
-        context.fill(x, y, x + 104, y + 18, 0xFF202020);
-        context.fill(x + 1, y + 1, x + 103, y + 17, background);
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(label), x + 52, y + 5, 0xFFFFFFFF);
+        context.fill(x, y, x + width, y + 18, 0xFF202020);
+        context.fill(x + 1, y + 1, x + width - 1, y + 17, background);
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(label), x + width / 2, y + 5, 0xFFFFFFFF);
     }
 
     @Unique
@@ -142,6 +153,15 @@ public abstract class MixinHandledScreen<T extends ScreenHandler> extends Screen
     private void moveAllIntoContainer() {
         for (Slot slot : this.getScreenHandler().slots) {
             if (slot.inventory == mc.player.getInventory() && slot.hasStack()) {
+                this.onMouseClick(slot, slot.id, 0, SlotActionType.QUICK_MOVE);
+            }
+        }
+    }
+
+    @Unique
+    private void takeAllFromContainer() {
+        for (Slot slot : this.getScreenHandler().slots) {
+            if (slot.inventory != mc.player.getInventory() && slot.hasStack()) {
                 this.onMouseClick(slot, slot.id, 0, SlotActionType.QUICK_MOVE);
             }
         }

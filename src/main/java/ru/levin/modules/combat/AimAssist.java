@@ -68,6 +68,7 @@ public class AimAssist extends Function {
     private long lastMouseMoveTime = System.currentTimeMillis();
     private float lastAppliedYaw = Float.MAX_VALUE;
     private float lastAppliedPitch = Float.MAX_VALUE;
+    private boolean manualMouseInput;
     private LivingEntity target;
 
     // Liminar ProviderCore state. These fields keep its target-relative smoothing
@@ -142,6 +143,7 @@ public class AimAssist extends Function {
         lastAppliedYaw = Float.MAX_VALUE;
         lastAppliedPitch = Float.MAX_VALUE;
         lastMouseMoveTime = System.currentTimeMillis();
+        manualMouseInput = false;
         resetLiminarState();
         if (mc.player != null) Manager.ROTATION.set(mc.player.getYaw(), mc.player.getPitch());
     }
@@ -172,10 +174,10 @@ public class AimAssist extends Function {
     private void detectMouseMovement(ClientPlayerEntity player) {
         float yaw = player.getYaw();
         float pitch = player.getPitch();
-        if (lastAppliedYaw != Float.MAX_VALUE && lastAppliedPitch != Float.MAX_VALUE
-                && (Math.abs(yaw - lastAppliedYaw) > 0.001f || Math.abs(pitch - lastAppliedPitch) > 0.001f)) {
-            lastMouseMoveTime = System.currentTimeMillis();
-        }
+        manualMouseInput = lastAppliedYaw != Float.MAX_VALUE && lastAppliedPitch != Float.MAX_VALUE
+                && (Math.abs(MathHelper.wrapDegrees(yaw - lastAppliedYaw)) > 0.35f
+                || Math.abs(pitch - lastAppliedPitch) > 0.35f);
+        if (manualMouseInput) lastMouseMoveTime = System.currentTimeMillis();
         lastAppliedYaw = yaw;
         lastAppliedPitch = pitch;
     }
@@ -465,6 +467,11 @@ public class AimAssist extends Function {
 
     private void runAimingLogic(ClientPlayerEntity player) {
         if (onlyWeapon.get() && !isWeapon(player.getMainHandStack())) return;
+        if (manualMouseInput && System.currentTimeMillis() - lastMouseMoveTime < 85L) {
+            liminarYawVelocity *= 0.35f;
+            liminarPitchVelocity *= 0.35f;
+            return;
+        }
         if (!isValidTarget(target)) target = null;
         if (!lastHit.get() && target == null) {
             for (Entity entity : getSortedEntities(mc.world.getEntities())) {
@@ -485,6 +492,11 @@ public class AimAssist extends Function {
         result = getLiminarAngles(target, yawFactor, pitchFactor, aimMode.get());
         if (yawSpeed.get().doubleValue() > 0.0 && !Float.isInfinite(result[0])) player.setYaw(result[0]);
         if (pitchSpeed.get().doubleValue() > 0.0 && !Float.isInfinite(result[1])) player.setPitch(result[1]);
+        // Store the angles written by AimAssist so the next tick can distinguish
+        // its own smooth movement from a fresh mouse input.
+        lastAppliedYaw = player.getYaw();
+        lastAppliedPitch = player.getPitch();
+        manualMouseInput = false;
     }
 
     private boolean isWeapon(ItemStack stack) {

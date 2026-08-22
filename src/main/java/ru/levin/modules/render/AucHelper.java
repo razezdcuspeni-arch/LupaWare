@@ -26,7 +26,8 @@ import java.util.regex.Pattern;
 
 @FunctionAnnotation(name = "AucHelper", desc = "Подсвечивает самый дешёвый и самый дорогой предмет на аукционе FunTime", type = Type.Render)
 public class AucHelper extends Function {
-    private static final Pattern PRICE_PATTERN = Pattern.compile("Цен[аaАAыЫ]?:?\\s*([\\d,\\s.]+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern PRICE_PATTERN = Pattern.compile("(?iu)(?:цена|цены|price|стоимость|cost)\\s*[:=\\-]?\\s*([$€₽]?\\s*[0-9][0-9\\s.,]*\\s*(?:тыс|кк|млрд|млн|[кkмmтtбb])?)");
+    private static final Pattern CURRENCY_PATTERN = Pattern.compile("(?iu)[$€₽]?\\s*([0-9][0-9\\s.,]*\\s*(?:тыс|кк|млрд|млн|[кkмmтtбb])?)\\s*(?:монет|руб(?:лей)?|coins?|[$€₽])");
     private static final int CHEAPEST_COLOR = 0xFF4BFF4B;
     private static final int MOST_EXPENSIVE_COLOR = 0xFFFF4B4B;
 
@@ -115,7 +116,17 @@ public class AucHelper extends Function {
 
     private boolean isAuction(GenericContainerScreen screen) {
         String title = screen.getTitle().getString().toLowerCase(Locale.ROOT);
-        return title.contains("аукцион") || title.contains("auction") || title.contains("/ah");
+        if (title.contains("аукцион") || title.contains("auction") || title.contains("/ah")
+                || title.contains("торгов") || title.contains("market") || title.contains("поиск предметов")) {
+            return true;
+        }
+        // Some FunTime menu variants use a generic container title. A price lore
+        // line is a safe fallback signal for those auction screens.
+        int rows = Math.min(screen.getScreenHandler().getRows() * 9, screen.getScreenHandler().slots.size());
+        for (int i = 0; i < rows; i++) {
+            if (parsePriceFromLore(screen.getScreenHandler().getSlot(i).getStack()) > 0) return true;
+        }
+        return false;
     }
 
     private boolean isFunTimeServer() {
@@ -138,16 +149,54 @@ public class AucHelper extends Function {
 
         for (Text line : lore.lines()) {
             String plain = Formatting.strip(line.getString());
-            if (plain == null) continue;
-            Matcher matcher = PRICE_PATTERN.matcher(plain);
-            if (!matcher.find()) continue;
-            try {
-                return Integer.parseInt(matcher.group(1).replaceAll("[,\\s.]", ""));
-            } catch (NumberFormatException ignored) {
-                return 0;
+            if (plain == null || plain.isBlank()) continue;
+            String normalized = plain.replace('\u00A0', ' ').trim();
+
+            Matcher named = PRICE_PATTERN.matcher(normalized);
+            if (named.find()) {
+                int parsed = parsePriceToken(named.group(1));
+                if (parsed > 0) return parsed;
+            }
+
+            Matcher currency = CURRENCY_PATTERN.matcher(normalized);
+            if (currency.find()) {
+                int parsed = parsePriceToken(currency.group(1));
+                if (parsed > 0) return parsed;
             }
         }
         return 0;
+    }
+
+    private int parsePriceToken(String raw) {
+        String token = raw.toLowerCase(Locale.ROOT).replace('\u00A0', ' ').trim();
+        token = token.replaceAll("^[$€₽]\\s*", "");
+        double multiplier = 1.0;
+        String[] suffixes = {"млрд", "b", "млн", "тыс", "кк", "т", "б", "к", "k", "м", "m"};
+        for (String suffix : suffixes) {
+            if (token.endsWith(suffix)) {
+                multiplier = switch (suffix) {
+                    case "тыс", "к", "k" -> 1_000.0;
+                    case "кк", "млн", "м", "m" -> 1_000_000.0;
+                    default -> 1_000_000_000.0;
+                };
+                token = token.substring(0, token.length() - suffix.length()).trim();
+                break;
+            }
+        }
+
+        String numeric = token.replace(" ", "");
+        try {
+            if (multiplier != 1.0 && numeric.matches("[0-9]+[.,][0-9]+")) {
+                numeric = numeric.replace(',', '.');
+                return (int) Math.round(Double.parseDouble(numeric) * multiplier);
+            }
+            String digits = numeric.replaceAll("[^0-9]", "");
+            if (digits.isEmpty()) return 0;
+            long value = Long.parseLong(digits);
+            return (int) Math.min(Integer.MAX_VALUE, value);
+        } catch (NumberFormatException ignored) {
+            return 0;
+        }
     }
 
     private int blinkingColor(int color, long period) {

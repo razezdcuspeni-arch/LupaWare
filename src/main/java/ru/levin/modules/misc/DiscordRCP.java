@@ -62,8 +62,9 @@ public class DiscordRCP extends Function {
         presence.largeImageText = null;
         presence.smallImageKey = null;
         presence.smallImageText = null;
-        // Keep the client name only in Discord's main activity title.
-        presence.details = "LupaWare 1.21.4";
+        // The Discord application title already contains LupaWare 1.21.4.
+        // Do not repeat it in details; keep the lower line useful and distinct.
+        presence.details = "Minecraft 1.21.4";
         presence.state = "User: free  |  Role: owner";
 
         presence.button_label_1 = "Купить";
