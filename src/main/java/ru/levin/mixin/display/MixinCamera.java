@@ -27,10 +27,20 @@ public abstract class MixinCamera implements IMinecraft {
     private boolean thirdPerson;
     @Inject(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;setRotation(FF)V", shift = At.Shift.AFTER))
     private void onUpdate(CallbackInfo ci) {
-        if (!FreeLookState.active || !(mc.player instanceof CameraOverriddenEntity entity))
-            return;
+        if (!(mc.player instanceof CameraOverriddenEntity entity)) return;
 
-        if (!initialized) {
+        boolean aimAssistActive = Manager.FUNCTION_MANAGER != null
+                && Manager.FUNCTION_MANAGER.aimAssist != null
+                && Manager.FUNCTION_MANAGER.aimAssist.state;
+        if (!FreeLookState.active && !aimAssistActive) return;
+
+        if (aimAssistActive) {
+            // AimAssist already calculated these angles; only mirror them to the
+            // rendered camera so the crosshair follows the character rotation.
+            entity.setCameraYaw(Manager.ROTATION.getYaw());
+            entity.setCameraPitch(Manager.ROTATION.getPitch());
+            initialized = true;
+        } else if (!initialized) {
             entity.setCameraPitch(mc.player.getPitch());
             entity.setCameraYaw(mc.player.getYaw());
             initialized = true;

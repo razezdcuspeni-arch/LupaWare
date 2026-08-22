@@ -17,6 +17,7 @@ import ru.levin.manager.Manager;
 import ru.levin.modules.Function;
 import ru.levin.modules.FunctionAnnotation;
 import ru.levin.modules.Type;
+import ru.levin.modules.movement.freelook.CameraOverriddenEntity;
 import ru.levin.modules.setting.BooleanSetting;
 import ru.levin.modules.setting.ModeSetting;
 import ru.levin.modules.setting.SliderSetting;
@@ -77,6 +78,7 @@ public class AimAssist extends Function {
             }
 
             applySuperSmoothAim(player, target);
+            syncVisibleCamera(player);
             currentTarget = target;
             lastTargetTime = System.currentTimeMillis();
         }
@@ -94,6 +96,7 @@ public class AimAssist extends Function {
         lastMoveTime = System.currentTimeMillis();
         if (mc.player != null) {
             Manager.ROTATION.set(mc.player.getYaw(), mc.player.getPitch());
+            syncVisibleCamera(mc.player);
             lastYaw = mc.player.getYaw();
             lastPitch = mc.player.getPitch();
         }
@@ -104,6 +107,22 @@ public class AimAssist extends Function {
         currentTarget = null;
         if (mc.player != null) {
             Manager.ROTATION.set(mc.player.getYaw(), mc.player.getPitch());
+            syncVisibleCamera(mc.player);
+        }
+    }
+
+    private void syncVisibleCamera(ClientPlayerEntity player) {
+        float yaw = Manager.ROTATION.getYaw();
+        float pitch = Manager.ROTATION.getPitch();
+
+        // Keep the entity orientation and the camera orientation on the same
+        // already-calculated AimAssist angles. The aim algorithm itself is not
+        // changed here; this only applies its result to what the player sees.
+        player.setYaw(yaw);
+        player.setPitch(pitch);
+        if (player instanceof CameraOverriddenEntity camera) {
+            camera.setCameraYaw(yaw);
+            camera.setCameraPitch(pitch);
         }
     }
 
