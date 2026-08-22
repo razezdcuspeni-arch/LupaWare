@@ -65,6 +65,7 @@ public class FunctionManager {
     public final AutoFish autoFish;
     public final AutoSell autoSell;
     public final AutoLes autoLes;
+    public final AutoFarm autoFarm;
     public final Phase phase;
     public final TargetStrafe targetStrafe;
     public final Globals globals;
@@ -144,6 +145,7 @@ public class FunctionManager {
                 autoFish = new AutoFish(),
                 autoSell = new AutoSell(),
                 autoLes = new AutoLes(),
+                autoFarm = new AutoFarm(),
                 itemScroller = new ItemScroller(),
                 new ItemFixSwap(),
                 new PerfectTime(),
