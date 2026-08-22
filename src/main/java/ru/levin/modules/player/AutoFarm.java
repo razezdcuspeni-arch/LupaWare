@@ -1,24 +1,33 @@
 package ru.levin.modules.player;
 
 import net.minecraft.client.network.PlayerListEntry;
+import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.network.packet.s2c.play.ChatMessageS2CPacket;
 import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
 import net.minecraft.network.packet.s2c.play.ProfilelessChatMessageS2CPacket;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import ru.levin.events.Event;
 import ru.levin.events.impl.EventPacket;
 import ru.levin.events.impl.EventUpdate;
+import ru.levin.manager.Manager;
+import ru.levin.manager.notificationManager.NotificationType;
 import ru.levin.modules.Function;
 import ru.levin.modules.FunctionAnnotation;
 import ru.levin.modules.Type;
 import ru.levin.modules.setting.BooleanSetting;
 import ru.levin.modules.setting.SliderSetting;
 
+import java.util.Comparator;
 import java.util.Locale;
+import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @FunctionAnnotation(
         name = "AutoFarm",
-        desc = "Ломает растительность через Baritone в ограниченной зоне ReallyWorld",
+        desc = "Ломает растительность через Baritone и периодически забирает зарплату у Фермера",
         type = Type.Player
 )
 public class AutoFarm extends Function {
@@ -41,39 +50,94 @@ public class AutoFarm extends Function {
             "Менее заметный Baritone", true,
             "Включает легитное ломание, небольшую случайность взгляда и спокойный темп"
     );
+    private final BooleanSetting collectSalary = new BooleanSetting(
+            "Забирать зарплату", true,
+            "Периодически подходит к NPC Фермер и забирает выплату"
+    );
+    private final SliderSetting salaryMinMinutes = new SliderSetting(
+            "Мин. интервал зарплаты", 10, 10, 15, 1
+    );
+    private final SliderSetting salaryMaxMinutes = new SliderSetting(
+            "Макс. интервал зарплаты", 15, 10, 15, 1
+    );
+    private final SliderSetting farmerSearchRadius = new SliderSetting(
+            "Радиус поиска Фермера", 96, 16, 128, 1
+    );
 
     private static final String[] STAFF_MARKERS = {
             "модератор", "модер", "хелпер", "helper", "moderator", "admin", "админ",
             "администратор", "administrator", "куратор", "владелец", "owner", "создатель",
             "стажер", "стажёр", "support", "поддержк", "персонал", "[мод]", "[хелп]", "[staff]"
     };
+    private static final Pattern SALARY_PATTERN = Pattern.compile(
+            "(?i)(?:работы\\s*[»>:-]?\\s*)?(?:ваша\\s+зарплата|salary)\\s*:\\s*([0-9][0-9\\s.,]*[a-zа-я]*)"
+    );
+    private static final Random RANDOM = new Random();
+
+    private enum SalaryState {
+        FARMING,
+        GOING_TO_FARMER,
+        WAITING_FOR_SALARY,
+        RETURNING_TO_FARM
+    }
 
     private BlockPos startPos;
+    private VillagerEntity farmer;
+    private SalaryState salaryState = SalaryState.FARMING;
     private boolean baritoneStarted;
     private boolean boundaryStopped;
-    private long nextStaffScanAt;
     private boolean hubSent;
+    private boolean salaryConfirmed;
+    private int salaryAttempts;
+    private long nextStaffScanAt;
+    private long nextSalaryAt;
+    private long salaryDeadline;
+    private long nextInteractionAt;
 
     public AutoFarm() {
-        addSettings(farmRadius, preventPlacing, stopAtBoundary, staffEscape, stealthBaritone);
+        addSettings(
+                farmRadius,
+                preventPlacing,
+                stopAtBoundary,
+                staffEscape,
+                stealthBaritone,
+                collectSalary,
+                salaryMinMinutes,
+                salaryMaxMinutes,
+                farmerSearchRadius
+        );
     }
 
     @Override
     protected void onEnable() {
         startPos = null;
+        farmer = null;
+        salaryState = SalaryState.FARMING;
         baritoneStarted = false;
         boundaryStopped = false;
-        nextStaffScanAt = 0L;
         hubSent = false;
+        salaryConfirmed = false;
+        salaryAttempts = 0;
+        nextStaffScanAt = 0L;
+        nextSalaryAt = 0L;
+        salaryDeadline = 0L;
+        nextInteractionAt = 0L;
     }
 
     @Override
     protected void onDisable() {
         stopBaritone();
+        releaseMovementKeys();
         startPos = null;
+        farmer = null;
+        salaryState = SalaryState.FARMING;
         boundaryStopped = false;
-        nextStaffScanAt = 0L;
         hubSent = false;
+        salaryConfirmed = false;
+        salaryAttempts = 0;
+        nextSalaryAt = 0L;
+        salaryDeadline = 0L;
+        nextInteractionAt = 0L;
     }
 
     @Override
@@ -83,12 +147,9 @@ public class AutoFarm extends Function {
             return;
         }
 
-        if (!(event instanceof EventUpdate) || mc.player == null || mc.world == null) {
-            return;
-        }
-
+        if (!(event instanceof EventUpdate) || mc.player == null || mc.world == null) return;
         if (!isReallyWorld()) {
-            if (baritoneStarted) stopBaritone();
+            stopBaritone();
             return;
         }
 
@@ -103,11 +164,18 @@ public class AutoFarm extends Function {
 
         if (startPos == null) {
             startPos = mc.player.getBlockPos().toImmutable();
-            startBaritone();
+            scheduleNextSalary(now);
+            startFarmBaritone();
             return;
         }
 
-        if (stopAtBoundary.get() && isOutsideFarmZone()) {
+        if (collectSalary.get()) {
+            tickSalaryCycle(now);
+        }
+
+        if (salaryState == SalaryState.FARMING
+                && stopAtBoundary.get()
+                && isOutsideFarmZone()) {
             if (!boundaryStopped) {
                 boundaryStopped = true;
                 stopBaritone();
@@ -115,9 +183,135 @@ public class AutoFarm extends Function {
         }
     }
 
-    private void startBaritone() {
-        if (mc.player == null || baritoneStarted) return;
+    private void tickSalaryCycle(long now) {
+        switch (salaryState) {
+            case FARMING -> {
+                if (now >= nextSalaryAt) beginSalaryTrip();
+            }
+            case GOING_TO_FARMER -> {
+                if (farmer == null || !farmer.isAlive()) {
+                    finishSalaryTrip(false, "NPC Фермер не найден");
+                    return;
+                }
 
+                double distance = mc.player.squaredDistanceTo(farmer);
+                if (distance <= 3.6D * 3.6D && now >= nextInteractionAt) {
+                    stopBaritone();
+                    interactWithFarmer();
+                }
+            }
+            case WAITING_FOR_SALARY -> {
+                if (salaryConfirmed) {
+                    beginReturnToFarm();
+                } else if (now >= salaryDeadline) {
+                    finishSalaryTrip(false, "Подтверждение зарплаты не пришло");
+                }
+            }
+            case RETURNING_TO_FARM -> {
+                if (startPos != null && mc.player.squaredDistanceTo(startPos.toCenterPos()) <= 3.5D * 3.5D) {
+                    finishSalaryTrip(salaryConfirmed, salaryConfirmed ? "Зарплата получена" : "Возврат к ферме");
+                }
+            }
+        }
+    }
+
+    private void beginSalaryTrip() {
+        if (salaryState != SalaryState.FARMING || startPos == null) return;
+
+        farmer = findFarmer();
+        if (farmer == null) {
+            scheduleNextSalary(System.currentTimeMillis());
+            Manager.NOTIFICATION_MANAGER.add(NotificationType.INFO, name, "NPC Фермер не найден", 3);
+            return;
+        }
+
+        boundaryStopped = false;
+        salaryConfirmed = false;
+        salaryAttempts = 0;
+        salaryState = SalaryState.GOING_TO_FARMER;
+        stopBaritone();
+        startGotoBaritone(farmer.getBlockPos());
+    }
+
+    private void interactWithFarmer() {
+        if (mc.player == null || mc.interactionManager == null || farmer == null) return;
+
+        nextInteractionAt = System.currentTimeMillis() + 2500L;
+        salaryDeadline = System.currentTimeMillis() + 15000L;
+        salaryAttempts++;
+        salaryState = SalaryState.WAITING_FOR_SALARY;
+        mc.interactionManager.interactEntity(mc.player, farmer, Hand.MAIN_HAND);
+    }
+
+    private void beginReturnToFarm() {
+        if (salaryState != SalaryState.WAITING_FOR_SALARY || startPos == null) return;
+        salaryState = SalaryState.RETURNING_TO_FARM;
+        stopBaritone();
+        startGotoBaritone(startPos);
+    }
+
+    private void finishSalaryTrip(boolean confirmed, String message) {
+        stopBaritone();
+        salaryConfirmed = confirmed;
+        salaryState = SalaryState.FARMING;
+        farmer = null;
+        boundaryStopped = false;
+        scheduleNextSalary(System.currentTimeMillis());
+        startFarmBaritone();
+        if (confirmed) {
+            Manager.NOTIFICATION_MANAGER.add(NotificationType.SUCCESS, name, message, 3);
+        }
+    }
+
+    private VillagerEntity findFarmer() {
+        if (mc.player == null || mc.world == null) return null;
+        double radius = farmerSearchRadius.get().doubleValue();
+        Box searchBox = mc.player.getBoundingBox().expand(radius);
+        return mc.world.getEntitiesByClass(
+                        VillagerEntity.class,
+                        searchBox,
+                        entity -> entity.isAlive() && isFarmerName(entity)
+                ).stream()
+                .min(Comparator.comparingDouble(entity -> mc.player.squaredDistanceTo(entity)))
+                .orElse(null);
+    }
+
+    private boolean isFarmerName(VillagerEntity entity) {
+        String customName = entity.hasCustomName() && entity.getCustomName() != null
+                ? entity.getCustomName().getString()
+                : "";
+        String displayName = entity.getDisplayName() == null ? "" : entity.getDisplayName().getString();
+        String text = (customName + " " + displayName).toLowerCase(Locale.ROOT);
+        return text.contains("фермер") || text.contains("farmer");
+    }
+
+    private void scheduleNextSalary(long now) {
+        int min = Math.round(salaryMinMinutes.get().floatValue());
+        int max = Math.round(salaryMaxMinutes.get().floatValue());
+        if (min > max) {
+            int swap = min;
+            min = max;
+            max = swap;
+        }
+        int delayMinutes = min + (max == min ? 0 : RANDOM.nextInt(max - min + 1));
+        nextSalaryAt = now + delayMinutes * 60_000L;
+    }
+
+    private void startFarmBaritone() {
+        if (mc.player == null || baritoneStarted || boundaryStopped) return;
+        configureBaritone();
+        sendBaritone("#farm " + farmRadius.get().intValue());
+        baritoneStarted = true;
+    }
+
+    private void startGotoBaritone(BlockPos target) {
+        if (mc.player == null || target == null) return;
+        configureBaritone();
+        sendBaritone("#goto " + target.getX() + " " + target.getY() + " " + target.getZ());
+        baritoneStarted = true;
+    }
+
+    private void configureBaritone() {
         if (preventPlacing.get()) {
             sendBaritone("#set allowPlace false");
             sendBaritone("#set replantCrops false");
@@ -129,8 +323,6 @@ public class AutoFarm extends Function {
             sendBaritone("#set blockBreakSpeed 10");
             sendBaritone("#set allowSprint false");
         }
-        sendBaritone("#farm " + farmRadius.get().intValue());
-        baritoneStarted = true;
     }
 
     private void stopBaritone() {
@@ -151,9 +343,29 @@ public class AutoFarm extends Function {
     }
 
     private void handleIncomingMessage(EventPacket event) {
-        if (!staffEscape.get() || !isReallyWorld()) return;
         String text = extractMessageText(event);
-        if (!text.isEmpty() && isStaffText(text)) {
+        if (text.isEmpty()) return;
+
+        if (collectSalary.get() && salaryState == SalaryState.WAITING_FOR_SALARY) {
+            Matcher matcher = SALARY_PATTERN.matcher(text);
+            if (matcher.find()) {
+                String amount = matcher.group(1).trim();
+                mc.execute(() -> {
+                    if (salaryState != SalaryState.WAITING_FOR_SALARY) return;
+                    salaryConfirmed = true;
+                    Manager.NOTIFICATION_MANAGER.add(
+                            NotificationType.SUCCESS,
+                            name,
+                            "Зарплата: " + amount,
+                            3
+                    );
+                    beginReturnToFarm();
+                });
+                return;
+            }
+        }
+
+        if (staffEscape.get() && isReallyWorld() && isStaffText(text)) {
             requestEmergencyHub();
         }
     }
@@ -195,9 +407,20 @@ public class AutoFarm extends Function {
         mc.execute(() -> {
             if (mc.player == null || !isReallyWorld()) return;
             stopBaritone();
+            releaseMovementKeys();
             mc.player.networkHandler.sendChatCommand("hub");
             setState(false);
         });
+    }
+
+    private void releaseMovementKeys() {
+        if (mc.options == null) return;
+        mc.options.forwardKey.setPressed(false);
+        mc.options.backKey.setPressed(false);
+        mc.options.leftKey.setPressed(false);
+        mc.options.rightKey.setPressed(false);
+        mc.options.sprintKey.setPressed(false);
+        mc.options.jumpKey.setPressed(false);
     }
 
     private boolean isOutsideFarmZone() {
