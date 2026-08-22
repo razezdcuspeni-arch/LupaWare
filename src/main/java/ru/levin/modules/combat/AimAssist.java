@@ -9,6 +9,7 @@ import net.minecraft.item.AxeItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.MaceItem;
 import net.minecraft.item.SwordItem;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import ru.levin.events.Event;
@@ -69,6 +70,19 @@ public class AimAssist extends Function {
     private float lastAppliedPitch = Float.MAX_VALUE;
     private LivingEntity target;
 
+    // Liminar ProviderCore state. These fields keep its target-relative smoothing
+    // continuous between ticks while the public LupaWare settings stay unchanged.
+    private long liminarLastNanos;
+    private int liminarEntityId = Integer.MIN_VALUE;
+    private Vec3d liminarSmoothedTarget;
+    private float liminarYawOffset;
+    private float liminarPitchOffset;
+    private float liminarYawVelocity;
+    private float liminarPitchVelocity;
+    private float liminarTrackingFactor = 1.0f;
+    private float liminarLastYawDelta;
+    private float liminarLastPitchDelta;
+
     public AimAssist() {
         addSettings(onlyWeapon, throughWalls, attackInvisible, attackNaked, attackMobs, lastHit, sorting,
                 distance, fov, yawSpeed, pitchSpeed, aimMode);
@@ -128,6 +142,7 @@ public class AimAssist extends Function {
         lastAppliedYaw = Float.MAX_VALUE;
         lastAppliedPitch = Float.MAX_VALUE;
         lastMouseMoveTime = System.currentTimeMillis();
+        resetLiminarState();
         if (mc.player != null) Manager.ROTATION.set(mc.player.getYaw(), mc.player.getPitch());
     }
 
@@ -142,6 +157,7 @@ public class AimAssist extends Function {
         lastSpeed = 0.0f;
         lastAppliedYaw = Float.MAX_VALUE;
         lastAppliedPitch = Float.MAX_VALUE;
+        resetLiminarState();
         Manager.ROTATION.set(mc.player != null ? mc.player.getYaw() : 0.0f, mc.player != null ? mc.player.getPitch() : 0.0f);
     }
 
@@ -226,6 +242,137 @@ public class AimAssist extends Function {
             return wearingArmor || attackNaked.get();
         }
         return entity instanceof MobEntity && attackMobs.get();
+    }
+
+    /**
+     * Adapted from Liminar ProviderCore.ncl(). It keeps the original shape of
+     * the algorithm: target-point interpolation, frame-time response, separate
+     * yaw/pitch deltas, velocity smoothing, tiny target-relative motion and
+     * final clamping/quantization. The public LupaWare settings feed the same
+     * stages instead of being replaced by Liminar's encrypted settings.
+     */
+    private float[] getLiminarAngles(Entity entity, float yawFactor, float pitchFactor, String mode) {
+        if (mc.player == null || entity == null) return new float[]{mc.player.getYaw(), mc.player.getPitch()};
+
+        int entityId = entity.getId();
+        if (entityId != liminarEntityId) {
+            liminarEntityId = entityId;
+            liminarSmoothedTarget = null;
+            liminarYawOffset = 0.0f;
+            liminarPitchOffset = 0.0f;
+            liminarYawVelocity = 0.0f;
+            liminarPitchVelocity = 0.0f;
+            liminarTrackingFactor = 1.0f;
+            liminarLastYawDelta = 0.0f;
+            liminarLastPitchDelta = 0.0f;
+        }
+
+        long now = System.nanoTime();
+        float dt = liminarLastNanos == 0L ? (1.0f / 60.0f)
+                : MathHelper.clamp((now - liminarLastNanos) / 1_000_000_000.0f, 1.0f / 240.0f, 1.0f / 20.0f);
+        liminarLastNanos = now;
+
+        Vec3d rawPoint = getLiminarAimPoint(entity, now);
+        if (liminarSmoothedTarget == null) {
+            liminarSmoothedTarget = rawPoint;
+        } else {
+            float positionResponse = MathHelper.clamp(5.2f + yawFactor * 0.18f + pitchFactor * 0.12f, 3.0f, 18.0f);
+            float interpolation = 1.0f - (float) Math.exp(-positionResponse * dt);
+            liminarSmoothedTarget = lerpVec(liminarSmoothedTarget, rawPoint, interpolation);
+        }
+
+        Vec3d eye = mc.player.getEyePos();
+        Vec3d delta = liminarSmoothedTarget.subtract(eye);
+        double horizontal = Math.sqrt(delta.x * delta.x + delta.z * delta.z);
+        if (horizontal < 1.0E-5) return new float[]{mc.player.getYaw(), mc.player.getPitch()};
+
+        float targetYaw = (float) Math.toDegrees(Math.atan2(delta.z, delta.x)) - 90.0f;
+        float targetPitch = (float) -Math.toDegrees(Math.atan2(delta.y, horizontal));
+        float yawDelta = MathHelper.wrapDegrees(targetYaw - mc.player.getYaw());
+        float pitchDelta = MathHelper.clamp(targetPitch - mc.player.getPitch(), -90.0f, 90.0f);
+
+        float distanceFactor = MathHelper.clamp((float) (entity.distanceTo(mc.player) / Math.max(0.1, distance.get().doubleValue())), 0.35f, 1.0f);
+        float angularSize = MathHelper.clamp((Math.abs(yawDelta) + Math.abs(pitchDelta) * 0.72f) / 60.0f, 0.0f, 1.0f);
+        float responseProfile = switch (mode) {
+            case "Smooth" -> 0.76f;
+            case "FT" -> 1.02f;
+            case "CakeWorld" -> 0.90f;
+            case "HVH" -> 1.16f;
+            default -> 0.86f;
+        };
+
+        // ProviderCore's exponential response and separate yaw/pitch scales.
+        float yawResponse = MathHelper.clamp((yawFactor / 100.0f) * 2.8f * responseProfile, 0.025f, 0.95f);
+        float pitchResponse = MathHelper.clamp((pitchFactor / 100.0f) * 2.2f * responseProfile, 0.020f, 0.85f);
+        float yawStepTarget = yawDelta * (1.0f - (float) Math.exp(-yawResponse * (0.55f + angularSize) * (1.0f / distanceFactor)));
+        float pitchStepTarget = pitchDelta * (1.0f - (float) Math.exp(-pitchResponse * (0.55f + angularSize) * (1.0f / distanceFactor)));
+
+        float velocityBlend = MathHelper.clamp(dt * (8.0f + responseProfile * 5.0f), 0.08f, 0.42f);
+        liminarYawVelocity += (yawStepTarget - liminarYawVelocity) * velocityBlend;
+        liminarPitchVelocity += (pitchStepTarget - liminarPitchVelocity) * velocityBlend;
+
+        // ProviderCore keeps very small target-relative noise, not a large random
+        // jump. It is deterministic per target and bounded to avoid jitter.
+        float wave = (float) (Math.sin(now * 1.47E-9 + entityId * 0.173) * 0.013
+                + Math.sin(now * 2.13E-9 + entityId * 0.071) * 0.004);
+        float pitchWave = (float) ((Math.cos(now * 1.31E-9 + entityId * 0.121)
+                + Math.sin(now * 1.91E-9 + entityId * 0.41) * 0.28) * 0.005);
+        float noiseScale = mode.equals("HVH") ? 1.0f : 0.55f;
+        liminarYawOffset += (wave * noiseScale - liminarYawOffset) * MathHelper.clamp(dt * 7.0f, 0.05f, 0.24f);
+        liminarPitchOffset += (pitchWave * noiseScale - liminarPitchOffset) * MathHelper.clamp(dt * 7.0f, 0.05f, 0.24f);
+
+        float newYaw = mc.player.getYaw() + liminarYawVelocity + liminarYawOffset;
+        float newPitch = mc.player.getPitch() + liminarPitchVelocity + liminarPitchOffset;
+        newPitch = MathHelper.clamp(newPitch, -90.0f, 90.0f);
+
+        // ProviderCore's qhi311-style sensitivity quantization is represented by
+        // a bounded adaptive quantum; it removes sub-pixel noise without making
+        // the result snap to integer degrees.
+        float yawQuantum = MathHelper.clamp(0.006f + Math.abs(yawDelta) * 0.0015f, 0.006f, 0.075f);
+        float pitchQuantum = MathHelper.clamp(0.005f + Math.abs(pitchDelta) * 0.0012f, 0.005f, 0.06f);
+        newYaw = quantizeRotation(mc.player.getYaw(), newYaw, yawQuantum);
+        newPitch = quantizeRotation(mc.player.getPitch(), newPitch, pitchQuantum);
+
+        liminarTrackingFactor += ((1.0f - distanceFactor) - liminarTrackingFactor) * MathHelper.clamp(dt * 2.5f, 0.02f, 0.12f);
+        liminarLastYawDelta = yawDelta;
+        liminarLastPitchDelta = pitchDelta;
+        return new float[]{newYaw, newPitch};
+    }
+
+    private Vec3d getLiminarAimPoint(Entity entity, long now) {
+        Box box = entity.getBoundingBox();
+        double height = box.maxY - box.minY;
+        float motion = (float) (Math.sin(now * 1.35E-9 + entity.getId() * 0.37) * 0.045);
+        double vertical = MathHelper.clamp(0.68 + motion, 0.48, 0.88);
+        double x = (box.minX + box.maxX) * 0.5;
+        double z = (box.minZ + box.maxZ) * 0.5;
+        return new Vec3d(x, box.minY + height * vertical, z);
+    }
+
+    private Vec3d lerpVec(Vec3d from, Vec3d to, float amount) {
+        return new Vec3d(
+                MathHelper.lerp(amount, (float) from.x, (float) to.x),
+                MathHelper.lerp(amount, (float) from.y, (float) to.y),
+                MathHelper.lerp(amount, (float) from.z, (float) to.z));
+    }
+
+    private float quantizeRotation(float current, float desired, float quantum) {
+        float delta = MathHelper.wrapDegrees(desired - current);
+        if (Math.abs(delta) < quantum) return desired;
+        return current + Math.round(delta / quantum) * quantum;
+    }
+
+    private void resetLiminarState() {
+        liminarLastNanos = 0L;
+        liminarEntityId = Integer.MIN_VALUE;
+        liminarSmoothedTarget = null;
+        liminarYawOffset = 0.0f;
+        liminarPitchOffset = 0.0f;
+        liminarYawVelocity = 0.0f;
+        liminarPitchVelocity = 0.0f;
+        liminarTrackingFactor = 1.0f;
+        liminarLastYawDelta = 0.0f;
+        liminarLastPitchDelta = 0.0f;
     }
 
     public float[] getNormalAngles(Entity entity, float yawFactor, float pitchFactor) {
@@ -346,14 +493,10 @@ public class AimAssist extends Function {
         float yawFactor = yawSpeed.get().floatValue() / getFPS() * 5.0f;
         float pitchFactor = pitchSpeed.get().floatValue() / getFPS() * 5.0f;
         float[] result = new float[]{player.getYaw(), player.getPitch()};
-        switch (aimMode.get()) {
-            case "Normal" -> result = getNormalAngles(target, yawFactor, pitchFactor);
-            case "Smooth" -> result = getSmoothAngles(target, yawFactor, pitchFactor);
-            case "FT" -> result = getFTAngles(target, yawFactor, pitchFactor);
-            case "CakeWorld" -> result = getCakeWorldAngles(target, yawFactor, pitchFactor);
-            case "HVH" -> result = getHVHAngles(target, yawFactor, pitchFactor);
-            default -> {}
-        }
+        // All public LupaWare modes now use the adapted Liminar ProviderCore
+        // path. The mode name remains part of the existing configuration and
+        // controls the response profile inside getLiminarAngles().
+        result = getLiminarAngles(target, yawFactor, pitchFactor, aimMode.get());
         if (yawSpeed.get().doubleValue() > 0.0 && !Float.isInfinite(result[0])) player.setYaw(result[0]);
         if (pitchSpeed.get().doubleValue() > 0.0 && !Float.isInfinite(result[1])) player.setPitch(result[1]);
     }
