@@ -72,7 +72,7 @@ public class FunctionManager {
     public final SelfTrap selfTrap;
     public final AutoTotem autoTotem;
     public final BlockHighLight blockHighLight;
-    public final ntiAFK ntiAFK;
+    public final AntiAFK antiAFK;
     public final AucHelper aucHelper;
     //public final KTLeave ktLeave;
     //public final MaceExploit maceExploit;
@@ -102,7 +102,7 @@ public class FunctionManager {
                 clientSounds = new ClientSounds(),
                 new DeathCoords(),
                 new ServerRPSpoff(),
-                ntiAFK = new ntiAFK(),
+                antiAFK = new AntiAFK(),
                 new Xray(),
                 new ElytraHelper(),
                 new FTHelper(),

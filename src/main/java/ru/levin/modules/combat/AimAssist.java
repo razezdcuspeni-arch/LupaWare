@@ -302,36 +302,21 @@ public class AimAssist extends Function {
         };
 
         // ProviderCore's exponential response and separate yaw/pitch scales.
-        float yawResponse = MathHelper.clamp((yawFactor / 100.0f) * 2.8f * responseProfile, 0.025f, 0.95f);
-        float pitchResponse = MathHelper.clamp((pitchFactor / 100.0f) * 2.2f * responseProfile, 0.020f, 0.85f);
+        float yawResponse = MathHelper.clamp((yawFactor / 100.0f) * 1.55f * responseProfile, 0.018f, 0.52f);
+        float pitchResponse = MathHelper.clamp((pitchFactor / 100.0f) * 1.25f * responseProfile, 0.015f, 0.42f);
         float yawStepTarget = yawDelta * (1.0f - (float) Math.exp(-yawResponse * (0.55f + angularSize) * (1.0f / distanceFactor)));
         float pitchStepTarget = pitchDelta * (1.0f - (float) Math.exp(-pitchResponse * (0.55f + angularSize) * (1.0f / distanceFactor)));
 
-        float velocityBlend = MathHelper.clamp(dt * (8.0f + responseProfile * 5.0f), 0.08f, 0.42f);
+        float velocityBlend = MathHelper.clamp(dt * (5.5f + responseProfile * 2.5f), 0.055f, 0.24f);
         liminarYawVelocity += (yawStepTarget - liminarYawVelocity) * velocityBlend;
         liminarPitchVelocity += (pitchStepTarget - liminarPitchVelocity) * velocityBlend;
 
-        // ProviderCore keeps very small target-relative noise, not a large random
-        // jump. It is deterministic per target and bounded to avoid jitter.
-        float wave = (float) (Math.sin(now * 1.47E-9 + entityId * 0.173) * 0.013
-                + Math.sin(now * 2.13E-9 + entityId * 0.071) * 0.004);
-        float pitchWave = (float) ((Math.cos(now * 1.31E-9 + entityId * 0.121)
-                + Math.sin(now * 1.91E-9 + entityId * 0.41) * 0.28) * 0.005);
-        float noiseScale = mode.equals("HVH") ? 1.0f : 0.55f;
-        liminarYawOffset += (wave * noiseScale - liminarYawOffset) * MathHelper.clamp(dt * 7.0f, 0.05f, 0.24f);
-        liminarPitchOffset += (pitchWave * noiseScale - liminarPitchOffset) * MathHelper.clamp(dt * 7.0f, 0.05f, 0.24f);
-
-        float newYaw = mc.player.getYaw() + liminarYawVelocity + liminarYawOffset;
-        float newPitch = mc.player.getPitch() + liminarPitchVelocity + liminarPitchOffset;
-        newPitch = MathHelper.clamp(newPitch, -90.0f, 90.0f);
-
-        // ProviderCore's qhi311-style sensitivity quantization is represented by
-        // a bounded adaptive quantum; it removes sub-pixel noise without making
-        // the result snap to integer degrees.
-        float yawQuantum = MathHelper.clamp(0.006f + Math.abs(yawDelta) * 0.0015f, 0.006f, 0.075f);
-        float pitchQuantum = MathHelper.clamp(0.005f + Math.abs(pitchDelta) * 0.0012f, 0.005f, 0.06f);
-        newYaw = quantizeRotation(mc.player.getYaw(), newYaw, yawQuantum);
-        newPitch = quantizeRotation(mc.player.getPitch(), newPitch, pitchQuantum);
+        // Keep the ProviderCore response continuous, but do not inject a
+        // time-based angle wave: at small deltas that wave was visible as jitter.
+        // Sub-pixel quantization is also deliberately omitted; vanilla mouse
+        // sensitivity already performs the final input quantization.
+        float newYaw = mc.player.getYaw() + liminarYawVelocity;
+        float newPitch = MathHelper.clamp(mc.player.getPitch() + liminarPitchVelocity, -90.0f, 90.0f);
 
         liminarTrackingFactor += ((1.0f - distanceFactor) - liminarTrackingFactor) * MathHelper.clamp(dt * 2.5f, 0.02f, 0.12f);
         liminarLastYawDelta = yawDelta;
@@ -342,8 +327,9 @@ public class AimAssist extends Function {
     private Vec3d getLiminarAimPoint(Entity entity, long now) {
         Box box = entity.getBoundingBox();
         double height = box.maxY - box.minY;
-        float motion = (float) (Math.sin(now * 1.35E-9 + entity.getId() * 0.37) * 0.045);
-        double vertical = MathHelper.clamp(0.68 + motion, 0.48, 0.88);
+        // A stable upper-torso point avoids the tiny vertical oscillation that
+        // is especially noticeable when the crosshair is already on target.
+        double vertical = 0.68;
         double x = (box.minX + box.maxX) * 0.5;
         double z = (box.minZ + box.maxZ) * 0.5;
         return new Vec3d(x, box.minY + height * vertical, z);

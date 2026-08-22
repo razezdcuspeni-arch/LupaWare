@@ -36,16 +36,16 @@ import static ru.levin.util.render.RenderUtil.drawBlur;
 public class ClickGUI extends Screen implements IMinecraft {
     private boolean isClose;
 
-    private final int PANEL_WIDTH = 125;
-    private final int PANEL_HEIGHT = 280;
-    private final int PANEL_MARGIN = 8;
+    private final int PANEL_WIDTH = 145;
+    private final int PANEL_HEIGHT = 300;
+    private final int PANEL_MARGIN = 10;
 
     private final Color GUI_COLOR = Manager.FUNCTION_MANAGER.clickGUI.getGuiColor();
 
     private final int TITLE_MARGIN_TOP = 5;
-    private final int TITLE_HEIGHT = 20;
+    private final int TITLE_HEIGHT = 24;
 
-    private final int FUNCTION_HEIGHT = 20;
+    private final int FUNCTION_HEIGHT = 22;
 
     private final int SCROLL_AREA_Y_OFFSET = TITLE_MARGIN_TOP + TITLE_HEIGHT;
     private final int SCROLL_AREA_HEIGHT = PANEL_HEIGHT - SCROLL_AREA_Y_OFFSET - 5;
@@ -142,6 +142,8 @@ public class ClickGUI extends Screen implements IMinecraft {
         if (animation <= 0.01) return;
 
         super.render(ctx, mouseX, mouseY, delta);
+        // A light scrim keeps the panels readable over any world background.
+        ctx.fill(0, 0, width, height, 0x33000000);
         ctx.getMatrices().push();
 
         for (Type category : renderCategories) {
@@ -268,13 +270,17 @@ public class ClickGUI extends Screen implements IMinecraft {
             drawBlur(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 12, 8, -1);
         }
         RenderUtil.drawRoundedRect(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 12, GUI_COLOR.getRGB());
-        RenderUtil.drawRoundedBorder(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 12, 0.35f,
-                new Color(255, 255, 255, 32).getRGB());
+        RenderUtil.drawRoundedBorder(ctx.getMatrices(), x, y, PANEL_WIDTH, PANEL_HEIGHT, 14, 0.5f,
+                new Color(255, 255, 255, 46).getRGB());
+        RenderUtil.drawRoundedRect(ctx.getMatrices(), x + 6, y + 5, PANEL_WIDTH - 12, 3, 1.5f,
+                ColorUtil.getColorStyle(35, 210));
+        ctx.fill(x + 10, y + TITLE_HEIGHT - 1, x + PANEL_WIDTH - 10, y + TITLE_HEIGHT,
+                new Color(255, 255, 255, 38).getRGB());
 
         String title = category.name();
         String icon = category.icon;
-        FontUtils.sf_bold[20].drawLeftAligned(ctx.getMatrices(), title, x + (PANEL_WIDTH - (int) FontUtils.sf_bold[20].getWidth(title)) / 2, y + TITLE_MARGIN_TOP + 2, Color.WHITE.getRGB());
-        FontUtils.icomoon[20].drawLeftAligned(ctx.getMatrices(), icon, x + (PANEL_WIDTH - (int) FontUtils.icomoon[20].getWidth(icon)) / 2 - 50, y + TITLE_MARGIN_TOP + 2, Color.WHITE.getRGB());
+        FontUtils.sf_bold[20].drawLeftAligned(ctx.getMatrices(), title, x + (PANEL_WIDTH - (int) FontUtils.sf_bold[20].getWidth(title)) / 2, y + TITLE_MARGIN_TOP + 5, Color.WHITE.getRGB());
+        FontUtils.icomoon[20].drawLeftAligned(ctx.getMatrices(), icon, x + 12, y + TITLE_MARGIN_TOP + 5, ColorUtil.getColorStyle(35, 230));
 
         {
             int maxBefore = calculateMaxScroll(category);

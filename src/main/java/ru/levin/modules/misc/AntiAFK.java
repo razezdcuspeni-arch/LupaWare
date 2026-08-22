@@ -2,6 +2,7 @@ package ru.levin.modules.misc;
 
 import ru.levin.events.Event;
 import ru.levin.events.impl.EventUpdate;
+import ru.levin.events.impl.input.EventKeyBoard;
 import ru.levin.modules.Function;
 import ru.levin.modules.FunctionAnnotation;
 import ru.levin.modules.Type;
@@ -12,11 +13,11 @@ import ru.levin.modules.setting.SliderSetting;
 import java.util.concurrent.ThreadLocalRandom;
 
 @FunctionAnnotation(
-        name = "ntiAFK",
+        name = "AntiAFK",
         desc = "Имитирует безопасную активность, чтобы сервер не считал игрока AFK",
         type = Type.Misc
 )
-public class ntiAFK extends Function {
+public class AntiAFK extends Function {
     private final ModeSetting action = new ModeSetting(
             "Действие",
             "Случайно",
@@ -35,10 +36,8 @@ public class ntiAFK extends Function {
     private int actionTicks;
     private boolean forwardInjected;
     private boolean sneakInjected;
-    private boolean previousForwardPressed;
-    private boolean previousSneakPressed;
 
-    public ntiAFK() {
+    public AntiAFK() {
         addSettings(action, interval, duration, onlyInWorld);
     }
 
@@ -52,18 +51,36 @@ public class ntiAFK extends Function {
 
     @Override
     protected void onDisable() {
-        releaseInjectedKeys();
+        actionTicks = 0;
+        forwardInjected = false;
+        sneakInjected = false;
     }
 
     @Override
     public void onEvent(Event event) {
-        if (!(event instanceof EventUpdate) || mc.player == null || mc.world == null) return;
+        if (mc.player == null || mc.world == null) return;
 
-        if (actionTicks > 0) {
-            actionTicks--;
-            if (actionTicks == 0) releaseInjectedKeys();
+        if (event instanceof EventKeyBoard keyboard) {
+            if (onlyInWorld.get() && mc.currentScreen != null) return;
+            if (actionTicks > 0 && forwardInjected
+                    && keyboard.getMovementForward() == 0.0f
+                    && keyboard.getMovementStrafe() == 0.0f) {
+                keyboard.setMovementForward(1.0f);
+            }
+            if (actionTicks > 0 && sneakInjected) keyboard.setSneak(true);
+            if (actionTicks > 0) {
+                actionTicks--;
+                if (actionTicks == 0) {
+                    forwardInjected = false;
+                    sneakInjected = false;
+                }
+            }
             return;
         }
+
+        if (!(event instanceof EventUpdate)) return;
+
+        if (actionTicks > 0) return;
 
         if (onlyInWorld.get() && mc.currentScreen != null) {
             nextActionAt = System.currentTimeMillis() + 1000L;
@@ -103,28 +120,14 @@ public class ntiAFK extends Function {
     }
 
     private void holdForward() {
-        previousForwardPressed = mc.options.forwardKey.isPressed();
         forwardInjected = true;
-        mc.options.forwardKey.setPressed(true);
+        sneakInjected = false;
         actionTicks = Math.max(1, duration.get().intValue());
     }
 
     private void holdSneak() {
-        previousSneakPressed = mc.options.sneakKey.isPressed();
         sneakInjected = true;
-        mc.options.sneakKey.setPressed(true);
+        forwardInjected = false;
         actionTicks = Math.max(1, duration.get().intValue());
-    }
-
-    private void releaseInjectedKeys() {
-        if (forwardInjected) {
-            mc.options.forwardKey.setPressed(previousForwardPressed);
-            forwardInjected = false;
-        }
-        if (sneakInjected) {
-            mc.options.sneakKey.setPressed(previousSneakPressed);
-            sneakInjected = false;
-        }
-        actionTicks = 0;
     }
 }

@@ -101,6 +101,9 @@ public final class LupaWare implements ModInitializer {
 
 			Manager.CONFIG_MANAGER = new ConfigManager();
 			Manager.CONFIG_MANAGER.init();
+			if (Manager.FUNCTION_MANAGER.clientSounds.shouldPlayLogin()) {
+				AudioUtil.playSound("join.wav");
+			}
 
 			ColorUtil.loadImage(ResourceProvider.color_image);
 

@@ -5,6 +5,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.util.Hand;
 import ru.levin.events.Event;
+import ru.levin.events.impl.EventUpdate;
 import ru.levin.events.impl.input.EventKey;
 import ru.levin.events.impl.input.EventMouse;
 import ru.levin.manager.Manager;
@@ -22,12 +23,18 @@ public class MiddleClickPearl extends Function {
     private final BindSetting bind = new BindSetting("Кнопка кидания",0,() -> mode.is("По бинду"));
     private final BooleanSetting inventoryUse = new BooleanSetting("Использовать из инвентаря",true,"Не используйте на HollyWorld (баниться)");
 
+    private int pendingRestoreSlot = -1;
+    private long restoreAt;
+
     public MiddleClickPearl() {
         addSettings(mode,bind,inventoryUse);
     }
 
     @Override
     public void onEvent(Event event) {
+        if (event instanceof EventUpdate) {
+            restorePendingSlot();
+        }
         if (mode.is("Обычный")) {
             if (event instanceof EventMouse mouseTick) {
                 if (mouseTick.getButton() == 2) {
@@ -46,6 +53,7 @@ public class MiddleClickPearl extends Function {
 
     private void handleMouseTickEvent() {
         if (mc.player == null || mc.interactionManager == null
+                || pendingRestoreSlot != -1
                 || mc.player.getItemCooldownManager().isCoolingDown(Items.ENDER_PEARL.getDefaultStack())) {
             return;
         }
@@ -66,7 +74,13 @@ public class MiddleClickPearl extends Function {
                 }
                 mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
                 mc.player.swingHand(Hand.MAIN_HAND);
-            } finally {
+                if (switched) {
+                    // Keep the pearl selected while the throw packet and hand
+                    // animation are processed; restore on a later client tick.
+                    pendingRestoreSlot = currentSlot;
+                    restoreAt = System.currentTimeMillis() + 140L;
+                }
+            } catch (RuntimeException ignored) {
                 if (switched) {
                     mc.player.getInventory().selectedSlot = currentSlot;
                     mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(currentSlot));
@@ -78,5 +92,27 @@ public class MiddleClickPearl extends Function {
         if (inventoryUse.get()) {
             InventoryUtil.inventorySwapClick2(Items.ENDER_PEARL, true, true);
         }
+    }
+
+    private void restorePendingSlot() {
+        if (pendingRestoreSlot == -1 || System.currentTimeMillis() < restoreAt || mc.player == null) return;
+        int slot = pendingRestoreSlot;
+        pendingRestoreSlot = -1;
+        restoreAt = 0L;
+        if (mc.player.getInventory().selectedSlot != slot) {
+            mc.player.getInventory().selectedSlot = slot;
+            mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(slot));
+        }
+    }
+
+    @Override
+    protected void onDisable() {
+        if (pendingRestoreSlot != -1 && mc.player != null) {
+            int slot = pendingRestoreSlot;
+            mc.player.getInventory().selectedSlot = slot;
+            mc.player.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(slot));
+        }
+        pendingRestoreSlot = -1;
+        restoreAt = 0L;
     }
 }

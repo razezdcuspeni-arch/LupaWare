@@ -22,11 +22,13 @@ import ru.levin.modules.setting.BooleanSetting;
 public class TriggerBot extends Function {
     private final BooleanSetting pauseIfEating = new BooleanSetting("Не бить когда ешь", true);
     private final BooleanSetting onlyCriticals = new BooleanSetting("Только критами", true);
+    private final BooleanSetting onlyWeapon = new BooleanSetting("Только с оружием", true,
+            "Атакует только с мечом, топором или булавой");
 
     private int delay;
 
     public TriggerBot() {
-        addSettings(pauseIfEating, onlyCriticals);
+        addSettings(pauseIfEating, onlyCriticals, onlyWeapon);
     }
 
     @Override
@@ -43,7 +45,7 @@ public class TriggerBot extends Function {
         }
 
         Item heldItem = player.getMainHandStack().getItem();
-        if (!(heldItem instanceof SwordItem || heldItem instanceof AxeItem || heldItem instanceof MaceItem)) return;
+        if (onlyWeapon.get() && !(heldItem instanceof SwordItem || heldItem instanceof AxeItem || heldItem instanceof MaceItem)) return;
         if (!(mc.crosshairTarget instanceof EntityHitResult result)) return;
 
         Entity entity = result.getEntity();

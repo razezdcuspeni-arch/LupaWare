@@ -310,6 +310,7 @@ public class HUD extends Function {
             rectRGB(eventRender2D.getDrawContext().getMatrices(), posX, posY, maxWidth, headerHeight + 1, corner, c1, c2, c3, c4);
         }
 
+        drawHudAccent(eventRender2D.getDrawContext().getMatrices(), posX, posY, maxWidth);
         RenderUtil.drawTexture(eventRender2D.getDrawContext().getMatrices(), "images/hud/potion.png", posX + maxWidth - 16, posY + 4.5f, 11, 11, 0, Color.white.getRGB());
 
         FontUtils.durman[15].drawLeftAligned(eventRender2D.getDrawContext().getMatrices(), "Effects", posX + 10, posY + 5f, -1);
@@ -449,6 +450,7 @@ public class HUD extends Function {
             rectRGB(eventRender2D.getDrawContext().getMatrices(), posX, posY, maxWidth, headerHeight + 1, corner, c1, c2, c3, c4);
         }
 
+        drawHudAccent(eventRender2D.getDrawContext().getMatrices(), posX, posY, maxWidth);
         RenderUtil.drawTexture(eventRender2D.getDrawContext().getMatrices(), "images/hud/cooldown.png", posX + maxWidth - 17, posY + 4.5f, 11, 11, 0, Color.white.getRGB());
 
         FontUtils.durman[15].drawLeftAligned(eventRender2D.getDrawContext().getMatrices(), "Cooldowns", posX + 10, posY + 5f, -1);
@@ -551,6 +553,7 @@ public class HUD extends Function {
         }
 
 
+        drawHudAccent(render2D.getDrawContext().getMatrices(), posX, posY, widthDynamic);
         RenderUtil.drawTexture(render2D.getDrawContext().getMatrices(), "images/hud/staff.png", posX + widthDynamic - headerHeight, posY + 4, 12, 12, 0, Color.white.getRGB());
 
         fontBig.drawLeftAligned(render2D.getDrawContext().getMatrices(), "StaffList",posX + 10, posY + 5f,-1);
@@ -629,6 +632,7 @@ public class HUD extends Function {
         drawRoundedRect(render2D.getDrawContext().getMatrices(), x, y, 120, 35, 3, hud_color);
         RenderUtil.drawRoundedBorder(render2D.getDrawContext().getMatrices(), x, y, 120, 35, 3, 0.35f,
                 ColorUtil.rgba(255, 255, 255, 40));
+        drawHudAccent(render2D.getDrawContext().getMatrices(), x, y, 120);
 
         String displayName = Manager.FUNCTION_MANAGER.nameProtect.getProtectedName(target.getName().getString());
         if (displayName.length() > 12) displayName = displayName.substring(0, 12) + "...";
@@ -705,12 +709,19 @@ public class HUD extends Function {
                 ColorUtil.rgba(255, 255, 255, 40));
         RenderUtil.drawRoundedBorder(matrices, infoX, renderY, 10 + infoWidth, 18, new Vector4f(0, 0, 3, 3), 0.35f,
                 ColorUtil.rgba(255, 255, 255, 28));
+        drawHudAccent(matrices, x, renderY, 17 + logoWidth);
 
         fontBig.renderGradientText(matrices, textLogo, x + 8, renderY + 4, ColorUtil.getColorStyle(180), ColorUtil.getColorStyle(30));
         fontSmall.drawLeftAligned(matrices, textInfo, infoX + 4.5f, renderY + 4.5f, -1);
 
         watermarkDrag.setHeight(18);
         watermarkDrag.setWidth(30 + logoWidth + infoWidth);
+    }
+
+    private void drawHudAccent(MatrixStack matrices, float x, float y, float width) {
+        if (width <= 14.0f) return;
+        RenderUtil.drawRoundedRect(matrices, x + 6.0f, y + 1.5f, width - 12.0f, 1.5f, 0.75f,
+                ColorUtil.getColorStyle(35, 220));
     }
 
     private float getBossbarWatermarkOffset() {
@@ -818,6 +829,7 @@ public class HUD extends Function {
             rectRGB(matrices, posX, posY, animatedWidth, headerHeight + 1, corner, c1, c2, c3, c4);
         }
 
+        drawHudAccent(matrices, posX, posY, animatedWidth);
         RenderUtil.drawTexture(matrices, "images/hud/keybinds.png", posX + animatedWidth - 17, posY + 4.5f, 11, 11, 0, Color.white.getRGB());
 
         FontUtils.durman[15].drawLeftAligned(matrices, "KeyBinds", posX + 10, posY + 5f, -1);

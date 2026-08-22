@@ -87,7 +87,7 @@ public abstract class Function implements IMinecraft {
 
     private void playSound(boolean enable) {
         ClientSounds clientSounds = Manager.FUNCTION_MANAGER.clientSounds;
-        if (!clientSounds.state) return;
+        if (!clientSounds.shouldPlayModuleToggle(enable)) return;
         String mode = clientSounds.mode.get();
         String soundFile;
 
@@ -96,6 +96,8 @@ public abstract class Function implements IMinecraft {
             case "Type-2" -> soundFile = enable ? "akron.wav" : "akroff.wav";
             case "Type-3" -> soundFile = enable ? "celon.wav" : "celoff.wav";
             case "Type-4" -> soundFile = enable ? "enableold.wav" : "disableold.wav";
+            case "Type-5" -> soundFile = enable ? "bell.wav" : "bonk.wav";
+            case "Type-6" -> soundFile = enable ? "bubble.wav" : "metallic.wav";
             default -> {
                 return;
             }

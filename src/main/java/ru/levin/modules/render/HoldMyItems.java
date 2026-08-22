@@ -9,14 +9,25 @@ import ru.levin.manager.Manager;
 /** Enables the vanilla three-dimensional first-person arm renderer. */
 @FunctionAnnotation(name = "Hold My Items", desc = "Объёмные 3D-руки в первом лице", type = Type.Render)
 public class HoldMyItems extends Function {
+    private boolean swingAnimationsWasEnabled;
+
     public HoldMyItems() {
     }
 
     @Override
     protected void onEnable() {
-        if (Manager.FUNCTION_MANAGER.swingAnimations.isState()) {
+        swingAnimationsWasEnabled = Manager.FUNCTION_MANAGER.swingAnimations.isState();
+        if (swingAnimationsWasEnabled) {
             Manager.FUNCTION_MANAGER.swingAnimations.setState(false);
         }
+    }
+
+    @Override
+    protected void onDisable() {
+        if (swingAnimationsWasEnabled && !Manager.FUNCTION_MANAGER.swingAnimations.isState()) {
+            Manager.FUNCTION_MANAGER.swingAnimations.setState(true);
+        }
+        swingAnimationsWasEnabled = false;
     }
 
     @Override

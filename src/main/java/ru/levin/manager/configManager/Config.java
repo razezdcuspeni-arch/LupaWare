@@ -48,7 +48,14 @@ public final class Config {
                 if (!start && module.isState()) {
                     module.setState(false);
                 }
-                module.load(modulesObject.getAsJsonObject(module.name));
+                JsonObject moduleObject = modulesObject.has(module.name)
+                        ? modulesObject.getAsJsonObject(module.name)
+                        : null;
+                // Keep old AutoCfg files compatible with the renamed module.
+                if (moduleObject == null && module.name.equals("AntiAFK") && modulesObject.has("ntiAFK")) {
+                    moduleObject = modulesObject.getAsJsonObject("ntiAFK");
+                }
+                module.load(moduleObject);
             });
         }
 
