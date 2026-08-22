@@ -102,6 +102,10 @@ public class AttackAura extends Function {
     private long lastHitMs = 0L;
     private int preSprintTicks = 0;
 
+    // State copied from HolyClient FocusedAngle: pitch acceleration persists
+    // while the same target is being tracked and resets at the neutral state.
+    private float focusedPitchAcceleration = 1.0f;
+
     /**
      * Active rotation implementation. Imported Shade modules override this
      * instead of relying on the legacy AttackAura mode selector.
@@ -114,7 +118,7 @@ public class AttackAura extends Function {
         String active = getRotationMode();
         if (value.equals("SpookyTime")) return active.equals("SpookyTime") || active.equals("testspooky");
         if (value.equals("FunTime")) return active.equals("FunTime");
-        if (value.equals("HollyWorld")) return active.equals("HollyWorld") || active.equals("AresMIne");
+        if (value.equals("HollyWorld")) return active.equals("HollyWorld");
         return value.equals(active);
     }
 
@@ -169,6 +173,7 @@ public class AttackAura extends Function {
                 Manager.ROTATION.set(player.getYaw(), player.getPitch());
                 lastHitMs = 0L;
                 shakeStartTime = 0L;
+                focusedPitchAcceleration = 1.0f;
                 cpsLimit = System.currentTimeMillis();
                 return;
             }
@@ -196,6 +201,7 @@ public class AttackAura extends Function {
         testSpookyLastAttackTime = 0L;
         testSpookyNextAttackTime = 0L;
         testSpookyAim.reset();
+        focusedPitchAcceleration = 1.0f;
         Arrays.fill(deltaPitchHistory, mc.player != null ? mc.player.getPitch() : 0f);
     }
 
@@ -204,7 +210,7 @@ public class AttackAura extends Function {
         if (target != null && isValidTarget(target)) {
             String modeName = getRotationMode();
             if (modeName.equals("FunTime")
-                    || modeName.equals("HollyWorld") || modeName.equals("AresMIne")
+                    || modeName.equals("HollyWorld")
                     || modeName.equals("ReallyWorld")) {
                 Manager.ROTATION.smoothReturn(350);
             } else {
@@ -215,6 +221,7 @@ public class AttackAura extends Function {
         target = null;
         testSpookyTarget = null;
         testSpookyAim.reset();
+        focusedPitchAcceleration = 1.0f;
         testSpookyNextAttackTime = 0L;
         cpsLimit = System.currentTimeMillis();
         super.onDisable();
@@ -342,6 +349,11 @@ public class AttackAura extends Function {
                 attackTarget(mc.player);
                 lastHitMs = System.currentTimeMillis();
             }
+            return;
+        }
+
+        if (isRotationMode("AresMIne")) {
+            focusedRotation(t, canAttackNow, noPotion);
             return;
         }
 
@@ -598,6 +610,58 @@ public class AttackAura extends Function {
     }
 
 
+
+    /**
+     * HolyClient FocusedAngle port. The only adaptation is the LupaWare
+     * Manager.ROTATION container and MathUtil/GCDUtil equivalents.
+     */
+    private void focusedRotation(LivingEntity entity, boolean canAttackNow, boolean noPotion) {
+        float currentYaw = Manager.ROTATION.getYaw();
+        float currentPitch = Manager.ROTATION.getPitch();
+        Vec3d eye = mc.player.getEyePos();
+        Vec3d aimPoint = MathUtil.getClosestVec(eye, entity);
+        double dx = aimPoint.x - eye.x;
+        double dy = aimPoint.y - eye.y;
+        double dz = aimPoint.z - eye.z;
+        double horizontal = Math.hypot(dx, dz);
+
+        float targetYaw = (float) (Math.toDegrees(Math.atan2(dz, dx)) - 90.0);
+        float targetPitch = (float) (-Math.toDegrees(Math.atan2(dy, horizontal)));
+        float yawDelta = MathHelper.wrapDegrees(targetYaw - currentYaw);
+        float pitchDelta = targetPitch - currentPitch;
+
+        float maxYawStep = MathUtil.random(65.0f, 75.0f);
+        float maxPitchStep;
+        if (mc.player.isGliding()) {
+            maxPitchStep = 180.0f;
+        } else {
+            focusedPitchAcceleration = Math.abs(pitchDelta) < 1.0f
+                    ? 1.0f
+                    : Math.min(focusedPitchAcceleration * 1.45f, 10.0f);
+            maxPitchStep = focusedPitchAcceleration + MathUtil.random(-1.0f, 1.0f);
+        }
+
+        float yawStep = MathHelper.clamp(yawDelta, -maxYawStep, maxYawStep);
+        float pitchStep = MathHelper.clamp(pitchDelta, -maxPitchStep, maxPitchStep);
+        float outputYaw = currentYaw + yawStep;
+        float outputPitch = MathHelper.clamp(currentPitch + pitchStep, -90.0f, 90.0f);
+
+        // Equivalent to HolyClient Angle.adjustSensitivity(): round relative
+        // to the current server angle using the vanilla mouse GCD.
+        float gcd = ru.levin.util.player.GCDUtil.getGCDValue();
+        if (gcd > 0.0f) {
+            outputYaw = currentYaw + Math.round(MathHelper.wrapDegrees(outputYaw - currentYaw) / gcd) * gcd;
+            outputPitch = currentPitch + Math.round((outputPitch - currentPitch) / gcd) * gcd;
+            outputPitch = MathHelper.clamp(outputPitch, -90.0f, 90.0f);
+        }
+        Manager.ROTATION.set(outputYaw, outputPitch);
+
+        boolean aligned = !raycast.get()
+                || RayTraceUtil.getMouseOver(entity, outputYaw, outputPitch, distance.get().floatValue()) == entity;
+        if (canAttackNow && canAttack() && aligned && noPotion) {
+            attackTarget(mc.player);
+        }
+    }
 
     private void hollyworld(LivingEntity entity, boolean force) {
         Vec3d eye = mc.player.getEyePos();
