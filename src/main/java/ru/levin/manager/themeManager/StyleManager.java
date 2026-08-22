@@ -42,10 +42,12 @@ public class StyleManager implements IMinecraft {
         styles.add(new Style(name, colors));
     }
 
-    public void addCustomTheme(String name, int color1, int color2) {
+    public Style addCustomTheme(String name, int color1, int color2) {
         Style style = new Style(name, new int[]{color1, color2});
         styles.add(style);
         saveCustomThemes();
+        currentStyle = style;
+        return style;
     }
 
     public void removeStyle(Style style) {
@@ -111,22 +113,23 @@ public class StyleManager implements IMinecraft {
                 return;
             }
 
-            Files.lines(file, StandardCharsets.UTF_8)
-                    .map(String::trim)
-                    .filter(s -> !s.isEmpty())
-                    .forEach(line -> {
-                        try {
-                            String[] parts = line.split(":");
-                            if (parts.length >= 3) {
-                                String name = parts[0];
-                                String hex1 = parts[1];
-                                String hex2 = parts[2];
-                                addStyle(name, hex1, hex2);
+            try (var lines = Files.lines(file, StandardCharsets.UTF_8)) {
+                lines.map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .forEach(line -> {
+                            try {
+                                String[] parts = line.split(":");
+                                if (parts.length >= 3) {
+                                    String name = parts[0];
+                                    String hex1 = parts[1];
+                                    String hex2 = parts[2];
+                                    addStyle(name, hex1, hex2);
+                                }
+                            } catch (Exception e) {
+                                System.err.println("Failed to parse theme line: " + line);
                             }
-                        } catch (Exception e) {
-                            System.err.println("Failed to parse theme line: " + line);
-                        }
-                    });
+                        });
+            }
         } catch (IOException e) {
             System.err.println("Failed to load themes: " + e.getMessage());
         }

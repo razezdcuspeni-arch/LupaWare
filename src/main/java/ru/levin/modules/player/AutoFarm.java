@@ -37,6 +37,10 @@ public class AutoFarm extends Function {
             "Выход при администрации", true,
             "Останавливает ферму и отправляет /hub, если администрация есть в сети"
     );
+    private final BooleanSetting stealthBaritone = new BooleanSetting(
+            "Менее заметный Baritone", true,
+            "Включает легитное ломание, небольшую случайность взгляда и спокойный темп"
+    );
 
     private static final String[] STAFF_MARKERS = {
             "модератор", "модер", "хелпер", "helper", "moderator", "admin", "админ",
@@ -51,7 +55,7 @@ public class AutoFarm extends Function {
     private boolean hubSent;
 
     public AutoFarm() {
-        addSettings(farmRadius, preventPlacing, stopAtBoundary, staffEscape);
+        addSettings(farmRadius, preventPlacing, stopAtBoundary, staffEscape, stealthBaritone);
     }
 
     @Override
@@ -118,6 +122,13 @@ public class AutoFarm extends Function {
             sendBaritone("#set allowPlace false");
             sendBaritone("#set replantCrops false");
         }
+        if (stealthBaritone.get()) {
+            sendBaritone("#set legitMine true");
+            sendBaritone("#set randomLooking 0.12");
+            sendBaritone("#set randomLooking113 2.5");
+            sendBaritone("#set blockBreakSpeed 10");
+            sendBaritone("#set allowSprint false");
+        }
         sendBaritone("#farm " + farmRadius.get().intValue());
         baritoneStarted = true;
     }
@@ -128,6 +139,13 @@ public class AutoFarm extends Function {
         if (preventPlacing.get()) {
             sendBaritone("#set allowPlace true");
             sendBaritone("#set replantCrops true");
+        }
+        if (stealthBaritone.get()) {
+            sendBaritone("#set legitMine false");
+            sendBaritone("#set randomLooking 0.01");
+            sendBaritone("#set randomLooking113 2");
+            sendBaritone("#set blockBreakSpeed 6");
+            sendBaritone("#set allowSprint true");
         }
         baritoneStarted = false;
     }

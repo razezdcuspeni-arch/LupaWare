@@ -42,8 +42,17 @@ public class ColorUtil implements IMinecraft {
 
     public static int getPixelColor(Identifier id, float pixelX, float pixelY) {
         BufferedImage bufferedImage = CACHED_IMAGES.get(id);
-        int x = Math.max(0, Math.min((int) (pixelX * bufferedImage.getWidth()), bufferedImage.getWidth() - 1));
-        int y = Math.max(0, Math.min((int) (pixelY * bufferedImage.getHeight()), bufferedImage.getHeight() - 1));
+        if (bufferedImage == null) {
+            loadImage(id);
+            bufferedImage = CACHED_IMAGES.get(id);
+        }
+        if (bufferedImage == null || bufferedImage.getWidth() <= 0 || bufferedImage.getHeight() <= 0) {
+            return Color.WHITE.getRGB();
+        }
+        float safeX = MathHelper.clamp(pixelX, 0f, 1f);
+        float safeY = MathHelper.clamp(pixelY, 0f, 1f);
+        int x = Math.min((int) (safeX * bufferedImage.getWidth()), bufferedImage.getWidth() - 1);
+        int y = Math.min((int) (safeY * bufferedImage.getHeight()), bufferedImage.getHeight() - 1);
         return bufferedImage.getRGB(x, y);
     }
 

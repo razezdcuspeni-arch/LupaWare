@@ -103,6 +103,8 @@ public class FunctionManager {
                 unHook = new UnHook(),
                 optimizer = new Optimizer(),
                 clientSounds = new ClientSounds(),
+                new LowHealthAlert(),
+                new DurabilityAlert(),
                 new DeathCoords(),
                 new ServerRPSpoff(),
                 antiAFK = new AntiAFK(),

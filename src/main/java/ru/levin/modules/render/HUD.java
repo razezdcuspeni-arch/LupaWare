@@ -159,8 +159,6 @@ public class HUD extends Function {
             boolean sPotion = setting.get("PotionHUD");
             boolean sCoordinates = setting.get("Coordinates / TPS");
             boolean sArmorHUD = setting.get("ArmorHUD");
-            boolean sMediaPlayer = setting.get("MediaPlayer");
-
             if (sWaterMark) waterMark(eventRender2D);
             if (sTargetHUD) targethud(eventRender2D);
             if (sStaffList) staffList(eventRender2D);
@@ -711,7 +709,8 @@ public class HUD extends Function {
                 ColorUtil.rgba(255, 255, 255, 28));
         drawHudAccent(matrices, x, renderY, 17 + logoWidth);
 
-        fontBig.renderGradientText(matrices, textLogo, x + 8, renderY + 4, ColorUtil.getColorStyle(180), ColorUtil.getColorStyle(30));
+        fontBig.renderGradientText(matrices, textLogo, x + 8, renderY + 4,
+                getThemeHudColor(0.1f, 255), getThemeHudColor(0.9f, 255));
         fontSmall.drawLeftAligned(matrices, textInfo, infoX + 4.5f, renderY + 4.5f, -1);
 
         watermarkDrag.setHeight(18);
@@ -721,7 +720,15 @@ public class HUD extends Function {
     private void drawHudAccent(MatrixStack matrices, float x, float y, float width) {
         if (width <= 14.0f) return;
         RenderUtil.drawRoundedRect(matrices, x + 6.0f, y + 1.5f, width - 12.0f, 1.5f, 0.75f,
-                ColorUtil.getColorStyle(35, 220));
+                getThemeHudColor(0.25f, 220));
+    }
+
+    private int getThemeHudColor(float progress, int alpha) {
+        int first = Manager.STYLE_MANAGER.getFirstColor();
+        int second = Manager.STYLE_MANAGER.getSecondColor();
+        if (first == -1) return ColorUtil.getColorStyle(0, alpha);
+        int blended = ColorUtil.interpolateColor(first, second, MathHelper.clamp(progress, 0f, 1f));
+        return ColorUtil.applyAlpha(blended, alpha / 255f);
     }
 
     private float getBossbarWatermarkOffset() {
