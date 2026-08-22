@@ -58,11 +58,7 @@ public class AttackAura extends Function {
             "SpookyTime",
             "AresMIne",
             "testspooky",
-            "SlothAC",
-            "LonyGrief",
-            "ФанТайм",
-            "ФанТайм ФОВ",
-            "Легит"
+            "LonyGrief"
     );
 
     private final MultiSetting targets = new MultiSetting(
@@ -202,7 +198,6 @@ public class AttackAura extends Function {
         testSpookyNextAttackTime = 0L;
         testSpookyAim.reset();
         focusedPitchAcceleration = 1.0f;
-        Arrays.fill(deltaPitchHistory, mc.player != null ? mc.player.getPitch() : 0f);
     }
 
     @Override
@@ -278,7 +273,6 @@ public class AttackAura extends Function {
 
 
     private long shakeStartTime = 0L;
-    private final float[] deltaPitchHistory = new float[30];
     private final TestSpookyRotation.SmoothAim testSpookyAim =
             new TestSpookyRotation.SmoothAim(TestSpookyRotation.AimProfile.human());
 
@@ -292,16 +286,6 @@ public class AttackAura extends Function {
 
         if (handleElytraRotation(t)) {
             if (canAttackNow && passRay && noPotion) attackTarget(mc.player);
-            return;
-        }
-
-        if (isRotationMode("SlothAC")) {
-            slothAcRotation(t, canAttackNow, noPotion);
-            return;
-        }
-
-        if (isRotationMode("ФанТайм") || isRotationMode("ФанТайм ФОВ") || isRotationMode("Легит")) {
-            deltaRotation(t, canAttackNow, passRay, noPotion);
             return;
         }
 
@@ -373,54 +357,6 @@ public class AttackAura extends Function {
         }
         setRotation(t, true);
     }
-    private void deltaRotation(LivingEntity entity, boolean canAttackNow, boolean passRay, boolean noPotion) {
-        Vec3d eye = mc.player.getEyePos();
-        Vec3d center = entity.getBoundingBox().getCenter();
-        double dx = center.x - eye.x;
-        double dy = center.y - eye.y;
-        double dz = center.z - eye.z;
-        float yawToTarget = (float) MathHelper.wrapDegrees(Math.toDegrees(Math.atan2(dz, dx)) - 90.0d);
-        float pitchToTarget = MathHelper.clamp((float) -Math.toDegrees(Math.atan2(dy, Math.hypot(dx, dz))), -90f, 90f);
-
-        System.arraycopy(deltaPitchHistory, 0, deltaPitchHistory, 1, deltaPitchHistory.length - 1);
-        deltaPitchHistory[0] = pitchToTarget;
-
-        float time = mc.player.age + mc.getRenderTickCounter().getTickDelta(false);
-        boolean legit = isRotationMode("Легит");
-        float smoothYaw;
-        float smoothPitch;
-        float finalYaw;
-        float finalPitch;
-
-        if (legit) {
-            float wave = (float) (((Math.sin(time * 0.31f) * 0.5d)
-                    + (Math.sin(time * 1.7f + 2.6f) * 0.2d)) * 2.0d);
-            smoothYaw = wave;
-            smoothPitch = wave;
-            finalYaw = MathUtil.interpolateFloat(mc.player.getYaw(), yawToTarget, 0.3f);
-            finalPitch = MathUtil.interpolateFloat(mc.player.getPitch(), pitchToTarget, 0.2f);
-            if (isRotationMode("ФанТайм ФОВ")) finalPitch = mc.player.getPitch();
-        } else {
-            smoothYaw = (float) (Math.sin(time * 0.4f) * 3.0d + Math.sin(time * 0.95f + 1.4d) * 2.0d);
-            smoothPitch = (float) (Math.cos(time * 0.5f + 0.7d) * 0.5d
-                    + Math.cos(time * 0.78f + 3.1d) * 1.5d);
-            finalPitch = MathUtil.interpolateFloat(mc.player.getPitch(),
-                    deltaPitchHistory[MathHelper.clamp(canAttackNow ? 0 : 10, 0, 29)] + smoothPitch * 1.5f,
-                    0.35f);
-            finalYaw = MathUtil.interpolateFloat(mc.player.getYaw(), yawToTarget + smoothYaw, 0.25f);
-            if (isRotationMode("ФанТайм ФОВ")) finalPitch = mc.player.getPitch();
-        }
-
-        if (!canAttackNow && ((int) time % 2 == 0)) finalYaw = mc.player.getYaw();
-        float outputPitch = MathHelper.clamp(finalPitch + smoothPitch, -90f, 90f);
-        Manager.ROTATION.setSmooth(finalYaw + smoothYaw, outputPitch,
-                legit ? 0.35f : 0.55f, legit ? 180f : 220f, legit ? 1 : 1, true);
-
-        boolean aligned = !raycast.get()
-                || RayTraceUtil.getMouseOver(entity, Manager.ROTATION.getYaw(), Manager.ROTATION.getPitch(), distance.get().floatValue()) == entity;
-        if (canAttackNow && passRay && aligned && canAttack() && noPotion) attackTarget(mc.player);
-    }
-
     private static final long TEST_SPOOKY_TARGET_SWITCH_DELAY_MS = 150L;
     private LivingEntity testSpookyTarget;
     private long testSpookyTargetSwitchTime = 0L;
@@ -479,52 +415,6 @@ public class AttackAura extends Function {
         while (angle > 180) angle -= 360;
         while (angle < -180) angle += 360;
         return angle;
-    }
-
-    private void slothAcRotation(LivingEntity entity, boolean canAttackNow, boolean noPotion) {
-        Vec3d targetPos = predictPos(entity);
-        Vec3d eyePos = mc.player.getEyePos();
-        double dx = targetPos.x - eyePos.x;
-        double dy = targetPos.y + entity.getEyeHeight(entity.getPose()) / 2.0 - eyePos.y;
-        double dz = targetPos.z - eyePos.z;
-
-        float targetYaw = (float) Math.toDegrees(Math.atan2(dz, dx)) - 90.0F;
-        float targetPitch = (float) -Math.toDegrees(Math.atan2(dy, Math.hypot(dx, dz)));
-        float yawDelta = MathHelper.wrapDegrees(targetYaw - Manager.ROTATION.getYaw());
-        float pitchDelta = targetPitch - Manager.ROTATION.getPitch();
-        float rotationDifference = (float) Math.hypot(yawDelta, pitchDelta);
-
-        boolean attackWindow = canAttackNow && canAttack();
-        boolean rayPassed = !raycast.get()
-                || RayTraceUtil.getMouseOver(entity, Manager.ROTATION.getYaw(), Manager.ROTATION.getPitch(), distance.get().floatValue()) == entity;
-
-        float yawOffset = attackWindow ? 0.0f
-                : (float) (randomLerp(1.0f, 40.0f) * Math.sin(System.currentTimeMillis() / 60.0D));
-        float pitchOffset = attackWindow ? 0.0f
-                : (float) (randomLerp(30.0f, 180.0f) * Math.cos(System.currentTimeMillis() / 40.0D));
-        float speed = attackWindow ? 1.0f : (canAttack() ? 0.5f : 0.3f);
-        if (attackWindow && !rayPassed) speed = 1.0f;
-
-        float lineYaw = rotationDifference < 0.001f ? 0.0f
-                : Math.abs(yawDelta / rotationDifference) * 180.0f;
-        float linePitch = Math.abs(pitchDelta) * 180.0f;
-        float moveYaw = MathHelper.clamp(yawDelta, -lineYaw, lineYaw);
-        float movePitch = MathHelper.clamp(pitchDelta, -linePitch, linePitch);
-        float factor = MathHelper.clamp(randomLerp(speed, speed + 0.2f), 0.0f, 1.0f);
-
-        float nextYaw = Manager.ROTATION.getYaw() + moveYaw * factor + yawOffset;
-        float nextPitch = MathHelper.clamp(Manager.ROTATION.getPitch() + movePitch * factor + pitchOffset, -89.9f, 89.9f);
-        Manager.ROTATION.set(nextYaw, nextPitch);
-
-        boolean aligned = !raycast.get()
-                || RayTraceUtil.getMouseOver(entity, nextYaw, nextPitch, distance.get().floatValue()) == entity;
-        if (canAttackNow && canAttack() && aligned && noPotion) {
-            attackTarget(mc.player);
-        }
-    }
-
-    private float randomLerp(float min, float max) {
-        return MathHelper.lerp(random.nextFloat(), min, max);
     }
 
     private void setRotation(LivingEntity entity, boolean applyGcd) {

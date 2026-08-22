@@ -1,7 +1,12 @@
 package ru.levin.modules.player;
 
+import net.minecraft.client.network.PlayerListEntry;
+import net.minecraft.network.packet.s2c.play.ChatMessageS2CPacket;
+import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
+import net.minecraft.network.packet.s2c.play.ProfilelessChatMessageS2CPacket;
 import net.minecraft.util.math.BlockPos;
 import ru.levin.events.Event;
+import ru.levin.events.impl.EventPacket;
 import ru.levin.events.impl.EventUpdate;
 import ru.levin.modules.Function;
 import ru.levin.modules.FunctionAnnotation;
@@ -28,13 +33,25 @@ public class AutoFarm extends Function {
             "Стоп на границе", true,
             "Останавливает Baritone при выходе за радиус от точки старта"
     );
+    private final BooleanSetting staffEscape = new BooleanSetting(
+            "Выход при администрации", true,
+            "Останавливает ферму и отправляет /hub, если администрация есть в сети"
+    );
+
+    private static final String[] STAFF_MARKERS = {
+            "модератор", "модер", "хелпер", "helper", "moderator", "admin", "админ",
+            "администратор", "administrator", "куратор", "владелец", "owner", "создатель",
+            "стажер", "стажёр", "support", "поддержк", "персонал", "[мод]", "[хелп]", "[staff]"
+    };
 
     private BlockPos startPos;
     private boolean baritoneStarted;
     private boolean boundaryStopped;
+    private long nextStaffScanAt;
+    private boolean hubSent;
 
     public AutoFarm() {
-        addSettings(farmRadius, preventPlacing, stopAtBoundary);
+        addSettings(farmRadius, preventPlacing, stopAtBoundary, staffEscape);
     }
 
     @Override
@@ -42,6 +59,8 @@ public class AutoFarm extends Function {
         startPos = null;
         baritoneStarted = false;
         boundaryStopped = false;
+        nextStaffScanAt = 0L;
+        hubSent = false;
     }
 
     @Override
@@ -49,10 +68,17 @@ public class AutoFarm extends Function {
         stopBaritone();
         startPos = null;
         boundaryStopped = false;
+        nextStaffScanAt = 0L;
+        hubSent = false;
     }
 
     @Override
     public void onEvent(Event event) {
+        if (event instanceof EventPacket packet && packet.isReceivePacket()) {
+            handleIncomingMessage(packet);
+            return;
+        }
+
         if (!(event instanceof EventUpdate) || mc.player == null || mc.world == null) {
             return;
         }
@@ -60,6 +86,15 @@ public class AutoFarm extends Function {
         if (!isReallyWorld()) {
             if (baritoneStarted) stopBaritone();
             return;
+        }
+
+        long now = System.currentTimeMillis();
+        if (staffEscape.get() && now >= nextStaffScanAt) {
+            nextStaffScanAt = now + 500L;
+            if (isStaffOnline()) {
+                requestEmergencyHub();
+                return;
+            }
         }
 
         if (startPos == null) {
@@ -95,6 +130,56 @@ public class AutoFarm extends Function {
             sendBaritone("#set replantCrops true");
         }
         baritoneStarted = false;
+    }
+
+    private void handleIncomingMessage(EventPacket event) {
+        if (!staffEscape.get() || !isReallyWorld()) return;
+        String text = extractMessageText(event);
+        if (!text.isEmpty() && isStaffText(text)) {
+            requestEmergencyHub();
+        }
+    }
+
+    private String extractMessageText(EventPacket event) {
+        if (event.getPacket() instanceof GameMessageS2CPacket packet) {
+            return packet.content().getString();
+        }
+        if (event.getPacket() instanceof ProfilelessChatMessageS2CPacket packet) {
+            return packet.message().getString();
+        }
+        if (event.getPacket() instanceof ChatMessageS2CPacket packet) {
+            return packet.unsignedContent().getString();
+        }
+        return "";
+    }
+
+    private boolean isStaffOnline() {
+        if (mc.player == null || mc.player.networkHandler == null) return false;
+        for (PlayerListEntry entry : mc.player.networkHandler.getPlayerList()) {
+            String name = entry.getProfile() == null ? "" : entry.getProfile().getName();
+            String display = entry.getDisplayName() == null ? "" : entry.getDisplayName().getString();
+            if (isStaffText(name + " " + display)) return true;
+        }
+        return false;
+    }
+
+    private boolean isStaffText(String text) {
+        String lower = text.toLowerCase(Locale.ROOT);
+        for (String marker : STAFF_MARKERS) {
+            if (lower.contains(marker)) return true;
+        }
+        return false;
+    }
+
+    private void requestEmergencyHub() {
+        if (hubSent || mc.player == null || !isReallyWorld()) return;
+        hubSent = true;
+        mc.execute(() -> {
+            if (mc.player == null || !isReallyWorld()) return;
+            stopBaritone();
+            mc.player.networkHandler.sendChatCommand("hub");
+            setState(false);
+        });
     }
 
     private boolean isOutsideFarmZone() {
