@@ -134,7 +134,12 @@ public class AutoLes extends Function {
             }
         }
 
-        if (targetLog == null || !isTreeLog(targetLog)) {
+        if (targetLog != null && !isTreeLog(targetLog)) {
+            mc.interactionManager.cancelBlockBreaking();
+            targetLog = null;
+            remainingBreaks = 1;
+        }
+        if (targetLog == null) {
             selectNextTree();
         }
 
@@ -159,17 +164,19 @@ public class AutoLes extends Function {
 
         releaseMovementKeys();
         rotateTo(center);
-        if (now >= nextBreakAt) {
-            breakTarget();
+        if (mc.interactionManager.isBreakingBlock()) {
+            updateBreakTarget();
+        } else if (now >= nextBreakAt) {
+            startBreakTarget();
             nextBreakAt = now + breakDelay.get().longValue();
         }
     }
 
     private void handleServerMessage(EventPacket event) {
-        if (!staffEscape.get() || !isReallyWorld()) return;
+        if (!isReallyWorld()) return;
         String text = extractMessageText(event);
         if (text.isEmpty()) return;
-        if (isStaffText(text) && isStaffJoinMessage(text)) {
+        if (staffEscape.get() && isStaffText(text) && isStaffJoinMessage(text)) {
             requestEmergencyHub();
             return;
         }
@@ -180,10 +187,7 @@ public class AutoLes extends Function {
             int parsed = Integer.parseInt(remainingMatcher.group(1));
             remainingBreaks = MathHelper.clamp(parsed, 0, 10);
             if (remainingBreaks <= 0 || TREE_DONE_PATTERN.matcher(text).find()) {
-                completedLogs.add(targetLog);
-                targetLog = null;
-                remainingBreaks = 1;
-                nextBreakAt = System.currentTimeMillis() + breakDelay.get().longValue();
+                finishTarget();
             } else {
                 nextBreakAt = System.currentTimeMillis() + breakDelay.get().longValue();
             }
@@ -191,10 +195,7 @@ public class AutoLes extends Function {
         }
 
         if (TREE_DONE_PATTERN.matcher(text).find()) {
-            completedLogs.add(targetLog);
-            targetLog = null;
-            remainingBreaks = 1;
-            nextBreakAt = System.currentTimeMillis() + breakDelay.get().longValue();
+            finishTarget();
         }
     }
 
@@ -241,11 +242,34 @@ public class AutoLes extends Function {
         return state.isOf(Blocks.BAMBOO_BLOCK);
     }
 
-    private void breakTarget() {
+    private void startBreakTarget() {
         if (targetLog == null || mc.interactionManager == null) return;
-        mc.interactionManager.attackBlock(targetLog, Direction.UP);
-        mc.interactionManager.updateBlockBreakingProgress(targetLog, Direction.UP);
+        mc.interactionManager.attackBlock(targetLog, getTargetSide());
         mc.player.swingHand(Hand.MAIN_HAND);
+    }
+
+    private void updateBreakTarget() {
+        if (targetLog == null || mc.interactionManager == null) return;
+        mc.interactionManager.updateBlockBreakingProgress(targetLog, getTargetSide());
+        mc.player.swingHand(Hand.MAIN_HAND);
+    }
+
+    private Direction getTargetSide() {
+        Vec3d eye = mc.player.getEyePos();
+        Vec3d center = Vec3d.ofCenter(targetLog);
+        return Direction.getFacing(eye.x - center.x, eye.y - center.y, eye.z - center.z);
+    }
+
+    private void finishTarget() {
+        if (targetLog != null) {
+            completedLogs.add(targetLog);
+        }
+        if (mc.interactionManager != null) {
+            mc.interactionManager.cancelBlockBreaking();
+        }
+        targetLog = null;
+        remainingBreaks = 1;
+        nextBreakAt = System.currentTimeMillis() + breakDelay.get().longValue();
     }
 
     private void rotateTo(Vec3d target) {
