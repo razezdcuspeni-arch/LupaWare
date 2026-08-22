@@ -63,6 +63,7 @@ public class FunctionManager {
     public final IRC irc;
     public final ClickAction clickAction;
     public final AutoFish autoFish;
+    public final AutoSell autoSell;
     public final Phase phase;
     public final TargetStrafe targetStrafe;
     public final Globals globals;
@@ -140,6 +141,7 @@ public class FunctionManager {
                 new AutoMessage(),
                 clickAction = new ClickAction(),
                 autoFish = new AutoFish(),
+                autoSell = new AutoSell(),
                 itemScroller = new ItemScroller(),
                 new ItemFixSwap(),
                 new PerfectTime(),
