@@ -14,6 +14,9 @@ base {
 
 repositories {
 	mavenCentral()
+	flatDir {
+		dirs "libs"
+	}
 }
 
 dependencies {
@@ -25,6 +28,10 @@ dependencies {
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
 	implementation "net.fabricmc:intermediary:1.21.4"
+
+	def baritoneRuntime = modImplementation(name: "baritone-standalone-fabric", version: "1.13.1")
+	include baritoneRuntime
+	implementation files("libs/nether-pathfinder-1.4.1.jar")
 
 	compileOnly 'org.projectlombok:lombok:1.18.32'
 	annotationProcessor 'org.projectlombok:lombok:1.18.32'
@@ -67,6 +74,10 @@ java {
 jar {
 	from("LICENSE") {
 		rename { "${it}_${project.base.archivesName.get()}"}
+	}
+	from(zipTree("libs/nether-pathfinder-1.4.1.jar")) {
+		exclude "META-INF/**"
+		exclude "fabric.mod.json"
 	}
 }
 
