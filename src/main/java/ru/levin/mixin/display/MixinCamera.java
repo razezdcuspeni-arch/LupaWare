@@ -31,12 +31,12 @@ public abstract class MixinCamera implements IMinecraft {
 
         boolean aimAssistActive = Manager.FUNCTION_MANAGER != null
                 && Manager.FUNCTION_MANAGER.aimAssist != null
-                && Manager.FUNCTION_MANAGER.aimAssist.state;
+                && Manager.FUNCTION_MANAGER.aimAssist.hasTarget();
         if (!FreeLookState.active && !aimAssistActive) return;
 
         if (aimAssistActive) {
-            // AimAssist already calculated these angles; only mirror them to the
-            // rendered camera so the crosshair follows the character rotation.
+            // Apply the current assist result once per camera update. When the
+            // target disappears this branch stops, so vanilla mouse look wins.
             entity.setCameraYaw(Manager.ROTATION.getYaw());
             entity.setCameraPitch(Manager.ROTATION.getPitch());
             initialized = true;

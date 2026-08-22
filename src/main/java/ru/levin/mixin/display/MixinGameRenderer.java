@@ -29,6 +29,7 @@ import ru.levin.events.Event;
 import ru.levin.events.impl.render.EventRender3D;
 import ru.levin.manager.IMinecraft;
 import ru.levin.manager.Manager;
+import ru.levin.modules.combat.AimAssist;
 import ru.levin.modules.combat.AttackAura;
 import ru.levin.modules.combat.CrystalAura;
 import ru.levin.modules.combat.SelfTrap;
@@ -112,6 +113,7 @@ public abstract class MixinGameRenderer implements IMinecraft {
     @Inject(method = "findCrosshairTarget", at = @At("HEAD"), cancellable = true)
     private void onFindCrosshairTarget(Entity camera, double blockRange, double entityRange, float tickDelta, CallbackInfoReturnable<HitResult> cir) {
         AttackAura attackAura = Manager.FUNCTION_MANAGER.attackAura;
+        AimAssist aimAssist = Manager.FUNCTION_MANAGER.aimAssist;
         CrystalAura crystalAura = Manager.FUNCTION_MANAGER.crystalAura;
         SelfTrap selfTrap = Manager.FUNCTION_MANAGER.selfTrap;
         RotationController rotation = Manager.ROTATION;
@@ -119,7 +121,7 @@ public abstract class MixinGameRenderer implements IMinecraft {
         float yaw;
         float pitch;
 
-        if (attackAura.state || rotation.isControlling()) {
+        if (attackAura.state || aimAssist.hasTarget() || rotation.isControlling()) {
             yaw = rotation.getYaw();
             pitch = rotation.getPitch();
         } else if (crystalAura.state && crystalAura.rotate != null && crystalAura.closestCrystal != null) {

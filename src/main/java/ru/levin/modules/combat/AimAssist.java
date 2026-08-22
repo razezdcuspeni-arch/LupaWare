@@ -71,6 +71,10 @@ public class AimAssist extends Function {
                 return;
             }
 
+            // The player yaw/pitch is the live result of mouse input. Use it as
+            // the base for this tick instead of feeding the previous assist
+            // result back into the next calculation.
+            Manager.ROTATION.set(player.getYaw(), player.getPitch());
             Entity target = getBestTarget(player);
             if (target == null) {
                 currentTarget = null;
@@ -115,15 +119,17 @@ public class AimAssist extends Function {
         float yaw = Manager.ROTATION.getYaw();
         float pitch = Manager.ROTATION.getPitch();
 
-        // Keep the entity orientation and the camera orientation on the same
-        // already-calculated AimAssist angles. The aim algorithm itself is not
-        // changed here; this only applies its result to what the player sees.
-        player.setYaw(yaw);
-        player.setPitch(pitch);
+        // Mirror the already-calculated result to the rendered camera. Do not
+        // overwrite the player's live yaw/pitch here: those values contain the
+        // next mouse input and are used as the next tick's base angle.
         if (player instanceof CameraOverriddenEntity camera) {
             camera.setCameraYaw(yaw);
             camera.setCameraPitch(pitch);
         }
+    }
+
+    public boolean hasTarget() {
+        return state && currentTarget != null && !currentTarget.isRemoved();
     }
 
     private Entity getBestTarget(ClientPlayerEntity player) {
