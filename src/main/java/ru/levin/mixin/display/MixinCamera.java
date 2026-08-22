@@ -29,18 +29,9 @@ public abstract class MixinCamera implements IMinecraft {
     private void onUpdate(CallbackInfo ci) {
         if (!(mc.player instanceof CameraOverriddenEntity entity)) return;
 
-        boolean aimAssistActive = Manager.FUNCTION_MANAGER != null
-                && Manager.FUNCTION_MANAGER.aimAssist != null
-                && Manager.FUNCTION_MANAGER.aimAssist.hasTarget();
-        if (!FreeLookState.active && !aimAssistActive) return;
+        if (!FreeLookState.active) return;
 
-        if (aimAssistActive) {
-            // Apply the current assist result once per camera update. When the
-            // target disappears this branch stops, so vanilla mouse look wins.
-            entity.setCameraYaw(Manager.ROTATION.getYaw());
-            entity.setCameraPitch(Manager.ROTATION.getPitch());
-            initialized = true;
-        } else if (!initialized) {
+        if (!initialized) {
             entity.setCameraPitch(mc.player.getPitch());
             entity.setCameraYaw(mc.player.getYaw());
             initialized = true;

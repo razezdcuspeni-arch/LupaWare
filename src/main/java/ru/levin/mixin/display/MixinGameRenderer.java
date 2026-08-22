@@ -121,7 +121,7 @@ public abstract class MixinGameRenderer implements IMinecraft {
         float yaw;
         float pitch;
 
-        if (attackAura.state || aimAssist.hasTarget() || rotation.isControlling()) {
+        if (attackAura.state || rotation.isControlling()) {
             yaw = rotation.getYaw();
             pitch = rotation.getPitch();
         } else if (crystalAura.state && crystalAura.rotate != null && crystalAura.closestCrystal != null) {
