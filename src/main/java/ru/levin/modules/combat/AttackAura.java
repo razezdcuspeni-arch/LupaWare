@@ -616,8 +616,11 @@ public class AttackAura extends Function {
      * Manager.ROTATION container and MathUtil/GCDUtil equivalents.
      */
     private void focusedRotation(LivingEntity entity, boolean canAttackNow, boolean noPotion) {
-        float currentYaw = Manager.ROTATION.getYaw();
-        float currentPitch = Manager.ROTATION.getPitch();
+        // Focused is a visible rotation in the reference video. Use the
+        // player's real camera angles as the base so manual mouse input is not
+        // replaced by a stale packet-only angle from the previous tick.
+        float currentYaw = mc.player.getYaw();
+        float currentPitch = mc.player.getPitch();
         Vec3d eye = mc.player.getEyePos();
         Vec3d aimPoint = MathUtil.getClosestVec(eye, entity);
         double dx = aimPoint.x - eye.x;
@@ -654,6 +657,12 @@ public class AttackAura extends Function {
             outputPitch = currentPitch + Math.round((outputPitch - currentPitch) / gcd) * gcd;
             outputPitch = MathHelper.clamp(outputPitch, -90.0f, 90.0f);
         }
+        // Keep the visible camera/head and outgoing movement rotation on the
+        // same Focused step. Previously only Manager.ROTATION was updated,
+        // which made the hit ray follow a target while the screen/head stayed
+        // on a different angle.
+        mc.player.setYaw(outputYaw);
+        mc.player.setPitch(outputPitch);
         Manager.ROTATION.set(outputYaw, outputPitch);
 
         boolean aligned = !raycast.get()
