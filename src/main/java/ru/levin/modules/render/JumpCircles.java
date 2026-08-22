@@ -93,6 +93,9 @@ public class JumpCircles extends Function {
     private Identifier texture = null;
 
     private void renderCircles(EventRender3D eventRender3D) {
+        // Circle positions are world coordinates, so render only in the world-space
+        // pass where the render matrix already contains the camera translation.
+        if (!eventRender3D.isWorldSpace()) return;
         Collections.reverse(circles);
         eventRender3D.getMatrixStack().push();
         RenderUtil.enableRender(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE);
@@ -116,7 +119,8 @@ public class JumpCircles extends Function {
             float animScale = (float) c.animation.getOutput();
 
             eventRender3D.getMatrixStack().push();
-            eventRender3D.getMatrixStack().translate(c.pos().x - mc.getEntityRenderDispatcher().camera.getPos().getX(), c.pos().y - mc.getEntityRenderDispatcher().camera.getPos().getY(), c.pos().z - mc.getEntityRenderDispatcher().camera.getPos().getZ());
+            // The world-space matrix is already translated by -camera position.
+            eventRender3D.getMatrixStack().translate(c.pos().x, c.pos().y, c.pos().z);
             eventRender3D.getMatrixStack().multiply(RotationAxis.POSITIVE_X.rotationDegrees(90));
             eventRender3D.getMatrixStack().multiply(RotationAxis.POSITIVE_Z.rotationDegrees((elapsed / 50f) * rotateSpeed.get().floatValue()));
 

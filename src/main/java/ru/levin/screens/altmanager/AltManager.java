@@ -43,6 +43,17 @@ public class AltManager extends Screen implements IMinecraft {
 
     private final String title = "AltManager";
 
+    private static final String[] NICK_ADJECTIVES = {
+            "Swift", "Silent", "Lucky", "Lunar", "Frost", "Shadow", "Mystic", "Bright",
+            "Brave", "Wild", "Noble", "Rapid", "Silver", "Crimson", "Hidden", "Golden",
+            "Arctic", "Royal", "Gentle", "Storm"
+    };
+    private static final String[] NICK_NOUNS = {
+            "Wolf", "Fox", "Raven", "Tiger", "Hawk", "Otter", "Panda", "Lynx", "Eagle",
+            "Bear", "Nova", "Pixel", "Ghost", "River", "Blaze", "Comet", "Maple", "Cobra",
+            "Knight", "Arrow"
+    };
+
     private int shakeTime = 0;
     private float shakeOffsetY = 0f;
     private boolean showConfirmDialog = false;
@@ -415,25 +426,29 @@ public class AltManager extends Screen implements IMinecraft {
     }
 
     private String generateRandomNick() {
-        // Popular adjective+noun names are frequently already taken. A short
-        // random base36 suffix keeps the name valid for Minecraft and makes
-        // collisions with existing server accounts statistically negligible.
-        String randomName;
-        boolean alreadyExists;
-        do {
-            long value = ThreadLocalRandom.current().nextLong();
-            String suffix = Long.toUnsignedString(value, 36);
-            if (suffix.length() > 13) suffix = suffix.substring(0, 13);
-            randomName = "q" + suffix;
-            alreadyExists = false;
+        // Generate readable Minecraft-style names instead of opaque hash strings.
+        // The numeric suffix keeps common combinations unlikely to collide while
+        // preserving the familiar adjective+noun appearance.
+        for (int attempt = 0; attempt < 100; attempt++) {
+            String adjective = NICK_ADJECTIVES[ThreadLocalRandom.current().nextInt(NICK_ADJECTIVES.length)];
+            String noun = NICK_NOUNS[ThreadLocalRandom.current().nextInt(NICK_NOUNS.length)];
+            String suffix = Integer.toString(ThreadLocalRandom.current().nextInt(10, 1000));
+            String candidate = adjective + noun + suffix;
+            if (candidate.length() > 16) {
+                candidate = adjective + noun + suffix.substring(0, Math.max(1, 16 - adjective.length() - noun.length()));
+            }
+
+            boolean taken = false;
             for (String account : accounts) {
-                if (account.equalsIgnoreCase(randomName)) {
-                    alreadyExists = true;
+                if (account != null && account.equalsIgnoreCase(candidate)) {
+                    taken = true;
                     break;
                 }
             }
-        } while (alreadyExists);
-        return randomName;
+            if (!taken) return candidate;
+        }
+
+        return "LunarFox" + ThreadLocalRandom.current().nextInt(100, 1000);
     }
 
     @Override

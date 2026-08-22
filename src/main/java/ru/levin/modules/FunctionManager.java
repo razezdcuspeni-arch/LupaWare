@@ -24,6 +24,8 @@ public class FunctionManager {
     public final ElytraTarget elytraTarget;
     public final SuperFirework superFirework;
     public final AttackAura attackAura;
+    public final AimAssist aimAssist;
+    public final TriggerBot triggerBot;
     public final CrystalAura crystalAura;
     public final NoFriendDamage noFriendDamage;
     public final HitBox xbox;
@@ -83,6 +85,8 @@ public class FunctionManager {
                 autoExplosion = new AutoExplosion(),
                 new AttackExtend(),
                 attackAura = new AttackAura(),
+                aimAssist = new AimAssist(),
+                triggerBot = new TriggerBot(),
                 crystalAura = new CrystalAura(),
                 selfTrap = new SelfTrap(),
                 autoPotion = new AutoPotion(),
